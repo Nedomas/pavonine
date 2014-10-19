@@ -4,7 +4,29 @@ Cornflake = (->
   init = ->
     console.log('Here and now')
     Godfather.API_URL = 'http://10.30.0.1:3000'
-    CornflakeSteps.changeStep(1)
+    state(1)
+
+  state = (i) ->
+    interpolate(i)
+    CornflakeSteps.changeStep(i)
+
+  interpolate = (i) ->
+    state_part = CornflakeSteps.element(i)
+    state_html = $('<div>').append(state_part.clone()).html()
+    data = step_results[i - 1]
+
+    result = state_html
+
+    _.each keywords(state_html), (keyword) ->
+      value = data[keyword] or throw "No value for #{keyword} in #{data}"
+      result = result.replace('#{' + keyword + '}', value)
+
+    state_part.replaceWith(result)
+
+  keywords = (text) ->
+    all = text.match(/#{[a-z0-9]+}/)
+    _.map all, (keyword) ->
+      keyword.replace('#{', '').replace('}', '')
 
   bindStep = (model, attributes, action) ->
     $(action.element).click(_.partial(act, model, attributes, action))
@@ -21,7 +43,7 @@ Cornflake = (->
     connection[action.name](attribute_values).then (record) ->
       step_number = 1
       step_results[step_number] = record
-      CornflakeSteps.changeStep(step_number + 1)
+      state(step_number + 1)
 
   return {
     init: init
@@ -69,6 +91,7 @@ CornflakeSteps = (->
 
   return {
     changeStep: changeStep
+    element: element
   }
 )()
 

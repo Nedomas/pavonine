@@ -1,12 +1,38 @@
 var Cornflake, CornflakeSteps;
 
 Cornflake = (function() {
-  var act, bindStep, init, step_results;
+  var act, bindStep, init, interpolate, keywords, state, step_results;
   step_results = {};
   init = function() {
     console.log('Here and now');
     Godfather.API_URL = 'http://10.30.0.1:3000';
-    return CornflakeSteps.changeStep(1);
+    return state(1);
+  };
+  state = function(i) {
+    interpolate(i);
+    return CornflakeSteps.changeStep(i);
+  };
+  interpolate = function(i) {
+    var data, result, state_html, state_part;
+    state_part = CornflakeSteps.element(i);
+    state_html = $('<div>').append(state_part.clone()).html();
+    data = step_results[i - 1];
+    result = state_html;
+    _.each(keywords(state_html), function(keyword) {
+      var value;
+      value = data[keyword] || (function() {
+        throw "No value for " + keyword + " in " + data;
+      })();
+      return result = result.replace('#{' + keyword + '}', value);
+    });
+    return state_part.replaceWith(result);
+  };
+  keywords = function(text) {
+    var all;
+    all = text.match(/#{[a-z0-9]+}/);
+    return _.map(all, function(keyword) {
+      return keyword.replace('#{', '').replace('}', '');
+    });
   };
   bindStep = function(model, attributes, action) {
     return $(action.element).click(_.partial(act, model, attributes, action));
@@ -23,7 +49,7 @@ Cornflake = (function() {
       var step_number;
       step_number = 1;
       step_results[step_number] = record;
-      return CornflakeSteps.changeStep(step_number + 1);
+      return state(step_number + 1);
     });
   };
   return {
@@ -77,7 +103,8 @@ CornflakeSteps = (function() {
     return $('*[data-model], *[data-step]');
   };
   return {
-    changeStep: changeStep
+    changeStep: changeStep,
+    element: element
   };
 })();
 
