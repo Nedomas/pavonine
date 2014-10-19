@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "lodash": "^2.4.1"
+  },
+  "devDependencies": {
+    "coffee-script": "1.8.0",
+    "gulp": "3.8.8",
+    "gulp-coffee": "2.2.0",
+    "gulp-util": "3.0.1",
+    "gulp-watch": "^1.1.0"
+  }
+}
