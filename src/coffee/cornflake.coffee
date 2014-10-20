@@ -1,9 +1,17 @@
+# HTMLtoJSX = require('htmltojsx')
+_ = require('lodash')
+
 Cornflake = (->
   step_results = {}
 
   init = ->
     console.log('Here and now')
     Godfather.API_URL = 'http://10.30.0.1:3000'
+    converter = new HTMLtoJSX
+      createClass: true
+      outputClassName: 'AwesomeComponent'
+    debugger
+
     state(1)
 
   state = (i) ->

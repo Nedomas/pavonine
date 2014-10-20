@@ -1,4 +1,6 @@
-var Godfather;
+var Godfather, _;
+
+_ = require('lodash');
 
 Godfather = function(endpoint, scope, options) {
   this.endpoint = endpoint;

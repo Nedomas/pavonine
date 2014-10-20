@@ -1,11 +1,21 @@
-var Cornflake, CornflakeSteps;
+var Cornflake, CornflakeSteps, HTMLtoJSX, _;
+
+HTMLtoJSX = require('htmltojsx');
+
+_ = require('lodash');
 
 Cornflake = (function() {
   var act, bindStep, init, interpolate, keywords, state, step_results;
   step_results = {};
   init = function() {
+    var converter;
     console.log('Here and now');
     Godfather.API_URL = 'http://10.30.0.1:3000';
+    converter = new HTMLtoJSX({
+      createClass: true,
+      outputClassName: 'AwesomeComponent'
+    });
+    debugger;
     return state(1);
   };
   state = function(i) {

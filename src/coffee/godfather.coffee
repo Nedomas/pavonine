@@ -10,6 +10,8 @@
 #     # I am from New York
 #     alert "I am from #{new_user.city}"
 # ```
+_ = require('lodash')
+
 Godfather = (endpoint, scope, options) ->
   @endpoint = endpoint
   @scope = scope or {}

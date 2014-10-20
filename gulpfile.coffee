@@ -3,6 +3,8 @@ coffee = require 'gulp-coffee'
 gutil = require 'gulp-util'
 watch = require 'gulp-watch'
 slim = require 'gulp-slim'
+browserify = require 'gulp-browserify'
+coffeeify = require 'coffeeify'
 
 gulp.task 'default', ['coffee', 'slim']
 
@@ -12,8 +14,11 @@ gulp.task 'watch', ->
 
 gulp.task 'coffee', ->
   gulp
-    .src('./src/coffee/*.coffee')
-    .pipe(coffee(bare: true)
+    .src('./src/coffee/*.coffee', read: false)
+    .pipe(browserify(
+      transform: ['coffeeify']
+      extensions: ['.coffee']
+    )
     .on('error', gutil.log))
     .pipe gulp.dest('./dist/js/')
 

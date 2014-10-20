@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "htmltojsx": "^0.2.0",
     "lodash": "^2.4.1"
   },
   "devDependencies": {
@@ -7,6 +8,9 @@
     "gulp": "3.8.8",
     "gulp-coffee": "2.2.0",
     "gulp-util": "3.0.1",
-    "gulp-watch": "^1.1.0"
+    "gulp-watch": "^1.1.0",
+    "gulp-slim": "0.0.10",
+    "gulp-browserify": "~0.4.6",
+    "coffeeify": ">=0.7.0"
   }
 }
