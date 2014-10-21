@@ -4,7 +4,8 @@
     <title>Cornflake</title>
     <meta content="Cornflake" name="description" />
     <meta content="width=device-width" name="viewport">
-      <script src="http://requirejs.org/docs/release/2.1.15/comments/require.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
       <script src="js/cornflake.js" type="text/javascript"></script>
     </meta>
   </meta>
@@ -13,6 +14,7 @@
     <form data-model="subscriber">
       <input data-attribute="email" type="email" /><button data-action="create">Subscribe</button>
     </form>
+    <div id="bind-here"></div>
     <!--Visi su step pradzioj hidden-->
     <form data-model="subscriber" data-step="2">
       You have been subscribed on #{email}<input data-attribute="name" /><button data-action="update"> Save my name</button>
