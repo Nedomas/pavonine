@@ -12,7 +12,7 @@
   <body>
     <!--Dedu tiesiai ant inputu-->
     <form data-model="subscriber">
-      <input data-attribute="email" type="email" /><button data-action="create">Subscribe</button>
+      <input data-attribute="email" onChange="{this.handleChange}" value="{this.state.value}">{this.state.value}</input><button data-action="create" onClick="{this.handleClick}">Subscribe</button>
     </form>
     <div id="bind-here"></div>
     <!--Visi su step pradzioj hidden-->

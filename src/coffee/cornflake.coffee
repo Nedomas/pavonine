@@ -62,10 +62,30 @@ CornflakeSteps = (->
   react_tools = require('react-tools')
 
   changeStep = (i) ->
+    initializers()
+    window.email = 'tsup'
     hideAllBut(i)
     binding(i)
 
     klass_name = "Cornflake#{random()}"
+
+    BindingMixin =
+      getInitialState: ->
+        value: 'Hello!'
+      getDefaultProps: ->
+        email: 'hater'
+      handleChange: (e) ->
+        @setState
+          value: e.target.value
+        console.log('changed')
+      handleClick: (e) ->
+        console.log('yooaaaaaaaaaaaaaaaaaaaaaa')
+        e.preventDefault()
+        debugger
+        # @setState({liked: !this.state.liked})
+      componentDidMount: ->
+        console.log('yoo')
+        # debugger
 
     jsx = new HTMLtoJSX
       createClass: true
@@ -73,7 +93,12 @@ CornflakeSteps = (->
 
     first_el_html = xhtml(elementHtml(1))
     jsx_code = "/** @jsx React.DOM */\n" + jsx.convert(first_el_html)
+    jsx_code = jsx_code.splice(64, 0, 'mixins: [BindingMixin],\n  ')
+    jsx_code = jsx_code.replace(/"{/g, '{').replace(/}"/g, '}')
+    jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick')
+    console.log jsx_code
     component_code = react_tools.transform(jsx_code)
+    console.log component_code
     eval(component_code)
 
     component = eval(klass_name)
@@ -84,6 +109,10 @@ CornflakeSteps = (->
     min = 1
     max = 10000
     Math.floor(Math.random() * (max - min + 1)) + min
+
+  initializers = ->
+    String::splice = (idx, rem, s) ->
+      (@slice(0, idx) + s + @slice(idx + Math.abs(rem)))
 
   xhtml = (input) ->
     without_spaces = input.replace('\n', '').replace(/\s{2,}/g, '')
