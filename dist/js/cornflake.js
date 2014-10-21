@@ -85260,18 +85260,21 @@ module.exports = require('./lib/React');
   })();
 
   CornflakeSteps = (function() {
-    var HTMLtoJSX, React, binding, changeStep, element, elementHtml, elements, hideAllBut, idx, initializers, random, react_tools, xhtml;
+    var HTMLtoJSX, React, binding, changeStep, coreMixin, element, elements, hideAllBut, idx, initializers, jQueryToReactComponent, outerHTML, random, react_tools, toComponent, toJSX, toXHTML;
     React = require('react');
     HTMLtoJSX = require('htmltojsx');
     react_tools = require('react-tools');
     changeStep = function(i) {
-      var BindingMixin, component, component_code, first_el_html, jsx, jsx_code, klass_name;
+      var component;
       initializers();
       window.email = 'tsup';
       hideAllBut(i);
       binding(i);
-      klass_name = "Cornflake" + (random());
-      BindingMixin = {
+      component = jQueryToReactComponent(element(1));
+      return React.renderComponent(component(), document.getElementById('bind-here'));
+    };
+    coreMixin = function() {
+      return {
         getInitialState: function() {
           return {
             value: 'Hello!'
@@ -85297,21 +85300,31 @@ module.exports = require('./lib/React');
           return console.log('yoo');
         }
       };
-      jsx = new HTMLtoJSX({
+    };
+    jQueryToReactComponent = function(element) {
+      var html, jsx, klass_name;
+      html = toXHTML(outerHTML(element));
+      klass_name = "Cornflake" + (random());
+      jsx = toJSX(klass_name, html);
+      return toComponent(klass_name, jsx);
+    };
+    toComponent = function(klass_name, jsx) {
+      var CoreMixin, component_code;
+      CoreMixin = coreMixin();
+      component_code = react_tools.transform(jsx);
+      eval(component_code);
+      return eval(klass_name);
+    };
+    toJSX = function(klass_name, html) {
+      var converter, jsx_code;
+      converter = new HTMLtoJSX({
         createClass: true,
         outputClassName: klass_name
       });
-      first_el_html = xhtml(elementHtml(1));
-      jsx_code = "/** @jsx React.DOM */\n" + jsx.convert(first_el_html);
-      jsx_code = jsx_code.splice(64, 0, 'mixins: [BindingMixin],\n  ');
+      jsx_code = "/** @jsx React.DOM */\n" + converter.convert(html);
+      jsx_code = jsx_code.splice(64, 0, 'mixins: [CoreMixin],\n  ');
       jsx_code = jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
-      jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick');
-      console.log(jsx_code);
-      component_code = react_tools.transform(jsx_code);
-      console.log(component_code);
-      eval(component_code);
-      component = eval(klass_name);
-      return React.renderComponent(component(), document.getElementById('bind-here'));
+      return jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick');
     };
     random = function() {
       var max, min;
@@ -85324,7 +85337,7 @@ module.exports = require('./lib/React');
         return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
       };
     };
-    xhtml = function(input) {
+    toXHTML = function(input) {
       var doc, result, without_spaces;
       without_spaces = input.replace('\n', '').replace(/\s{2,}/g, '');
       doc = new DOMParser().parseFromString(without_spaces, 'text/html');
@@ -85359,8 +85372,8 @@ module.exports = require('./lib/React');
     element = function(i) {
       return idx()[i];
     };
-    elementHtml = function(i) {
-      return $('<div>').append(element(i).clone()).html();
+    outerHTML = function(element) {
+      return $('<div>').append(element.clone()).html();
     };
     idx = function() {
       return _.inject(elements(), function(result, element) {

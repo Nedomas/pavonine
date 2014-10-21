@@ -66,44 +66,50 @@ CornflakeSteps = (->
     window.email = 'tsup'
     hideAllBut(i)
     binding(i)
+    component = jQueryToReactComponent(element(1))
+    React.renderComponent(component(),
+      document.getElementById('bind-here'))
 
+  coreMixin = ->
+    getInitialState: ->
+      value: 'Hello!'
+    getDefaultProps: ->
+      email: 'hater'
+    handleChange: (e) ->
+      @setState
+        value: e.target.value
+      console.log('changed')
+    handleClick: (e) ->
+      console.log('yooaaaaaaaaaaaaaaaaaaaaaa')
+      e.preventDefault()
+      debugger
+      # @setState({liked: !this.state.liked})
+    componentDidMount: ->
+      console.log('yoo')
+      # debugger
+
+  jQueryToReactComponent = (element) ->
+    html = toXHTML(outerHTML(element))
     klass_name = "Cornflake#{random()}"
 
-    BindingMixin =
-      getInitialState: ->
-        value: 'Hello!'
-      getDefaultProps: ->
-        email: 'hater'
-      handleChange: (e) ->
-        @setState
-          value: e.target.value
-        console.log('changed')
-      handleClick: (e) ->
-        console.log('yooaaaaaaaaaaaaaaaaaaaaaa')
-        e.preventDefault()
-        debugger
-        # @setState({liked: !this.state.liked})
-      componentDidMount: ->
-        console.log('yoo')
-        # debugger
+    jsx = toJSX(klass_name, html)
+    toComponent(klass_name, jsx)
 
-    jsx = new HTMLtoJSX
+  toComponent = (klass_name, jsx) ->
+    CoreMixin = coreMixin()
+    component_code = react_tools.transform(jsx)
+    eval(component_code)
+    eval(klass_name)
+
+  toJSX = (klass_name, html) ->
+    converter = new HTMLtoJSX
       createClass: true
       outputClassName: klass_name
 
-    first_el_html = xhtml(elementHtml(1))
-    jsx_code = "/** @jsx React.DOM */\n" + jsx.convert(first_el_html)
-    jsx_code = jsx_code.splice(64, 0, 'mixins: [BindingMixin],\n  ')
+    jsx_code = "/** @jsx React.DOM */\n" + converter.convert(html)
+    jsx_code = jsx_code.splice(64, 0, 'mixins: [CoreMixin],\n  ')
     jsx_code = jsx_code.replace(/"{/g, '{').replace(/}"/g, '}')
     jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick')
-    console.log jsx_code
-    component_code = react_tools.transform(jsx_code)
-    console.log component_code
-    eval(component_code)
-
-    component = eval(klass_name)
-    React.renderComponent(component(),
-      document.getElementById('bind-here'))
 
   random = ->
     min = 1
@@ -114,7 +120,7 @@ CornflakeSteps = (->
     String::splice = (idx, rem, s) ->
       (@slice(0, idx) + s + @slice(idx + Math.abs(rem)))
 
-  xhtml = (input) ->
+  toXHTML = (input) ->
     without_spaces = input.replace('\n', '').replace(/\s{2,}/g, '')
     doc = new DOMParser().parseFromString(without_spaces, 'text/html')
     result = new XMLSerializer().serializeToString(doc)
@@ -144,8 +150,8 @@ CornflakeSteps = (->
   element = (i) ->
     idx()[i]
 
-  elementHtml = (i) ->
-    $('<div>').append(element(i).clone()).html()
+  outerHTML = (element) ->
+    $('<div>').append(element.clone()).html()
 
   idx = ->
     _.inject(elements(), (result, element) ->
