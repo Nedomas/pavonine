@@ -11,47 +11,23 @@ Cornflake = (->
     state(1)
 
   state = (i) ->
-    interpolate(i)
     CornflakeSteps.changeStep(i)
 
-  interpolate = (i) ->
-    state_part = CornflakeSteps.element(i)
-    state_html = $('<div>').append(state_part.clone()).html()
-    data = step_results[i - 1]
-
-    result = state_html
-
-    _.each keywords(state_html), (keyword) ->
-      value = data[keyword] or throw "No value for #{keyword} in #{data}"
-      result = result.replace('#{' + keyword + '}', value)
-
-    state_part.replaceWith(result)
-
-  keywords = (text) ->
-    all = text.match(/#{[a-z0-9]+}/)
-    _.map all, (keyword) ->
-      keyword.replace('#{', '').replace('}', '')
-
-  bindStep = (model, attributes, action) ->
-    $(action.element).click(_.partial(act, model, attributes, action))
-
-  act = (model, attributes, action, e) ->
+  act = (action, e, attributes) ->
     e.preventDefault()
+    model_element = $(e.target).parent('*[data-model]')
+    throw new Error 'No model specified' if _.isEmpty(model_element)
+    model = model_element.data('model')
 
     connection = new Godfather("#{model}s")
-    attribute_values = _.inject(attributes, (result, element, name) ->
-      result[name] = element.val()
-      result
-    , {})
-
-    connection[action.name](attribute_values).then (record) ->
+    connection[action](attributes).then (record) ->
       step_number = 1
       step_results[step_number] = record
       state(step_number + 1)
 
   return {
-    init: init
-    bindStep: bindStep
+    init: init,
+    act: act
   }
 )()
 
@@ -63,34 +39,25 @@ CornflakeSteps = (->
 
   changeStep = (i) ->
     initializers()
-    window.email = 'tsup'
     hideAllBut(i)
-    binding(i)
-    component = jQueryToReactComponent(element(1))
+    klass_name = "cornflake#{random()}"
+    component = jQueryToReactComponent(klass_name, element(i))
+    element(i).before("<div id='#{klass_name}'>")
+    element(i).hide()
     React.renderComponent(component(),
-      document.getElementById('bind-here'))
+      document.getElementById(klass_name))
 
   coreMixin = ->
     getInitialState: ->
-      value: 'Hello!'
-    getDefaultProps: ->
-      email: 'hater'
-    handleChange: (e) ->
+      email: 'Hello!'
+    onChange: (e) ->
       @setState
-        value: e.target.value
-      console.log('changed')
-    handleClick: (e) ->
-      console.log('yooaaaaaaaaaaaaaaaaaaaaaa')
-      e.preventDefault()
-      debugger
-      # @setState({liked: !this.state.liked})
-    componentDidMount: ->
-      console.log('yoo')
-      # debugger
+        email: e.target.value
+    create: (e) ->
+      Cornflake.act('create', e, @state)
 
-  jQueryToReactComponent = (element) ->
+  jQueryToReactComponent = (klass_name, element) ->
     html = toXHTML(outerHTML(element))
-    klass_name = "Cornflake#{random()}"
 
     jsx = toJSX(klass_name, html)
     toComponent(klass_name, jsx)
@@ -126,19 +93,6 @@ CornflakeSteps = (->
     result = new XMLSerializer().serializeToString(doc)
     /<body>(.*)<\/body>/im.exec(result)
     RegExp.$1
-
-  binding = (i) ->
-    model = element(i).data('model')
-    attributeElements = element(i).find('*[data-attribute]')
-    attributes = _.inject(attributeElements, (result, element) ->
-      result[$(element).data('attribute')] = $(element)
-      result
-    , {})
-
-    actionElement = element(i).find('*[data-action]').first()
-    action = { element: actionElement, name: $(actionElement).data('action') }
-
-    Cornflake.bindStep(model, attributes, action)
 
   hideAllBut = (dont_hide_i) ->
     _.each idx(), (element, i) ->

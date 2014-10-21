@@ -16,11 +16,9 @@ head
     form data-model='subscriber'
       /div data-error=''
       /  | Invalid email
-      input data-attribute='email' value='{this.state.value}' onChange='{this.handleChange}'
-        | {this.state.value}
-      button data-action='create' onClick='{this.handleClick}' Subscribe
-
-    div#bind-here
+      input value='{this.state.email}' onChange='{this.onChange}'
+        | {this.state.email}
+      button onClick='{this.create}' Subscribe
 
     /! Visi su step pradzioj hidden
     form data-model='subscriber' data-step='2'

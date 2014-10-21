@@ -85202,7 +85202,7 @@ module.exports = require('./lib/React');
   var Cornflake, CornflakeSteps, Godfather;
 
   Cornflake = (function() {
-    var act, bindStep, init, interpolate, keywords, state, step_results;
+    var act, init, state, step_results;
     step_results = {};
     init = function() {
       console.log('Here and now');
@@ -85210,43 +85210,18 @@ module.exports = require('./lib/React');
       return state(1);
     };
     state = function(i) {
-      interpolate(i);
       return CornflakeSteps.changeStep(i);
     };
-    interpolate = function(i) {
-      var data, result, state_html, state_part;
-      state_part = CornflakeSteps.element(i);
-      state_html = $('<div>').append(state_part.clone()).html();
-      data = step_results[i - 1];
-      result = state_html;
-      _.each(keywords(state_html), function(keyword) {
-        var value;
-        value = data[keyword] || (function() {
-          throw "No value for " + keyword + " in " + data;
-        })();
-        return result = result.replace('#{' + keyword + '}', value);
-      });
-      return state_part.replaceWith(result);
-    };
-    keywords = function(text) {
-      var all;
-      all = text.match(/#{[a-z0-9]+}/);
-      return _.map(all, function(keyword) {
-        return keyword.replace('#{', '').replace('}', '');
-      });
-    };
-    bindStep = function(model, attributes, action) {
-      return $(action.element).click(_.partial(act, model, attributes, action));
-    };
-    act = function(model, attributes, action, e) {
-      var attribute_values, connection;
+    act = function(action, e, attributes) {
+      var connection, model, model_element;
       e.preventDefault();
+      model_element = $(e.target).parent('*[data-model]');
+      if (_.isEmpty(model_element)) {
+        throw new Error('No model specified');
+      }
+      model = model_element.data('model');
       connection = new Godfather("" + model + "s");
-      attribute_values = _.inject(attributes, function(result, element, name) {
-        result[name] = element.val();
-        return result;
-      }, {});
-      return connection[action.name](attribute_values).then(function(record) {
+      return connection[action](attributes).then(function(record) {
         var step_number;
         step_number = 1;
         step_results[step_number] = record;
@@ -85255,56 +85230,45 @@ module.exports = require('./lib/React');
     };
     return {
       init: init,
-      bindStep: bindStep
+      act: act
     };
   })();
 
   CornflakeSteps = (function() {
-    var HTMLtoJSX, React, binding, changeStep, coreMixin, element, elements, hideAllBut, idx, initializers, jQueryToReactComponent, outerHTML, random, react_tools, toComponent, toJSX, toXHTML;
+    var HTMLtoJSX, React, changeStep, coreMixin, element, elements, hideAllBut, idx, initializers, jQueryToReactComponent, outerHTML, random, react_tools, toComponent, toJSX, toXHTML;
     React = require('react');
     HTMLtoJSX = require('htmltojsx');
     react_tools = require('react-tools');
     changeStep = function(i) {
-      var component;
+      var component, klass_name;
       initializers();
-      window.email = 'tsup';
       hideAllBut(i);
-      binding(i);
-      component = jQueryToReactComponent(element(1));
-      return React.renderComponent(component(), document.getElementById('bind-here'));
+      klass_name = "cornflake" + (random());
+      component = jQueryToReactComponent(klass_name, element(i));
+      element(i).before("<div id='" + klass_name + "'>");
+      element(i).hide();
+      return React.renderComponent(component(), document.getElementById(klass_name));
     };
     coreMixin = function() {
       return {
         getInitialState: function() {
           return {
-            value: 'Hello!'
+            email: 'Hello!'
           };
         },
-        getDefaultProps: function() {
-          return {
-            email: 'hater'
-          };
-        },
-        handleChange: function(e) {
-          this.setState({
-            value: e.target.value
+        onChange: function(e) {
+          return this.setState({
+            email: e.target.value
           });
-          return console.log('changed');
         },
-        handleClick: function(e) {
-          console.log('yooaaaaaaaaaaaaaaaaaaaaaa');
-          e.preventDefault();
-          debugger;
-        },
-        componentDidMount: function() {
-          return console.log('yoo');
+        create: function(e) {
+          return Cornflake.act('create', e, this.state);
         }
       };
     };
-    jQueryToReactComponent = function(element) {
-      var html, jsx, klass_name;
+    jQueryToReactComponent = function(klass_name, element) {
+      var html, jsx;
       html = toXHTML(outerHTML(element));
-      klass_name = "Cornflake" + (random());
       jsx = toJSX(klass_name, html);
       return toComponent(klass_name, jsx);
     };
@@ -85344,21 +85308,6 @@ module.exports = require('./lib/React');
       result = new XMLSerializer().serializeToString(doc);
       /<body>(.*)<\/body>/im.exec(result);
       return RegExp.$1;
-    };
-    binding = function(i) {
-      var action, actionElement, attributeElements, attributes, model;
-      model = element(i).data('model');
-      attributeElements = element(i).find('*[data-attribute]');
-      attributes = _.inject(attributeElements, function(result, element) {
-        result[$(element).data('attribute')] = $(element);
-        return result;
-      }, {});
-      actionElement = element(i).find('*[data-action]').first();
-      action = {
-        element: actionElement,
-        name: $(actionElement).data('action')
-      };
-      return Cornflake.bindStep(model, attributes, action);
     };
     hideAllBut = function(dont_hide_i) {
       return _.each(idx(), function(element, i) {
