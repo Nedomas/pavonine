@@ -10,7 +10,7 @@
 #     # I am from New York
 #     alert "I am from #{new_user.city}"
 # ```
-_ = require('lodash')
+# _ = require('lodash')
 
 Godfather = (endpoint, scope, options) ->
   @endpoint = endpoint
@@ -145,3 +145,5 @@ Godfather::data = (params) ->
   scope: JSON.stringify(@scope)
   extra_find_scopes: JSON.stringify(@extra_find_scopes)
   data: JSON.stringify(params)
+
+module.exports = Godfather

@@ -1,10 +1,11 @@
 gulp = require 'gulp'
-coffee = require 'gulp-coffee'
+# coffee = require 'gulp-coffee'
 gutil = require 'gulp-util'
 watch = require 'gulp-watch'
 slim = require 'gulp-slim'
 browserify = require 'gulp-browserify'
 coffeeify = require 'coffeeify'
+concat = require 'gulp-concat'
 
 gulp.task 'default', ['coffee', 'slim']
 
@@ -20,7 +21,8 @@ gulp.task 'coffee', ->
       extensions: ['.coffee']
     )
     .on('error', gutil.log))
-    .pipe gulp.dest('./dist/js/')
+    .pipe(concat('cornflake.js'))
+    .pipe gulp.dest './dist/js/'
 
 gulp.task 'slim', ->
   gulp.src './src/slim/*.slim'

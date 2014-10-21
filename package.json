@@ -11,6 +11,7 @@
     "gulp-watch": "^1.1.0",
     "gulp-slim": "0.0.10",
     "gulp-browserify": "~0.4.6",
-    "coffeeify": ">=0.7.0"
+    "coffeeify": ">=0.7.0",
+    "gulp-concat": "2.4.1"
   }
 }
