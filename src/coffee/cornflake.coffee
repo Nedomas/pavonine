@@ -3,15 +3,15 @@
 Cornflake = (->
   # _ = require('lodash')
 
-  step_results = {}
-
   init = ->
     console.log('Here and now')
-    Godfather.API_URL = 'http://10.30.0.1:3000'
-    state(1)
+    initializers()
+    CornflakeUI.state(1)
 
-  state = (i) ->
-    CornflakeSteps.changeStep(i)
+  initializers = ->
+    Godfather.API_URL = 'http://10.30.0.1:3000'
+    String::splice = (idx, rem, s) ->
+      (@slice(0, idx) + s + @slice(idx + Math.abs(rem)))
 
   act = (action, e, attributes) ->
     e.preventDefault()
@@ -21,24 +21,28 @@ Cornflake = (->
 
     connection = new Godfather("#{model}s")
     connection[action](attributes).then (record) ->
-      step_number = 1
-      step_results[step_number] = record
-      state(step_number + 1)
+      CornflakeUI.nextState(record)
 
   return {
-    init: init,
+    init: init
     act: act
   }
 )()
 
-CornflakeSteps = (->
+CornflakeUI = (->
   # $ = require('jquery')
   React = require('react')
   HTMLtoJSX = require('htmltojsx')
   react_tools = require('react-tools')
+  step_results = { 0: {} }
+  current_state = 1
 
-  changeStep = (i) ->
-    initializers()
+  nextState = (results) ->
+    step_results[current_state] = results
+    state(current_state + 1)
+
+  state = (i) ->
+    current_state = i
     hideAllBut(i)
     klass_name = "cornflake#{random()}"
     component = jQueryToReactComponent(klass_name, element(i))
@@ -49,12 +53,14 @@ CornflakeSteps = (->
 
   coreMixin = ->
     getInitialState: ->
-      email: 'Hello!'
+      step_results[current_state - 1]
     onChange: (e) ->
       @setState
         email: e.target.value
     create: (e) ->
       Cornflake.act('create', e, @state)
+    update: (e) ->
+      Cornflake.act('update', e, @state)
 
   jQueryToReactComponent = (klass_name, element) ->
     html = toXHTML(outerHTML(element))
@@ -82,10 +88,6 @@ CornflakeSteps = (->
     min = 1
     max = 10000
     Math.floor(Math.random() * (max - min + 1)) + min
-
-  initializers = ->
-    String::splice = (idx, rem, s) ->
-      (@slice(0, idx) + s + @slice(idx + Math.abs(rem)))
 
   toXHTML = (input) ->
     without_spaces = input.replace('\n', '').replace(/\s{2,}/g, '')
@@ -118,7 +120,8 @@ CornflakeSteps = (->
     $('*[data-model], *[data-step]')
 
   return {
-    changeStep: changeStep
+    nextState: nextState
+    state: state
     element: element
   }
 )()

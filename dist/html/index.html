@@ -16,7 +16,7 @@
     </form>
     <!--Visi su step pradzioj hidden-->
     <form data-model="subscriber" data-step="2">
-      You have been subscribed on #{email}<input data-attribute="name" /><button data-action="update"> Save my name</button>
+      You have been subscribed on {this.state.email}<input value="{this.state.name}" /><button onClick="{this.update}">Save my name</button>
     </form>
     <!--kitas stepas kaip ir success handleris gali but-->
     <div data-step="3">

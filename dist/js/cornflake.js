@@ -85199,18 +85199,20 @@ module.exports = require('./lib/React');
 
 },{"./lib/React":584}],702:[function(require,module,exports){
 (function() {
-  var Cornflake, CornflakeSteps, Godfather;
+  var Cornflake, CornflakeUI, Godfather;
 
   Cornflake = (function() {
-    var act, init, state, step_results;
-    step_results = {};
+    var act, init, initializers;
     init = function() {
       console.log('Here and now');
-      Godfather.API_URL = 'http://10.30.0.1:3000';
-      return state(1);
+      initializers();
+      return CornflakeUI.state(1);
     };
-    state = function(i) {
-      return CornflakeSteps.changeStep(i);
+    initializers = function() {
+      Godfather.API_URL = 'http://10.30.0.1:3000';
+      return String.prototype.splice = function(idx, rem, s) {
+        return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
+      };
     };
     act = function(action, e, attributes) {
       var connection, model, model_element;
@@ -85222,10 +85224,7 @@ module.exports = require('./lib/React');
       model = model_element.data('model');
       connection = new Godfather("" + model + "s");
       return connection[action](attributes).then(function(record) {
-        var step_number;
-        step_number = 1;
-        step_results[step_number] = record;
-        return state(step_number + 1);
+        return CornflakeUI.nextState(record);
       });
     };
     return {
@@ -85234,14 +85233,22 @@ module.exports = require('./lib/React');
     };
   })();
 
-  CornflakeSteps = (function() {
-    var HTMLtoJSX, React, changeStep, coreMixin, element, elements, hideAllBut, idx, initializers, jQueryToReactComponent, outerHTML, random, react_tools, toComponent, toJSX, toXHTML;
+  CornflakeUI = (function() {
+    var HTMLtoJSX, React, coreMixin, current_state, element, elements, hideAllBut, idx, jQueryToReactComponent, nextState, outerHTML, random, react_tools, state, step_results, toComponent, toJSX, toXHTML;
     React = require('react');
     HTMLtoJSX = require('htmltojsx');
     react_tools = require('react-tools');
-    changeStep = function(i) {
+    step_results = {
+      0: {}
+    };
+    current_state = 1;
+    nextState = function(results) {
+      step_results[current_state] = results;
+      return state(current_state + 1);
+    };
+    state = function(i) {
       var component, klass_name;
-      initializers();
+      current_state = i;
       hideAllBut(i);
       klass_name = "cornflake" + (random());
       component = jQueryToReactComponent(klass_name, element(i));
@@ -85252,9 +85259,7 @@ module.exports = require('./lib/React');
     coreMixin = function() {
       return {
         getInitialState: function() {
-          return {
-            email: 'Hello!'
-          };
+          return step_results[current_state - 1];
         },
         onChange: function(e) {
           return this.setState({
@@ -85263,6 +85268,9 @@ module.exports = require('./lib/React');
         },
         create: function(e) {
           return Cornflake.act('create', e, this.state);
+        },
+        update: function(e) {
+          return Cornflake.act('update', e, this.state);
         }
       };
     };
@@ -85295,11 +85303,6 @@ module.exports = require('./lib/React');
       min = 1;
       max = 10000;
       return Math.floor(Math.random() * (max - min + 1)) + min;
-    };
-    initializers = function() {
-      return String.prototype.splice = function(idx, rem, s) {
-        return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
-      };
     };
     toXHTML = function(input) {
       var doc, result, without_spaces;
@@ -85336,7 +85339,8 @@ module.exports = require('./lib/React');
       return $('*[data-model], *[data-step]');
     };
     return {
-      changeStep: changeStep,
+      nextState: nextState,
+      state: state,
       element: element
     };
   })();
