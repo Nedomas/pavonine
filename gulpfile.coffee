@@ -3,8 +3,10 @@ gulp = require 'gulp'
 gutil = require 'gulp-util'
 watch = require 'gulp-watch'
 slim = require 'gulp-slim'
-browserify = require 'gulp-browserify'
-coffeeify = require 'coffeeify'
+browserify = require 'browserify'
+coffeeify = require('gulp-coffeeify')
+source = require('vinyl-source-stream')
+# coffeeify = require 'coffeeify'
 concat = require 'gulp-concat'
 
 gulp.task 'default', ['coffee', 'slim']
@@ -15,14 +17,20 @@ gulp.task 'watch', ->
 
 gulp.task 'coffee', ->
   gulp
-    .src('./src/coffee/*.coffee', read: false)
-    .pipe(browserify(
-      transform: ['coffeeify']
-      extensions: ['.coffee']
-    )
-    .on('error', gutil.log))
-    .pipe(concat('cornflake.js'))
-    .pipe gulp.dest './dist/js/'
+    .src('./src/coffee/cornflake.coffee')
+    .pipe(coffeeify())
+    # .pipe(concat('cornflake.js'))
+    .pipe(gulp.dest('./dist/js/'))
+
+  # gulp
+  #   .src('./src/coffee/*.coffee', read: false)
+  #   .pipe(browserify(
+  #     transform: ['coffeeify']
+  #     extensions: ['.coffee']
+  #   )
+  #   .on('error', gutil.log))
+  #   .pipe(concat('cornflake.js'))
+  #   .pipe gulp.dest './dist/js/'
 
 gulp.task 'slim', ->
   gulp.src './src/slim/*.slim'
