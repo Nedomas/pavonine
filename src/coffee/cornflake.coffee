@@ -41,7 +41,7 @@ Cornflake = (->
 
 CornflakeUI = (->
   React = require('react')
-  HTMLtoJSX = require('htmltojsx')
+  HTMLtoJSX = require('../vendor/htmltojsx.min')
   react_tools = require('react-tools')
   step_results = { 0: {} }
   current_state = 1
