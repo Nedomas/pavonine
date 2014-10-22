@@ -38,6 +38,10 @@ CornflakeUI = (->
   step_results = { 0: {} }
   current_state = 1
 
+  previousState = (results) ->
+    step_results[current_state] = results
+    state(current_state - 1)
+
   nextState = (results) ->
     step_results[current_state] = results
     state(current_state + 1)
@@ -65,6 +69,12 @@ CornflakeUI = (->
       Cornflake.act('update', e, @state)
     destroy: (e) ->
       Cornflake.act('destroy', e, @state)
+    previous: (e) ->
+      e.preventDefault()
+      previousState(@state)
+    next: (e) ->
+      e.preventDefault()
+      nextState(@state)
 
   jQueryToReactComponent = (klass_name, element) ->
     html = toXHTML(outerHTML(element))
@@ -85,14 +95,14 @@ CornflakeUI = (->
       outputClassName: klass_name
 
     jsx_code = "/** @jsx React.DOM */\n" + converter.convert(html)
-    jsx_code = jsx_code.splice(64, 0, 'mixins: [CoreMixin],\n  ')
+    render_index = jsx_code.match('render').index
+    jsx_code = jsx_code.splice(render_index, 0, 'mixins: [CoreMixin],\n  ')
 
     jsx_code = jsx_code.replace(/"{/g, '{').replace(/}"/g, '}')
     jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick')
     jsx_code = replaceToBindings(jsx_code)
     jsx_code = replaceToActions(jsx_code)
     jsx_code = replaceToState(jsx_code)
-    console.log jsx_code
     jsx_code
 
   wrapInJSX = (klass_name, html) ->
@@ -111,6 +121,7 @@ CornflakeUI = (->
     "#{code}\n"
 
   replaceToActions = (jsx_code) ->
+    actions = ['create', 'update', 'destroy', 'previous', 'next']
     re = /{([a-z]*)}/gi
     result = jsx_code
 
@@ -121,7 +132,7 @@ CornflakeUI = (->
         # {create} => {this.create}
         attribute = matched[1]
 
-        if _.include(['create', 'update', 'destroy'], attribute)
+        if _.include(actions, attribute)
           length = matched[0].length
           react_tag = "{this.#{attribute}}"
           result = result.splice(matched.index, length, react_tag)
@@ -179,11 +190,17 @@ CornflakeUI = (->
     RegExp.$1
 
   hideAllBut = (dont_hide_i) ->
-    _.each idx(), (element, i) ->
-      if parseInt(i) == dont_hide_i
-        element.show()
+    _.each $('*[data-model], *[data-step]'), (element) ->
+      jelement = $(element)
+      step = jelement.data('step') or 1
+
+      if parseInt(step) == dont_hide_i
+        jelement.show()
       else
-        element.hide()
+        if jelement.data('reactid')
+          jelement.remove()
+        else
+          jelement.hide()
 
   element = (i) ->
     idx()[i]

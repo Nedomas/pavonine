@@ -24,10 +24,12 @@ head
 
     div data-model='subscriber' data-step='3'
       | You are {name} with email {email}
+      button onClick='{previous}' Go previous
       button onClick='{destroy}' Kill me
 
     /! kitas stepas kaip ir success handleris gali but
     div data-step='4'
       p All steps were done!
-/
+      button onClick='{previous}' Go previous
+
 /    login model='user'

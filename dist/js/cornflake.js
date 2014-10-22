@@ -85236,7 +85236,7 @@ module.exports = require('./lib/React');
   })();
 
   CornflakeUI = (function() {
-    var HTMLtoJSX, React, coreMixin, current_state, element, elements, hideAllBut, idx, jQueryToReactComponent, l, nextState, outerHTML, random, react_tools, replaceToActions, replaceToBindings, replaceToState, state, step_results, toComponent, toJSX, toXHTML, wrapInJSX;
+    var HTMLtoJSX, React, coreMixin, current_state, element, elements, hideAllBut, idx, jQueryToReactComponent, l, nextState, outerHTML, previousState, random, react_tools, replaceToActions, replaceToBindings, replaceToState, state, step_results, toComponent, toJSX, toXHTML, wrapInJSX;
     React = require('react');
     HTMLtoJSX = require('htmltojsx');
     react_tools = require('react-tools');
@@ -85244,6 +85244,10 @@ module.exports = require('./lib/React');
       0: {}
     };
     current_state = 1;
+    previousState = function(results) {
+      step_results[current_state] = results;
+      return state(current_state - 1);
+    };
     nextState = function(results) {
       step_results[current_state] = results;
       return state(current_state + 1);
@@ -85277,6 +85281,14 @@ module.exports = require('./lib/React');
         },
         destroy: function(e) {
           return Cornflake.act('destroy', e, this.state);
+        },
+        previous: function(e) {
+          e.preventDefault();
+          return previousState(this.state);
+        },
+        next: function(e) {
+          e.preventDefault();
+          return nextState(this.state);
         }
       };
     };
@@ -85294,19 +85306,19 @@ module.exports = require('./lib/React');
       return eval(klass_name);
     };
     toJSX = function(klass_name, html) {
-      var converter, jsx_code;
+      var converter, jsx_code, render_index;
       converter = new HTMLtoJSX({
         createClass: true,
         outputClassName: klass_name
       });
       jsx_code = "/** @jsx React.DOM */\n" + converter.convert(html);
-      jsx_code = jsx_code.splice(64, 0, 'mixins: [CoreMixin],\n  ');
+      render_index = jsx_code.match('render').index;
+      jsx_code = jsx_code.splice(render_index, 0, 'mixins: [CoreMixin],\n  ');
       jsx_code = jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
       jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick');
       jsx_code = replaceToBindings(jsx_code);
       jsx_code = replaceToActions(jsx_code);
       jsx_code = replaceToState(jsx_code);
-      console.log(jsx_code);
       return jsx_code;
     };
     wrapInJSX = function(klass_name, html) {
@@ -85317,14 +85329,15 @@ module.exports = require('./lib/React');
       return "" + code + "\n";
     };
     replaceToActions = function(jsx_code) {
-      var attribute, length, matched, re, react_tag, result;
+      var actions, attribute, length, matched, re, react_tag, result;
+      actions = ['create', 'update', 'destroy', 'previous', 'next'];
       re = /{([a-z]*)}/gi;
       result = jsx_code;
       while (true) {
         matched = re.exec(result);
         if (matched) {
           attribute = matched[1];
-          if (_.include(['create', 'update', 'destroy'], attribute)) {
+          if (_.include(actions, attribute)) {
             length = matched[0].length;
             react_tag = "{this." + attribute + "}";
             result = result.splice(matched.index, length, react_tag);
@@ -85384,11 +85397,18 @@ module.exports = require('./lib/React');
       return RegExp.$1;
     };
     hideAllBut = function(dont_hide_i) {
-      return _.each(idx(), function(element, i) {
-        if (parseInt(i) === dont_hide_i) {
-          return element.show();
+      return _.each($('*[data-model], *[data-step]'), function(element) {
+        var jelement, step;
+        jelement = $(element);
+        step = jelement.data('step') || 1;
+        if (parseInt(step) === dont_hide_i) {
+          return jelement.show();
         } else {
-          return element.hide();
+          if (jelement.data('reactid')) {
+            return jelement.remove();
+          } else {
+            return jelement.hide();
+          }
         }
       });
     };
