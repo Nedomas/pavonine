@@ -12,11 +12,11 @@
   <body>
     <!--Dedu tiesiai ant inputu-->
     <form data-model="subscriber">
-      <input value="{email}">{email}</input><input value="{password}">{password}</input><button onClick="{this.create}">Subscribe</button>
+      <input value="{email}">{email}</input><button onClick="{create}">Subscribe</button>
     </form>
     <!--Visi su step pradzioj hidden-->
     <form data-model="subscriber" data-step="2">
-      You have been subscribed on {this.state.email}<input value="{this.state.name}" /><button onClick="{this.update}">Save my name</button>
+      You have been subscribed on {email}<input value="{name}" /><button onClick="{update}">Save my name</button>
     </form>
     <!--kitas stepas kaip ir success handleris gali but-->
     <div data-step="3">

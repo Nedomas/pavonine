@@ -85210,8 +85210,24 @@ module.exports = require('./lib/React');
     };
     initializers = function() {
       Godfather.API_URL = 'http://10.30.0.1:3000';
-      return String.prototype.splice = function(idx, rem, s) {
+      String.prototype.splice = function(idx, rem, s) {
         return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
+      };
+      return RegExp.prototype.execAll = function(string) {
+        var group, match, matches;
+        matches = [];
+        while (match = this.exec(string)) {
+          matches.push((function() {
+            var _i, _len, _results;
+            _results = [];
+            for (_i = 0, _len = match.length; _i < _len; _i++) {
+              group = match[_i];
+              _results.push(group);
+            }
+            return _results;
+          })());
+        }
+        return matches;
       };
     };
     act = function(action, e, attributes) {
@@ -85234,7 +85250,7 @@ module.exports = require('./lib/React');
   })();
 
   CornflakeUI = (function() {
-    var HTMLtoJSX, React, coreMixin, current_state, element, elements, hideAllBut, idx, jQueryToReactComponent, nextState, outerHTML, random, react_tools, replaceToBindings, state, step_results, toComponent, toJSX, toXHTML;
+    var HTMLtoJSX, React, coreMixin, current_state, element, elements, hideAllBut, idx, jQueryToReactComponent, nextState, outerHTML, random, react_tools, replaceToActions, replaceToBindings, replaceToState, state, step_results, toComponent, toJSX, toXHTML;
     React = require('react');
     HTMLtoJSX = require('htmltojsx');
     react_tools = require('react-tools');
@@ -85261,10 +85277,11 @@ module.exports = require('./lib/React');
         getInitialState: function() {
           return step_results[current_state - 1];
         },
-        onChange: function(e) {
-          return this.setState({
-            email: e.target.value
-          });
+        onChange: function(attribute, e) {
+          var attribute_hash;
+          attribute_hash = {};
+          attribute_hash[attribute] = e.target.value;
+          return this.setState(attribute_hash);
         },
         create: function(e) {
           return Cornflake.act('create', e, this.state);
@@ -85298,24 +85315,62 @@ module.exports = require('./lib/React');
       jsx_code = jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
       jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick');
       jsx_code = replaceToBindings(jsx_code);
-      debugger;
+      jsx_code = replaceToActions(jsx_code);
+      jsx_code = replaceToState(jsx_code);
+      return jsx_code;
     };
-    replaceToBindings = function(jsx_code, from) {
-      var attribute, m, matched, new_line, re, result;
-      re = /value={(.+?)}/ig;
+    replaceToActions = function(jsx_code) {
+      var attribute, length, matched, re, react_tag, result;
+      re = /{([a-z]*)}/gi;
       result = jsx_code;
-      m = null;
       while (true) {
         matched = re.exec(result);
         if (matched) {
           attribute = matched[1];
-          new_line = "value={" + attribute + "} onChange={_.partial(this.onChange, '" + attribute + "')}";
-          result = result.splice(matched.index, 0, new_line);
+          if (_.include(['create', 'update', 'destroy'], attribute)) {
+            length = matched[0].length;
+            react_tag = "{this." + attribute + "}";
+            result = result.splice(matched.index, length, react_tag);
+          }
         } else {
           break;
         }
       }
-      debugger;
+      return result;
+    };
+    replaceToState = function(jsx_code) {
+      var attribute, length, matched, re, react_tag, result;
+      re = /{([a-zA-Z]*)}/gi;
+      result = jsx_code;
+      while (true) {
+        matched = re.exec(result);
+        if (matched) {
+          console.log(matched);
+          attribute = matched[1];
+          length = matched[0].length;
+          react_tag = "{this.state." + attribute + "}";
+          result = result.splice(matched.index, length, react_tag);
+        } else {
+          break;
+        }
+      }
+      return result;
+    };
+    replaceToBindings = function(jsx_code) {
+      var attribute, length, matched, new_line, re, result;
+      re = /value={(.+?)}/gi;
+      result = jsx_code;
+      while (true) {
+        matched = re.exec(result);
+        if (matched) {
+          attribute = matched[1];
+          length = matched[0].length;
+          new_line = " onChange={_.partial(this.onChange, '" + attribute + "')}";
+          result = result.splice(matched.index + length, 0, new_line);
+        } else {
+          break;
+        }
+      }
       return result;
     };
     random = function() {

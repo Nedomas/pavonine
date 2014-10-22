@@ -12,6 +12,12 @@ Cornflake = (->
     Godfather.API_URL = 'http://10.30.0.1:3000'
     String::splice = (idx, rem, s) ->
       (@slice(0, idx) + s + @slice(idx + Math.abs(rem)))
+    RegExp::execAll = (string) ->
+      matches = []
+      while match = @exec string
+        matches.push(group for group in match)
+
+      matches
 
   act = (action, e, attributes) ->
     e.preventDefault()
@@ -54,9 +60,10 @@ CornflakeUI = (->
   coreMixin = ->
     getInitialState: ->
       step_results[current_state - 1]
-    onChange: (e) ->
-      @setState
-        email: e.target.value
+    onChange: (attribute, e) ->
+      attribute_hash = {}
+      attribute_hash[attribute] = e.target.value
+      @setState(attribute_hash)
     create: (e) ->
       Cornflake.act('create', e, @state)
     update: (e) ->
@@ -84,12 +91,51 @@ CornflakeUI = (->
     jsx_code = jsx_code.replace(/"{/g, '{').replace(/}"/g, '}')
     jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick')
     jsx_code = replaceToBindings(jsx_code)
-    debugger
+    jsx_code = replaceToActions(jsx_code)
+    jsx_code = replaceToState(jsx_code)
+    jsx_code
 
-  replaceToBindings = (jsx_code, from) ->
-    re = /value={(.+?)}/ig
+  replaceToActions = (jsx_code) ->
+    re = /{([a-z]*)}/gi
     result = jsx_code
-    m = null
+
+    loop
+      matched = re.exec(result)
+
+      if matched
+        # {create} => {this.create}
+        attribute = matched[1]
+
+        if _.include(['create', 'update', 'destroy'], attribute)
+          length = matched[0].length
+          react_tag = "{this.#{attribute}}"
+          result = result.splice(matched.index, length, react_tag)
+      else
+        break
+
+    result
+
+  replaceToState = (jsx_code) ->
+    re = /{([a-zA-Z]*)}/gi
+    result = jsx_code
+
+    loop
+      matched = re.exec(result)
+
+      if matched
+        # {email} => {this.state.email}
+        attribute = matched[1]
+        length = matched[0].length
+        react_tag = "{this.state.#{attribute}}"
+        result = result.splice(matched.index, length, react_tag)
+      else
+        break
+
+    result
+
+  replaceToBindings = (jsx_code) ->
+    re = /value={(.+?)}/gi
+    result = jsx_code
 
     loop
       matched = re.exec(result)
@@ -97,26 +143,13 @@ CornflakeUI = (->
       if matched
         # value={email} => value={email} onChange={_.partial(this.onChange)}
         attribute = matched[1]
-        new_line = "value={#{attribute}} onChange={_.partial(this.onChange, '#{attribute}')}"
-        result = result.splice(matched.index, 0, new_line)
-        # console.log(m[1], m[2])
+        length = matched[0].length
+        new_line = " onChange={_.partial(this.onChange, '#{attribute}')}"
+        result = result.splice(matched.index + length, 0, new_line)
       else
         break
 
-    debugger
     result
-
-#     matched = jsx_code.match(/value={(.+?)}/ig)
-#
-#     if matched
-#       debugger
-#       # # value={email} => value={email} onChange={_.partial(this.onChange)}
-#       attribute = matched[1]
-#       new_line = "value={#{attribute}} onChange={_.partial(this.onChange, '#{attribute}')}"
-#       # jsx_code = jsx_code.splice(matched.index, 0, new_line)
-#       # replaceToBindings(jsx_code)
-#     else
-#       jsx_code
 
   random = ->
     min = 1
