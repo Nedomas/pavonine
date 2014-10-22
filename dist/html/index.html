@@ -18,9 +18,14 @@
     <form data-model="subscriber" data-step="2">
       You have been subscribed on {email}<input value="{name}" /><button onClick="{update}">Save my name</button>
     </form>
+    <div data-model="subscriber" data-step="3">
+      You are {name} with email {email}<button onClick="{destroy}">Kill me</button>
+    </div>
     <!--kitas stepas kaip ir success handleris gali but-->
-    <div data-step="3">
-      All steps were done!
+    <div data-step="4">
+      <p>
+        All steps were done!
+      </p>
     </div>
   </body>
 </head>

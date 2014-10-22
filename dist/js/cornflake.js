@@ -85210,24 +85210,8 @@ module.exports = require('./lib/React');
     };
     initializers = function() {
       Godfather.API_URL = 'http://10.30.0.1:3000';
-      String.prototype.splice = function(idx, rem, s) {
+      return String.prototype.splice = function(idx, rem, s) {
         return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
-      };
-      return RegExp.prototype.execAll = function(string) {
-        var group, match, matches;
-        matches = [];
-        while (match = this.exec(string)) {
-          matches.push((function() {
-            var _i, _len, _results;
-            _results = [];
-            for (_i = 0, _len = match.length; _i < _len; _i++) {
-              group = match[_i];
-              _results.push(group);
-            }
-            return _results;
-          })());
-        }
-        return matches;
       };
     };
     act = function(action, e, attributes) {
@@ -85239,7 +85223,9 @@ module.exports = require('./lib/React');
       }
       model = model_element.data('model');
       connection = new Godfather("" + model + "s");
-      return connection[action](attributes).then(function(record) {
+      return connection[action](attributes).then(function(resp) {
+        var record;
+        record = _.isObject(resp) ? resp : null;
         return CornflakeUI.nextState(record);
       });
     };
@@ -85250,7 +85236,7 @@ module.exports = require('./lib/React');
   })();
 
   CornflakeUI = (function() {
-    var HTMLtoJSX, React, coreMixin, current_state, element, elements, hideAllBut, idx, jQueryToReactComponent, nextState, outerHTML, random, react_tools, replaceToActions, replaceToBindings, replaceToState, state, step_results, toComponent, toJSX, toXHTML;
+    var HTMLtoJSX, React, coreMixin, current_state, element, elements, hideAllBut, idx, jQueryToReactComponent, l, nextState, outerHTML, random, react_tools, replaceToActions, replaceToBindings, replaceToState, state, step_results, toComponent, toJSX, toXHTML, wrapInJSX;
     React = require('react');
     HTMLtoJSX = require('htmltojsx');
     react_tools = require('react-tools');
@@ -85288,6 +85274,9 @@ module.exports = require('./lib/React');
         },
         update: function(e) {
           return Cornflake.act('update', e, this.state);
+        },
+        destroy: function(e) {
+          return Cornflake.act('destroy', e, this.state);
         }
       };
     };
@@ -85317,7 +85306,15 @@ module.exports = require('./lib/React');
       jsx_code = replaceToBindings(jsx_code);
       jsx_code = replaceToActions(jsx_code);
       jsx_code = replaceToState(jsx_code);
+      console.log(jsx_code);
       return jsx_code;
+    };
+    wrapInJSX = function(klass_name, html) {
+      var result;
+      return result = l('/** @jsx React.DOM */') + l("var " + klass_name + " = React.createClass({") + l('  mixins: [CoreMixin],') + l('  render: function() {') + l('    return (') + l("      " + html) + l('    );') + l('  }') + l('});');
+    };
+    l = function(code) {
+      return "" + code + "\n";
     };
     replaceToActions = function(jsx_code) {
       var attribute, length, matched, re, react_tag, result;
@@ -85345,7 +85342,6 @@ module.exports = require('./lib/React');
       while (true) {
         matched = re.exec(result);
         if (matched) {
-          console.log(matched);
           attribute = matched[1];
           length = matched[0].length;
           react_tag = "{this.state." + attribute + "}";

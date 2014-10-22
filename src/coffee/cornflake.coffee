@@ -12,12 +12,6 @@ Cornflake = (->
     Godfather.API_URL = 'http://10.30.0.1:3000'
     String::splice = (idx, rem, s) ->
       (@slice(0, idx) + s + @slice(idx + Math.abs(rem)))
-    RegExp::execAll = (string) ->
-      matches = []
-      while match = @exec string
-        matches.push(group for group in match)
-
-      matches
 
   act = (action, e, attributes) ->
     e.preventDefault()
@@ -26,7 +20,8 @@ Cornflake = (->
     model = model_element.data('model')
 
     connection = new Godfather("#{model}s")
-    connection[action](attributes).then (record) ->
+    connection[action](attributes).then (resp) ->
+      record = if _.isObject(resp) then resp else null
       CornflakeUI.nextState(record)
 
   return {
@@ -68,10 +63,11 @@ CornflakeUI = (->
       Cornflake.act('create', e, @state)
     update: (e) ->
       Cornflake.act('update', e, @state)
+    destroy: (e) ->
+      Cornflake.act('destroy', e, @state)
 
   jQueryToReactComponent = (klass_name, element) ->
     html = toXHTML(outerHTML(element))
-
     jsx = toJSX(klass_name, html)
     toComponent(klass_name, jsx)
 
@@ -82,18 +78,37 @@ CornflakeUI = (->
     eval(klass_name)
 
   toJSX = (klass_name, html) ->
+    # jsx_code = wrapInJSX(klass_name, html)
+
     converter = new HTMLtoJSX
       createClass: true
       outputClassName: klass_name
 
     jsx_code = "/** @jsx React.DOM */\n" + converter.convert(html)
     jsx_code = jsx_code.splice(64, 0, 'mixins: [CoreMixin],\n  ')
+
     jsx_code = jsx_code.replace(/"{/g, '{').replace(/}"/g, '}')
     jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick')
     jsx_code = replaceToBindings(jsx_code)
     jsx_code = replaceToActions(jsx_code)
     jsx_code = replaceToState(jsx_code)
+    console.log jsx_code
     jsx_code
+
+  wrapInJSX = (klass_name, html) ->
+    result =
+      l('/** @jsx React.DOM */') +
+      l("var #{klass_name} = React.createClass({") +
+      l('  mixins: [CoreMixin],') +
+      l('  render: function() {') +
+      l('    return (') +
+      l("      #{html}") +
+      l('    );') +
+      l('  }') +
+      l('});')
+
+  l = (code) ->
+    "#{code}\n"
 
   replaceToActions = (jsx_code) ->
     re = /{([a-z]*)}/gi
