@@ -83,6 +83,40 @@ CornflakeUI = (->
     jsx_code = jsx_code.splice(64, 0, 'mixins: [CoreMixin],\n  ')
     jsx_code = jsx_code.replace(/"{/g, '{').replace(/}"/g, '}')
     jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick')
+    jsx_code = replaceToBindings(jsx_code)
+    debugger
+
+  replaceToBindings = (jsx_code, from) ->
+    re = /value={(.+?)}/ig
+    result = jsx_code
+    m = null
+
+    loop
+      matched = re.exec(result)
+
+      if matched
+        # value={email} => value={email} onChange={_.partial(this.onChange)}
+        attribute = matched[1]
+        new_line = "value={#{attribute}} onChange={_.partial(this.onChange, '#{attribute}')}"
+        result = result.splice(matched.index, 0, new_line)
+        # console.log(m[1], m[2])
+      else
+        break
+
+    debugger
+    result
+
+#     matched = jsx_code.match(/value={(.+?)}/ig)
+#
+#     if matched
+#       debugger
+#       # # value={email} => value={email} onChange={_.partial(this.onChange)}
+#       attribute = matched[1]
+#       new_line = "value={#{attribute}} onChange={_.partial(this.onChange, '#{attribute}')}"
+#       # jsx_code = jsx_code.splice(matched.index, 0, new_line)
+#       # replaceToBindings(jsx_code)
+#     else
+#       jsx_code
 
   random = ->
     min = 1

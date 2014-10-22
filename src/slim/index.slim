@@ -10,10 +10,14 @@ head
   body
     /! Dedu tiesiai ant inputu
     form data-model='subscriber'
+      input value='{email}'
+        | {email}
+      input value='{password}'
+        | {password}
       /div data-error=''
       /  | Invalid email
-      input value='{this.state.email}' onChange='{this.onChange}'
-        | {this.state.email}
+      /input value='{this.state.email}' onChange='{this.onChange}'
+      /  | {this.state.email}
       button onClick='{this.create}' Subscribe
 
     /! Visi su step pradzioj hidden

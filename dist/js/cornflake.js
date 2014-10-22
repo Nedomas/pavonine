@@ -85234,7 +85234,7 @@ module.exports = require('./lib/React');
   })();
 
   CornflakeUI = (function() {
-    var HTMLtoJSX, React, coreMixin, current_state, element, elements, hideAllBut, idx, jQueryToReactComponent, nextState, outerHTML, random, react_tools, state, step_results, toComponent, toJSX, toXHTML;
+    var HTMLtoJSX, React, coreMixin, current_state, element, elements, hideAllBut, idx, jQueryToReactComponent, nextState, outerHTML, random, react_tools, replaceToBindings, state, step_results, toComponent, toJSX, toXHTML;
     React = require('react');
     HTMLtoJSX = require('htmltojsx');
     react_tools = require('react-tools');
@@ -85296,7 +85296,27 @@ module.exports = require('./lib/React');
       jsx_code = "/** @jsx React.DOM */\n" + converter.convert(html);
       jsx_code = jsx_code.splice(64, 0, 'mixins: [CoreMixin],\n  ');
       jsx_code = jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
-      return jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick');
+      jsx_code = jsx_code.replace(/onchange/g, 'onChange').replace(/onclick/g, 'onClick');
+      jsx_code = replaceToBindings(jsx_code);
+      debugger;
+    };
+    replaceToBindings = function(jsx_code, from) {
+      var attribute, m, matched, new_line, re, result;
+      re = /value={(.+?)}/ig;
+      result = jsx_code;
+      m = null;
+      while (true) {
+        matched = re.exec(result);
+        if (matched) {
+          attribute = matched[1];
+          new_line = "value={" + attribute + "} onChange={_.partial(this.onChange, '" + attribute + "')}";
+          result = result.splice(matched.index, 0, new_line);
+        } else {
+          break;
+        }
+      }
+      debugger;
+      return result;
     };
     random = function() {
       var max, min;
