@@ -1,6 +1,6 @@
 Databound = require 'databound'
-_ = require('lodash')
-$ = require('jquery')
+_ = require 'lodash'
+$ = require 'jquery'
 
 Cornflake = (->
 
@@ -11,14 +11,6 @@ Cornflake = (->
 
   initializers = ->
     Databound.API_URL = 'http://10.30.0.1:3000'
-    Databound::request = (action, params) ->
-      $.post @url(action), @data(params), 'json'
-
-    Databound::promise = (result) ->
-      deferred = $.Deferred()
-      deferred.resolve result
-      deferred.promise()
-
     String::splice = (idx, rem, s) ->
       (@slice(0, idx) + s + @slice(idx + Math.abs(rem)))
 

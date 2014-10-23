@@ -12,6 +12,7 @@ gulp.task 'default', ['coffee', 'slim']
 
 gulp.task 'watch', ->
   gulp.watch('./src/coffee/*.coffee', ['coffee'])
+  gulp.watch('./node_modules/**/*.js', ['coffee'])
   gulp.watch('./src/slim/*.slim', ['slim'])
 
 gulp.task 'coffee', ->
