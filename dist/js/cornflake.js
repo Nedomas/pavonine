@@ -31,7 +31,6 @@ Databound.prototype.promise = function(result) {
 Databound.prototype.where = function(params) {
   var _this;
   _this = this;
-  console.log('ddd');
   return this.request('where', params).then(function(records) {
     var computed_records;
     records = records.concat(_this.seeds);
@@ -35552,7 +35551,90 @@ exports.visitorList = [
 /*global exports:true*/
 "use strict";
 
-var Syntax = require('esprima-fb').Syntax;
+var Syntax = {
+        ArrayExpression: 'ArrayExpression',
+        ArrayPattern: 'ArrayPattern',
+        ArrowFunctionExpression: 'ArrowFunctionExpression',
+        AssignmentExpression: 'AssignmentExpression',
+        BinaryExpression: 'BinaryExpression',
+        BlockStatement: 'BlockStatement',
+        BreakStatement: 'BreakStatement',
+        CallExpression: 'CallExpression',
+        CatchClause: 'CatchClause',
+        ClassBody: 'ClassBody',
+        ClassDeclaration: 'ClassDeclaration',
+        ClassExpression: 'ClassExpression',
+        ClassProperty: 'ClassProperty',
+        ComprehensionBlock: 'ComprehensionBlock',
+        ComprehensionExpression: 'ComprehensionExpression',
+        ConditionalExpression: 'ConditionalExpression',
+        ContinueStatement: 'ContinueStatement',
+        DebuggerStatement: 'DebuggerStatement',
+        DoWhileStatement: 'DoWhileStatement',
+        EmptyStatement: 'EmptyStatement',
+        ExportDeclaration: 'ExportDeclaration',
+        ExportBatchSpecifier: 'ExportBatchSpecifier',
+        ExportSpecifier: 'ExportSpecifier',
+        ExpressionStatement: 'ExpressionStatement',
+        ForInStatement: 'ForInStatement',
+        ForOfStatement: 'ForOfStatement',
+        ForStatement: 'ForStatement',
+        FunctionDeclaration: 'FunctionDeclaration',
+        FunctionExpression: 'FunctionExpression',
+        Identifier: 'Identifier',
+        IfStatement: 'IfStatement',
+        ImportDeclaration: 'ImportDeclaration',
+        ImportSpecifier: 'ImportSpecifier',
+        LabeledStatement: 'LabeledStatement',
+        Literal: 'Literal',
+        LogicalExpression: 'LogicalExpression',
+        MemberExpression: 'MemberExpression',
+        MethodDefinition: 'MethodDefinition',
+        ModuleDeclaration: 'ModuleDeclaration',
+        NewExpression: 'NewExpression',
+        ObjectExpression: 'ObjectExpression',
+        ObjectPattern: 'ObjectPattern',
+        ObjectTypeAnnotation: 'ObjectTypeAnnotation',
+        OptionalParameter: 'OptionalParameter',
+        ParametricTypeAnnotation: 'ParametricTypeAnnotation',
+        ParametricallyTypedIdentifier: 'ParametricallyTypedIdentifier',
+        Program: 'Program',
+        Property: 'Property',
+        ReturnStatement: 'ReturnStatement',
+        SequenceExpression: 'SequenceExpression',
+        SpreadElement: 'SpreadElement',
+        SpreadProperty: 'SpreadProperty',
+        SwitchCase: 'SwitchCase',
+        SwitchStatement: 'SwitchStatement',
+        TaggedTemplateExpression: 'TaggedTemplateExpression',
+        TemplateElement: 'TemplateElement',
+        TemplateLiteral: 'TemplateLiteral',
+        ThisExpression: 'ThisExpression',
+        ThrowStatement: 'ThrowStatement',
+        TryStatement: 'TryStatement',
+        TypeAnnotatedIdentifier: 'TypeAnnotatedIdentifier',
+        TypeAnnotation: 'TypeAnnotation',
+        UnaryExpression: 'UnaryExpression',
+        UpdateExpression: 'UpdateExpression',
+        VariableDeclaration: 'VariableDeclaration',
+        VariableDeclarator: 'VariableDeclarator',
+        VoidTypeAnnotation: 'VoidTypeAnnotation',
+        WhileStatement: 'WhileStatement',
+        WithStatement: 'WithStatement',
+        XJSIdentifier: 'XJSIdentifier',
+        XJSNamespacedName: 'XJSNamespacedName',
+        XJSMemberExpression: 'XJSMemberExpression',
+        XJSEmptyExpression: 'XJSEmptyExpression',
+        XJSExpressionContainer: 'XJSExpressionContainer',
+        XJSElement: 'XJSElement',
+        XJSClosingElement: 'XJSClosingElement',
+        XJSOpeningElement: 'XJSOpeningElement',
+        XJSAttribute: 'XJSAttribute',
+        XJSSpreadAttribute: 'XJSSpreadAttribute',
+        XJSText: 'XJSText',
+        YieldExpression: 'YieldExpression',
+        AwaitExpression: 'AwaitExpression'
+    };
 var utils = require('jstransform/src/utils');
 
 var FALLBACK_TAGS = require('./xjs').knownTags;
@@ -35823,7 +35905,7 @@ exports.visitorList = [
   visitReactTag
 ];
 
-},{"./xjs":41,"esprima-fb":13,"jstransform/src/utils":28}],40:[function(require,module,exports){
+},{"./xjs":41,"jstransform/src/utils":28}],40:[function(require,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -54902,7 +54984,6 @@ module.exports = require('./lib/React');
   Cornflake = (function() {
     var act, init, initializers;
     init = function() {
-      debugger;
       console.log('Here and now');
       initializers();
       return CornflakeUI.state(1);
@@ -55000,6 +55081,7 @@ module.exports = require('./lib/React');
     toComponent = function(klass_name, jsx) {
       var CoreMixin, component_code;
       CoreMixin = coreMixin();
+      debugger;
       component_code = react_tools.transform(jsx);
       eval(component_code);
       return eval(klass_name);

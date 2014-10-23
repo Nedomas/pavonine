@@ -3,10 +3,11 @@ gutil = require 'gulp-util'
 watch = require 'gulp-watch'
 slim = require 'gulp-slim'
 browserify = require 'browserify'
-coffeeify = require('gulp-coffeeify')
-source = require('vinyl-source-stream')
+coffeeify = require 'gulp-coffeeify'
+source = require 'vinyl-source-stream'
 concat = require 'gulp-concat'
-uglify = require('gulp-uglify')
+uglify = require 'gulp-uglify'
+rename = require 'gulp-rename'
 
 gulp.task 'default', ['coffee', 'slim']
 
@@ -21,12 +22,15 @@ gulp.task 'coffee', ->
     .pipe(coffeeify())
     .pipe(gulp.dest('./dist/js/'))
 
-gulp.task 'uglycoffee', ->
+gulp.task 'ugly', ->
   gulp
     .src('./src/coffee/cornflake.coffee')
     .pipe(coffeeify())
     .pipe(uglify())
+    .pipe(rename('cornflake.min.js'))
     .pipe(gulp.dest('./dist/js/'))
+
+gulp.task 'build', ['coffee', 'slim', 'ugly']
 
 gulp.task 'slim', ->
   gulp.src './src/slim/*.slim'

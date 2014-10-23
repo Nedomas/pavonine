@@ -83,6 +83,7 @@ CornflakeUI = (->
 
   toComponent = (klass_name, jsx) ->
     CoreMixin = coreMixin()
+    debugger
     component_code = react_tools.transform(jsx)
     eval(component_code)
     eval(klass_name)
