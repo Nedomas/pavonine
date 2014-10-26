@@ -1,12 +1,7 @@
 Converter = module.exports = (->
-  React = require('react')
-  HTMLtoJSX = require('../vendor/htmltojsx.min')
-  react_tools = require('react-tools')
-  Memory = require './memory'
-  ReactMixin = require './react_mixin'
+  react_tools = require 'react-tools'
+  HTMLtoJSX = require '../vendor/htmltojsx.min'
   Replacer = require './replacer'
-  _ = require 'lodash'
-  $ = require 'jquery'
 
   htmlToReactComponent = (klass_name, element) ->
     xhtml = toXHTML(element)
@@ -15,6 +10,9 @@ Converter = module.exports = (->
 
   toComponent = (klass_name, jsx) ->
     component_code = react_tools.transform(jsx)
+    ReactMixin = require './react_mixin'
+    React = require 'react'
+    _ = require 'lodash'
     eval(component_code)
     eval(klass_name)
 

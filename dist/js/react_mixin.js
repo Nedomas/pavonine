@@ -54980,15 +54980,10 @@ module.exports = require('./lib/React');
   var Converter;
 
   Converter = module.exports = (function() {
-    var $, HTMLtoJSX, Memory, React, ReactMixin, Replacer, htmlToReactComponent, l, react_tools, toComponent, toJSX, toXHTML, wrapInJSX, _;
-    React = require('react');
-    HTMLtoJSX = require('../vendor/htmltojsx.min');
+    var HTMLtoJSX, Replacer, htmlToReactComponent, l, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
     react_tools = require('react-tools');
-    Memory = require('./memory');
-    ReactMixin = require('./react_mixin');
+    HTMLtoJSX = require('../vendor/htmltojsx.min');
     Replacer = require('./replacer');
-    _ = require('lodash');
-    $ = require('jquery');
     htmlToReactComponent = function(klass_name, element) {
       var jsx, xhtml;
       xhtml = toXHTML(element);
@@ -54996,8 +54991,11 @@ module.exports = require('./lib/React');
       return toComponent(klass_name, jsx);
     };
     toComponent = function(klass_name, jsx) {
-      var component_code;
+      var React, ReactMixin, component_code, _;
       component_code = react_tools.transform(jsx);
+      ReactMixin = require('./react_mixin');
+      React = require('react');
+      _ = require('lodash');
       eval(component_code);
       return eval(klass_name);
     };
@@ -55034,7 +55032,7 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":194,"./memory":189,"./react_mixin":191,"./replacer":192,"jquery":10,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":194,"./react_mixin":191,"./replacer":192,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
 (function() {
   var ReactMixin;
 
@@ -55151,21 +55149,14 @@ module.exports=require(188)
   var Replacer;
 
   Replacer = module.exports = (function() {
-    var $, HTMLtoJSX, Memory, React, ReactMixin, capitalizeActionCase, react_tools, removeExtraQuotes, replace, replaceToActions, replaceToBindings, replaceToState, toReactCode, _;
-    React = require('react');
-    HTMLtoJSX = require('../vendor/htmltojsx.min');
-    react_tools = require('react-tools');
-    Memory = require('./memory');
-    ReactMixin = require('./react_mixin');
+    var capitalizeActionCase, removeExtraQuotes, replace, replaceToActions, replaceToBindings, replaceToState, toReactCode, _;
     _ = require('lodash');
-    $ = require('jquery');
     toReactCode = function(jsx_code) {
       jsx_code = removeExtraQuotes(jsx_code);
       jsx_code = capitalizeActionCase(jsx_code);
       jsx_code = replaceToBindings(jsx_code);
       jsx_code = replaceToActions(jsx_code);
-      jsx_code = replaceToState(jsx_code);
-      return jsx_code;
+      return replaceToState(jsx_code);
     };
     removeExtraQuotes = function(jsx_code) {
       return jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
@@ -55221,17 +55212,14 @@ module.exports=require(188)
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":194,"./memory":189,"./react_mixin":191,"jquery":10,"lodash":11,"react":186,"react-tools":12}],193:[function(require,module,exports){
+},{"lodash":11}],193:[function(require,module,exports){
 (function() {
   var UI;
 
   UI = module.exports = (function() {
-    var $, Converter, HTMLtoJSX, Memory, React, ReactMixin, currentState, current_state, element, elements, hideAllBut, idx, nextState, outerHtml, previousState, random, react_tools, state, _;
+    var $, Converter, Memory, React, currentState, current_state, element, elements, hideAllBut, idx, nextState, outerHtml, previousState, random, state, _;
     React = require('react');
-    HTMLtoJSX = require('../vendor/htmltojsx.min');
-    react_tools = require('react-tools');
     Memory = require('./memory');
-    ReactMixin = require('./react_mixin');
     Converter = require('./converter');
     _ = require('lodash');
     $ = require('jquery');
@@ -55307,7 +55295,7 @@ module.exports=require(188)
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":194,"./converter":187,"./memory":189,"./react_mixin":191,"jquery":10,"lodash":11,"react":186,"react-tools":12}],194:[function(require,module,exports){
+},{"./converter":187,"./memory":189,"jquery":10,"lodash":11,"react":186}],194:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.

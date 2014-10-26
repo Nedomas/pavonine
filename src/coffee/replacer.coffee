@@ -1,11 +1,5 @@
 Replacer = module.exports = (->
-  React = require('react')
-  HTMLtoJSX = require('../vendor/htmltojsx.min')
-  react_tools = require('react-tools')
-  Memory = require './memory'
-  ReactMixin = require './react_mixin'
   _ = require 'lodash'
-  $ = require 'jquery'
 
   toReactCode = (jsx_code) ->
     jsx_code = removeExtraQuotes(jsx_code)
