@@ -55035,37 +55035,8 @@ module.exports = require('./lib/React');
 }).call(this);
 
 },{"../vendor/htmltojsx.min":194,"./memory":189,"./react_mixin":191,"./replacer":192,"jquery":10,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
-(function() {
-  var Cornflake;
-
-  Cornflake = (function() {
-    var UI, init, initializers;
-    UI = require('./ui');
-    init = function() {
-      console.log('Here and now');
-      initializers();
-      return UI.state(1);
-    };
-    initializers = function() {
-      var Persistance;
-      Persistance = require('./persistance');
-      Persistance.setApi('http://10.30.0.1:3000');
-      return String.prototype.splice = function(idx, rem, s) {
-        return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
-      };
-    };
-    return {
-      init: init
-    };
-  })();
-
-  window.onload = function() {
-    return Cornflake.init();
-  };
-
-}).call(this);
-
-},{"./persistance":190,"./ui":193}],189:[function(require,module,exports){
+module.exports=require(187)
+},{"../vendor/htmltojsx.min":194,"./memory":189,"./react_mixin":191,"./replacer":192,"jquery":10,"lodash":11,"react":186,"react-tools":12}],189:[function(require,module,exports){
 (function() {
   var Memory;
 

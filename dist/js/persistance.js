@@ -55036,60 +55036,6 @@ module.exports = require('./lib/React');
 
 },{"../vendor/htmltojsx.min":194,"./memory":189,"./react_mixin":191,"./replacer":192,"jquery":10,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
 (function() {
-  var Cornflake;
-
-  Cornflake = (function() {
-    var UI, init, initializers;
-    UI = require('./ui');
-    init = function() {
-      console.log('Here and now');
-      initializers();
-      return UI.state(1);
-    };
-    initializers = function() {
-      var Persistance;
-      Persistance = require('./persistance');
-      Persistance.setApi('http://10.30.0.1:3000');
-      return String.prototype.splice = function(idx, rem, s) {
-        return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
-      };
-    };
-    return {
-      init: init
-    };
-  })();
-
-  window.onload = function() {
-    return Cornflake.init();
-  };
-
-}).call(this);
-
-},{"./persistance":190,"./ui":193}],189:[function(require,module,exports){
-(function() {
-  var Memory;
-
-  Memory = module.exports = (function() {
-    var app_data, get, set;
-    app_data = {
-      0: {}
-    };
-    set = function(state, state_data) {
-      return app_data[state] = state_data;
-    };
-    get = function(state) {
-      return app_data[state];
-    };
-    return {
-      set: set,
-      get: get
-    };
-  })();
-
-}).call(this);
-
-},{}],190:[function(require,module,exports){
-(function() {
   var Persistance;
 
   Persistance = module.exports = (function() {
@@ -55124,6 +55070,31 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
+},{"./ui":193,"databound":1,"jquery":10,"lodash":11}],189:[function(require,module,exports){
+(function() {
+  var Memory;
+
+  Memory = module.exports = (function() {
+    var app_data, get, set;
+    app_data = {
+      0: {}
+    };
+    set = function(state, state_data) {
+      return app_data[state] = state_data;
+    };
+    get = function(state) {
+      return app_data[state];
+    };
+    return {
+      set: set,
+      get: get
+    };
+  })();
+
+}).call(this);
+
+},{}],190:[function(require,module,exports){
+module.exports=require(188)
 },{"./ui":193,"databound":1,"jquery":10,"lodash":11}],191:[function(require,module,exports){
 (function() {
   var ReactMixin;

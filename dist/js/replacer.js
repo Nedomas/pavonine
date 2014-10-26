@@ -55036,36 +55036,80 @@ module.exports = require('./lib/React');
 
 },{"../vendor/htmltojsx.min":194,"./memory":189,"./react_mixin":191,"./replacer":192,"jquery":10,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
 (function() {
-  var Cornflake;
+  var Replacer;
 
-  Cornflake = (function() {
-    var UI, init, initializers;
-    UI = require('./ui');
-    init = function() {
-      console.log('Here and now');
-      initializers();
-      return UI.state(1);
+  Replacer = module.exports = (function() {
+    var $, HTMLtoJSX, Memory, React, ReactMixin, capitalizeActionCase, react_tools, removeExtraQuotes, replace, replaceToActions, replaceToBindings, replaceToState, toReactCode, _;
+    React = require('react');
+    HTMLtoJSX = require('../vendor/htmltojsx.min');
+    react_tools = require('react-tools');
+    Memory = require('./memory');
+    ReactMixin = require('./react_mixin');
+    _ = require('lodash');
+    $ = require('jquery');
+    toReactCode = function(jsx_code) {
+      jsx_code = removeExtraQuotes(jsx_code);
+      jsx_code = capitalizeActionCase(jsx_code);
+      jsx_code = replaceToBindings(jsx_code);
+      jsx_code = replaceToActions(jsx_code);
+      jsx_code = replaceToState(jsx_code);
+      return jsx_code;
     };
-    initializers = function() {
-      var Persistance;
-      Persistance = require('./persistance');
-      Persistance.setApi('http://10.30.0.1:3000');
-      return String.prototype.splice = function(idx, rem, s) {
-        return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
-      };
+    removeExtraQuotes = function(jsx_code) {
+      return jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
+    };
+    capitalizeActionCase = function(jsx_code) {
+      var result, words;
+      words = ['onChange', 'onClick'];
+      result = jsx_code;
+      _.each(words, function(word) {
+        return result = result.replace(word.toLowerCase(), word);
+      });
+      return result;
+    };
+    replaceToActions = function(jsx_code) {
+      var actions;
+      actions = ['create', 'update', 'destroy', 'previous', 'next'];
+      return replace(jsx_code, /{([a-z]*)}/gi, function(attribute) {
+        if (!_.include(actions, attribute)) {
+          return "{" + attribute + "}";
+        }
+        return "{this." + attribute + "}";
+      });
+    };
+    replaceToState = function(jsx_code) {
+      return replace(jsx_code, /{([a-zA-Z]*)}/gi, function(attribute) {
+        return "{this.state." + attribute + "}";
+      });
+    };
+    replaceToBindings = function(jsx_code) {
+      return replace(jsx_code, /value={(.+?)}/gi, function(attribute) {
+        return "value={" + attribute + "} onChange={_.partial(this.onChange, '" + attribute + "')}";
+      });
+    };
+    replace = function(code, from, to) {
+      var attribute, length, matched, result;
+      result = code;
+      while (true) {
+        matched = from.exec(result);
+        if (matched) {
+          attribute = matched[1];
+          length = matched[0].length;
+          result = result.splice(matched.index, length, to(attribute));
+        } else {
+          break;
+        }
+      }
+      return result;
     };
     return {
-      init: init
+      toReactCode: toReactCode
     };
   })();
 
-  window.onload = function() {
-    return Cornflake.init();
-  };
-
 }).call(this);
 
-},{"./persistance":190,"./ui":193}],189:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":194,"./memory":189,"./react_mixin":191,"jquery":10,"lodash":11,"react":186,"react-tools":12}],189:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -55176,80 +55220,7 @@ module.exports = require('./lib/React');
 }).call(this);
 
 },{"./memory":189,"./persistance":190,"./ui":193}],192:[function(require,module,exports){
-(function() {
-  var Replacer;
-
-  Replacer = module.exports = (function() {
-    var $, HTMLtoJSX, Memory, React, ReactMixin, capitalizeActionCase, react_tools, removeExtraQuotes, replace, replaceToActions, replaceToBindings, replaceToState, toReactCode, _;
-    React = require('react');
-    HTMLtoJSX = require('../vendor/htmltojsx.min');
-    react_tools = require('react-tools');
-    Memory = require('./memory');
-    ReactMixin = require('./react_mixin');
-    _ = require('lodash');
-    $ = require('jquery');
-    toReactCode = function(jsx_code) {
-      jsx_code = removeExtraQuotes(jsx_code);
-      jsx_code = capitalizeActionCase(jsx_code);
-      jsx_code = replaceToBindings(jsx_code);
-      jsx_code = replaceToActions(jsx_code);
-      jsx_code = replaceToState(jsx_code);
-      return jsx_code;
-    };
-    removeExtraQuotes = function(jsx_code) {
-      return jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
-    };
-    capitalizeActionCase = function(jsx_code) {
-      var result, words;
-      words = ['onChange', 'onClick'];
-      result = jsx_code;
-      _.each(words, function(word) {
-        return result = result.replace(word.toLowerCase(), word);
-      });
-      return result;
-    };
-    replaceToActions = function(jsx_code) {
-      var actions;
-      actions = ['create', 'update', 'destroy', 'previous', 'next'];
-      return replace(jsx_code, /{([a-z]*)}/gi, function(attribute) {
-        if (!_.include(actions, attribute)) {
-          return "{" + attribute + "}";
-        }
-        return "{this." + attribute + "}";
-      });
-    };
-    replaceToState = function(jsx_code) {
-      return replace(jsx_code, /{([a-zA-Z]*)}/gi, function(attribute) {
-        return "{this.state." + attribute + "}";
-      });
-    };
-    replaceToBindings = function(jsx_code) {
-      return replace(jsx_code, /value={(.+?)}/gi, function(attribute) {
-        return "value={" + attribute + "} onChange={_.partial(this.onChange, '" + attribute + "')}";
-      });
-    };
-    replace = function(code, from, to) {
-      var attribute, length, matched, result;
-      result = code;
-      while (true) {
-        matched = from.exec(result);
-        if (matched) {
-          attribute = matched[1];
-          length = matched[0].length;
-          result = result.splice(matched.index, length, to(attribute));
-        } else {
-          break;
-        }
-      }
-      return result;
-    };
-    return {
-      toReactCode: toReactCode
-    };
-  })();
-
-}).call(this);
-
+module.exports=require(188)
 },{"../vendor/htmltojsx.min":194,"./memory":189,"./react_mixin":191,"jquery":10,"lodash":11,"react":186,"react-tools":12}],193:[function(require,module,exports){
 (function() {
   var UI;

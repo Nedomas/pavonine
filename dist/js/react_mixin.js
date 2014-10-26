@@ -55036,36 +55036,56 @@ module.exports = require('./lib/React');
 
 },{"../vendor/htmltojsx.min":194,"./memory":189,"./react_mixin":191,"./replacer":192,"jquery":10,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
 (function() {
-  var Cornflake;
+  var ReactMixin;
 
-  Cornflake = (function() {
-    var UI, init, initializers;
-    UI = require('./ui');
-    init = function() {
-      console.log('Here and now');
-      initializers();
-      return UI.state(1);
-    };
-    initializers = function() {
-      var Persistance;
-      Persistance = require('./persistance');
-      Persistance.setApi('http://10.30.0.1:3000');
-      return String.prototype.splice = function(idx, rem, s) {
-        return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
-      };
-    };
+  ReactMixin = module.exports = (function() {
+    var Memory;
+    Memory = require('./memory');
     return {
-      init: init
+      getInitialState: function() {
+        var UI;
+        UI = require('./ui');
+        return Memory.get(UI.currentState() - 1);
+      },
+      onChange: function(attribute, e) {
+        var attribute_hash;
+        attribute_hash = {};
+        attribute_hash[attribute] = e.target.value;
+        return this.setState(attribute_hash);
+      },
+      create: function(e) {
+        var Persistance;
+        Persistance = require('./persistance');
+        return Persistance.act('create', e, this.state);
+      },
+      update: function(e) {
+        var Persistance;
+        Persistance = require('./persistance');
+        return Persistance.act('update', e, this.state);
+      },
+      destroy: function(e) {
+        var Persistance;
+        Persistance = require('./persistance');
+        return Persistance.act('destroy', e, this.state);
+      },
+      previous: function(e) {
+        var UI;
+        e.preventDefault();
+        UI = require('./ui');
+        return UI.previousState(this.state);
+      },
+      next: function(e) {
+        var UI;
+        e.preventDefault();
+        UI = require('./ui');
+        return UI.nextState(this.state);
+      }
     };
   })();
 
-  window.onload = function() {
-    return Cornflake.init();
-  };
-
 }).call(this);
 
-},{"./persistance":190,"./ui":193}],189:[function(require,module,exports){
+},{"./memory":189,"./persistance":190,"./ui":193}],189:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -55125,56 +55145,7 @@ module.exports = require('./lib/React');
 }).call(this);
 
 },{"./ui":193,"databound":1,"jquery":10,"lodash":11}],191:[function(require,module,exports){
-(function() {
-  var ReactMixin;
-
-  ReactMixin = module.exports = (function() {
-    var Memory;
-    Memory = require('./memory');
-    return {
-      getInitialState: function() {
-        var UI;
-        UI = require('./ui');
-        return Memory.get(UI.currentState() - 1);
-      },
-      onChange: function(attribute, e) {
-        var attribute_hash;
-        attribute_hash = {};
-        attribute_hash[attribute] = e.target.value;
-        return this.setState(attribute_hash);
-      },
-      create: function(e) {
-        var Persistance;
-        Persistance = require('./persistance');
-        return Persistance.act('create', e, this.state);
-      },
-      update: function(e) {
-        var Persistance;
-        Persistance = require('./persistance');
-        return Persistance.act('update', e, this.state);
-      },
-      destroy: function(e) {
-        var Persistance;
-        Persistance = require('./persistance');
-        return Persistance.act('destroy', e, this.state);
-      },
-      previous: function(e) {
-        var UI;
-        e.preventDefault();
-        UI = require('./ui');
-        return UI.previousState(this.state);
-      },
-      next: function(e) {
-        var UI;
-        e.preventDefault();
-        UI = require('./ui');
-        return UI.nextState(this.state);
-      }
-    };
-  })();
-
-}).call(this);
-
+module.exports=require(188)
 },{"./memory":189,"./persistance":190,"./ui":193}],192:[function(require,module,exports){
 (function() {
   var Replacer;

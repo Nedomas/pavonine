@@ -18,13 +18,13 @@ gulp.task 'watch', ->
 
 gulp.task 'coffee', ->
   gulp
-    .src('./src/coffee/cornflake.coffee')
+    .src('./src/coffee/**/*.coffee')
     .pipe(coffeeify())
     .pipe(gulp.dest('./dist/js/'))
 
 gulp.task 'ugly', ->
   gulp
-    .src('./src/coffee/cornflake.coffee')
+    .src('./src/coffee/**/*.coffee')
     .pipe(coffeeify())
     .pipe(uglify())
     .pipe(rename('cornflake.min.js'))

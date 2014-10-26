@@ -55036,36 +55036,91 @@ module.exports = require('./lib/React');
 
 },{"../vendor/htmltojsx.min":194,"./memory":189,"./react_mixin":191,"./replacer":192,"jquery":10,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
 (function() {
-  var Cornflake;
+  var UI;
 
-  Cornflake = (function() {
-    var UI, init, initializers;
-    UI = require('./ui');
-    init = function() {
-      console.log('Here and now');
-      initializers();
-      return UI.state(1);
+  UI = module.exports = (function() {
+    var $, Converter, HTMLtoJSX, Memory, React, ReactMixin, currentState, current_state, element, elements, hideAllBut, idx, nextState, outerHtml, previousState, random, react_tools, state, _;
+    React = require('react');
+    HTMLtoJSX = require('../vendor/htmltojsx.min');
+    react_tools = require('react-tools');
+    Memory = require('./memory');
+    ReactMixin = require('./react_mixin');
+    Converter = require('./converter');
+    _ = require('lodash');
+    $ = require('jquery');
+    current_state = 1;
+    currentState = function() {
+      return current_state;
     };
-    initializers = function() {
-      var Persistance;
-      Persistance = require('./persistance');
-      Persistance.setApi('http://10.30.0.1:3000');
-      return String.prototype.splice = function(idx, rem, s) {
-        return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
-      };
+    previousState = function(results) {
+      Memory.set(current_state, results);
+      return state(current_state - 1);
+    };
+    nextState = function(results) {
+      Memory.set(current_state, results);
+      return state(current_state + 1);
+    };
+    state = function(i) {
+      var component, klass_name;
+      current_state = i;
+      hideAllBut(i);
+      klass_name = "cornflake" + (random());
+      component = Converter.htmlToReactComponent(klass_name, outerHtml(element(i)));
+      element(i).before("<div id='" + klass_name + "'>");
+      element(i).hide();
+      return React.renderComponent(component(), document.getElementById(klass_name));
+    };
+    random = function() {
+      var max, min;
+      min = 1;
+      max = 10000;
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    };
+    hideAllBut = function(dont_hide_i) {
+      return _.each($('*[data-model], *[data-step]'), function(element) {
+        var jelement, step;
+        jelement = $(element);
+        step = jelement.data('step') || 1;
+        if (parseInt(step) === dont_hide_i) {
+          return jelement.show();
+        } else {
+          if (jelement.data('reactid')) {
+            return jelement.remove();
+          } else {
+            return jelement.hide();
+          }
+        }
+      });
+    };
+    element = function(i) {
+      return idx()[i];
+    };
+    outerHtml = function(element) {
+      return $('<div>').append(element.clone()).html();
+    };
+    idx = function() {
+      return _.inject(elements(), function(result, element) {
+        var step;
+        step = $(element).data('step') || 1;
+        result[step] = $(element);
+        return result;
+      }, {});
+    };
+    elements = function() {
+      return $('*[data-model], *[data-step]');
     };
     return {
-      init: init
+      previousState: previousState,
+      nextState: nextState,
+      currentState: currentState,
+      state: state,
+      element: element
     };
   })();
 
-  window.onload = function() {
-    return Cornflake.init();
-  };
-
 }).call(this);
 
-},{"./persistance":190,"./ui":193}],189:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":194,"./converter":187,"./memory":189,"./react_mixin":191,"jquery":10,"lodash":11,"react":186,"react-tools":12}],189:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -55251,91 +55306,7 @@ module.exports = require('./lib/React');
 }).call(this);
 
 },{"../vendor/htmltojsx.min":194,"./memory":189,"./react_mixin":191,"jquery":10,"lodash":11,"react":186,"react-tools":12}],193:[function(require,module,exports){
-(function() {
-  var UI;
-
-  UI = module.exports = (function() {
-    var $, Converter, HTMLtoJSX, Memory, React, ReactMixin, currentState, current_state, element, elements, hideAllBut, idx, nextState, outerHtml, previousState, random, react_tools, state, _;
-    React = require('react');
-    HTMLtoJSX = require('../vendor/htmltojsx.min');
-    react_tools = require('react-tools');
-    Memory = require('./memory');
-    ReactMixin = require('./react_mixin');
-    Converter = require('./converter');
-    _ = require('lodash');
-    $ = require('jquery');
-    current_state = 1;
-    currentState = function() {
-      return current_state;
-    };
-    previousState = function(results) {
-      Memory.set(current_state, results);
-      return state(current_state - 1);
-    };
-    nextState = function(results) {
-      Memory.set(current_state, results);
-      return state(current_state + 1);
-    };
-    state = function(i) {
-      var component, klass_name;
-      current_state = i;
-      hideAllBut(i);
-      klass_name = "cornflake" + (random());
-      component = Converter.htmlToReactComponent(klass_name, outerHtml(element(i)));
-      element(i).before("<div id='" + klass_name + "'>");
-      element(i).hide();
-      return React.renderComponent(component(), document.getElementById(klass_name));
-    };
-    random = function() {
-      var max, min;
-      min = 1;
-      max = 10000;
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    };
-    hideAllBut = function(dont_hide_i) {
-      return _.each($('*[data-model], *[data-step]'), function(element) {
-        var jelement, step;
-        jelement = $(element);
-        step = jelement.data('step') || 1;
-        if (parseInt(step) === dont_hide_i) {
-          return jelement.show();
-        } else {
-          if (jelement.data('reactid')) {
-            return jelement.remove();
-          } else {
-            return jelement.hide();
-          }
-        }
-      });
-    };
-    element = function(i) {
-      return idx()[i];
-    };
-    outerHtml = function(element) {
-      return $('<div>').append(element.clone()).html();
-    };
-    idx = function() {
-      return _.inject(elements(), function(result, element) {
-        var step;
-        step = $(element).data('step') || 1;
-        result[step] = $(element);
-        return result;
-      }, {});
-    };
-    elements = function() {
-      return $('*[data-model], *[data-step]');
-    };
-    return {
-      previousState: previousState,
-      nextState: nextState,
-      currentState: currentState,
-      state: state,
-      element: element
-    };
-  })();
-
-}).call(this);
-
+module.exports=require(188)
 },{"../vendor/htmltojsx.min":194,"./converter":187,"./memory":189,"./react_mixin":191,"jquery":10,"lodash":11,"react":186,"react-tools":12}],194:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
