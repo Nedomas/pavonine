@@ -55237,6 +55237,9 @@ module.exports=require(187)
     };
     state = function(i) {
       var component, klass_name;
+      if (_.isEmpty(element(i))) {
+        return;
+      }
       current_state = i;
       hideAllBut(i);
       klass_name = "cornflake" + (random());

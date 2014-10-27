@@ -19,6 +19,8 @@ UI = module.exports = (->
     state(current_state + 1)
 
   state = (i) ->
+    return if _.isEmpty(element(i))
+
     current_state = i
     hideAllBut(i)
     klass_name = "cornflake#{random()}"

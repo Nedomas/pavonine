@@ -1,4 +1,8 @@
 {
+  "name": "cornflake",
+  "version": "0.0.1",
+  "author": "Domas <domas.bitvinskas@me.com>",
+  "main": "dist/cornflake.js",
   "dependencies": {
     "databound": "0.0.3",
     "jquery": "^2.1.1",

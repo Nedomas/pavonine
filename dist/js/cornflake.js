@@ -55036,7 +55036,7 @@ module.exports = require('./lib/React');
 (function() {
   var Cornflake;
 
-  Cornflake = (function() {
+  window.Cornflake = Cornflake = module.exports = (function() {
     var UI, init, initializers;
     UI = require('./ui');
     init = function() {
@@ -55047,7 +55047,7 @@ module.exports = require('./lib/React');
     initializers = function() {
       var Persistance;
       Persistance = require('./persistance');
-      Persistance.setApi('http://10.30.0.1:3000');
+      Persistance.setApi('http://cornflake-backend.herokuapp.com');
       return String.prototype.splice = function(idx, rem, s) {
         return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
       };
@@ -55266,6 +55266,9 @@ module.exports = require('./lib/React');
     };
     state = function(i) {
       var component, klass_name;
+      if (_.isEmpty(element(i))) {
+        return;
+      }
       current_state = i;
       hideAllBut(i);
       klass_name = "cornflake" + (random());

@@ -55057,6 +55057,9 @@ module.exports = require('./lib/React');
     };
     state = function(i) {
       var component, klass_name;
+      if (_.isEmpty(element(i))) {
+        return;
+      }
       current_state = i;
       hideAllBut(i);
       klass_name = "cornflake" + (random());

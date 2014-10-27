@@ -1,4 +1,4 @@
-Cornflake = (->
+window.Cornflake = Cornflake = module.exports = (->
   UI = require './ui'
 
   init = ->
@@ -8,7 +8,7 @@ Cornflake = (->
 
   initializers = ->
     Persistance = require './persistance'
-    Persistance.setApi('http://10.30.0.1:3000')
+    Persistance.setApi('http://cornflake-backend.herokuapp.com')
     String::splice = (idx, rem, s) ->
       (@slice(0, idx) + s + @slice(idx + Math.abs(rem)))
 
