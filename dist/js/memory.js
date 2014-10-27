@@ -4,14 +4,12 @@
 
   Memory = module.exports = (function() {
     var app_data, get, set;
-    app_data = {
-      0: {}
-    };
+    app_data = {};
     set = function(state, state_data) {
       return app_data[state] = state_data;
     };
     get = function(state) {
-      return app_data[state];
+      return app_data[state] || {};
     };
     return {
       set: set,

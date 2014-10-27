@@ -55032,22 +55032,22 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":194,"./react_mixin":191,"./replacer":192,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":195,"./react_mixin":191,"./replacer":192,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
 (function() {
   var Cornflake;
 
   window.Cornflake = Cornflake = module.exports = (function() {
-    var UI, init, initializers;
-    UI = require('./ui');
+    var Router, configure, init;
+    Router = require('./router');
     init = function() {
       console.log('Here and now');
-      initializers();
-      return UI.state(1);
+      configure();
+      return Router.change(1);
     };
-    initializers = function() {
+    configure = function() {
       var Persistance;
       Persistance = require('./persistance');
-      Persistance.setApi('http://cornflake-backend.herokuapp.com');
+      Persistance.setApi('http://10.30.0.1:3000');
       return String.prototype.splice = function(idx, rem, s) {
         return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
       };
@@ -55063,20 +55063,18 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./persistance":190,"./ui":193}],189:[function(require,module,exports){
+},{"./persistance":190,"./router":193}],189:[function(require,module,exports){
 (function() {
   var Memory;
 
   Memory = module.exports = (function() {
     var app_data, get, set;
-    app_data = {
-      0: {}
-    };
+    app_data = {};
     set = function(state, state_data) {
       return app_data[state] = state_data;
     };
     get = function(state) {
-      return app_data[state];
+      return app_data[state] || {};
     };
     return {
       set: set,
@@ -55091,27 +55089,25 @@ module.exports = require('./lib/React');
   var Persistance;
 
   Persistance = module.exports = (function() {
-    var $, Databound, UI, act, setApi, _;
+    var $, Databound, Router, act, setApi, _;
     Databound = require('databound');
     _ = require('lodash');
     $ = require('jquery');
-    UI = require('./ui');
+    Router = require('./router');
     setApi = function(api_url) {
       return Databound.API_URL = api_url;
     };
     act = function(action, e, attributes) {
-      var connection, model, model_element;
+      var connection;
       e.preventDefault();
-      model_element = $(e.target).parent('*[data-model]');
-      if (_.isEmpty(model_element)) {
+      if (!attributes.model) {
         throw new Error('No model specified');
       }
-      model = model_element.data('model');
-      connection = new Databound("" + model + "s");
-      return connection[action](attributes).then(function(resp) {
+      connection = new Databound("" + attributes.model + "s");
+      return connection[action](_.omit(attributes, 'model', 'step')).then(function(resp) {
         var record;
         record = _.isObject(resp) ? resp : null;
-        return UI.nextState(record);
+        return Router.next(record);
       });
     };
     return {
@@ -55122,18 +55118,17 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./ui":193,"databound":1,"jquery":10,"lodash":11}],191:[function(require,module,exports){
+},{"./router":193,"databound":1,"jquery":10,"lodash":11}],191:[function(require,module,exports){
 (function() {
   var ReactMixin;
 
   ReactMixin = module.exports = (function() {
-    var Memory;
+    var Memory, Router;
+    Router = require('./router');
     Memory = require('./memory');
     return {
       getInitialState: function() {
-        var UI;
-        UI = require('./ui');
-        return Memory.get(UI.currentState() - 1);
+        return Memory.get(Router.current());
       },
       onChange: function(attribute, e) {
         var attribute_hash;
@@ -55157,23 +55152,19 @@ module.exports = require('./lib/React');
         return Persistance.act('destroy', e, this.state);
       },
       previous: function(e) {
-        var UI;
         e.preventDefault();
-        UI = require('./ui');
-        return UI.previousState(this.state);
+        return Router.previous(this.state);
       },
       next: function(e) {
-        var UI;
         e.preventDefault();
-        UI = require('./ui');
-        return UI.nextState(this.state);
+        return Router.next(this.state);
       }
     };
   })();
 
 }).call(this);
 
-},{"./memory":189,"./persistance":190,"./ui":193}],192:[function(require,module,exports){
+},{"./memory":189,"./persistance":190,"./router":193}],192:[function(require,module,exports){
 (function() {
   var Replacer;
 
@@ -55243,61 +55234,110 @@ module.exports = require('./lib/React');
 
 },{"lodash":11}],193:[function(require,module,exports){
 (function() {
+  var Router;
+
+  Router = module.exports = (function() {
+    var Memory, UI, change, current, next, previous, setCurrent, step;
+    Memory = require('./memory');
+    UI = require('./ui');
+    step = 1;
+    setCurrent = function(_step) {
+      return step = _step;
+    };
+    current = function() {
+      return step;
+    };
+    change = function(step) {
+      return UI.render(step);
+    };
+    previous = function(results) {
+      Memory.set(step, results);
+      return change(step - 1);
+    };
+    next = function(results) {
+      Memory.set(step, results);
+      return change(step + 1);
+    };
+    return {
+      current: current,
+      setCurrent: setCurrent,
+      change: change,
+      previous: previous,
+      next: next
+    };
+  })();
+
+}).call(this);
+
+},{"./memory":189,"./ui":194}],194:[function(require,module,exports){
+(function() {
   var UI;
 
   UI = module.exports = (function() {
-    var $, Converter, Memory, React, currentState, current_state, element, elements, hideAllBut, idx, nextState, outerHtml, previousState, random, state, _;
+    var $, Converter, React, component, components, element, elements, hide, hideAll, idx, insertComponent, insertContainter, klassName, outerElement, outerElementHtml, outerHtml, removePreviousSteps, render, renderComponent, setProps, _;
     React = require('react');
-    Memory = require('./memory');
     Converter = require('./converter');
     _ = require('lodash');
     $ = require('jquery');
-    current_state = 1;
-    currentState = function() {
-      return current_state;
+    hideAll = function() {
+      removePreviousSteps();
+      return _.each(elements(), function(el) {
+        var step;
+        step = el.attr('step') || 1;
+        return hide(step);
+      });
     };
-    previousState = function(results) {
-      Memory.set(current_state, results);
-      return state(current_state - 1);
+    hide = function(step) {
+      return element(step).hide();
     };
-    nextState = function(results) {
-      Memory.set(current_state, results);
-      return state(current_state + 1);
+    removePreviousSteps = function() {
+      return _.each(components(), function(component) {
+        return component.remove();
+      });
     };
-    state = function(i) {
-      var component, klass_name;
+    render = function(step) {
+      var component;
+      hideAll();
+      component = insertComponent(step);
+      return $(component.getDOMNode()).show();
+    };
+    insertComponent = function(i) {
+      var Router, rendered_component;
       if (_.isEmpty(element(i))) {
         return;
       }
-      current_state = i;
-      hideAllBut(i);
-      klass_name = "cornflake" + (random());
-      component = Converter.htmlToReactComponent(klass_name, outerHtml(element(i)));
-      element(i).before("<div id='" + klass_name + "'>");
-      element(i).hide();
-      return React.renderComponent(component(), document.getElementById(klass_name));
+      rendered_component = renderComponent(i);
+      setProps(rendered_component, outerElement(i));
+      Router = require('./router');
+      Router.setCurrent(i);
+      return rendered_component;
     };
-    random = function() {
-      var max, min;
-      min = 1;
-      max = 10000;
-      return Math.floor(Math.random() * (max - min + 1)) + min;
+    component = function(i) {
+      return Converter.htmlToReactComponent(klassName(i), outerElementHtml(i))();
     };
-    hideAllBut = function(dont_hide_i) {
-      return _.each($('*[data-model], *[data-step]'), function(element) {
-        var jelement, step;
-        jelement = $(element);
-        step = jelement.data('step') || 1;
-        if (parseInt(step) === dont_hide_i) {
-          return jelement.show();
-        } else {
-          if (jelement.data('reactid')) {
-            return jelement.remove();
-          } else {
-            return jelement.hide();
-          }
-        }
+    renderComponent = function(i) {
+      var container;
+      container = insertContainter(i);
+      return React.renderComponent(component(i), container);
+    };
+    insertContainter = function(step) {
+      element(step).before("<div class='" + (klassName(step)) + "'>");
+      return $("." + (klassName(step)))[0];
+    };
+    klassName = function(step) {
+      return "cornflake" + step;
+    };
+    setProps = function(rendered_component, el) {
+      return rendered_component.setState({
+        model: el.attr('model'),
+        step: el.attr('step')
       });
+    };
+    outerElement = function(i) {
+      return $(outerHtml(element(i)));
+    };
+    outerElementHtml = function(i) {
+      return outerHtml(element(i));
     };
     element = function(i) {
       return idx()[i];
@@ -55308,26 +55348,29 @@ module.exports = require('./lib/React');
     idx = function() {
       return _.inject(elements(), function(result, element) {
         var step;
-        step = $(element).data('step') || 1;
+        step = $(element).attr('step') || 1;
         result[step] = $(element);
         return result;
       }, {});
     };
     elements = function() {
-      return $('*[data-model], *[data-step]');
+      return _.map($('*[model], *[step]'), function(el) {
+        return $(el);
+      });
+    };
+    components = function() {
+      return _.map($("[class^='cornflake']"), function(el) {
+        return $(el);
+      });
     };
     return {
-      previousState: previousState,
-      nextState: nextState,
-      currentState: currentState,
-      state: state,
-      element: element
+      render: render
     };
   })();
 
 }).call(this);
 
-},{"./converter":187,"./memory":189,"jquery":10,"lodash":11,"react":186}],194:[function(require,module,exports){
+},{"./converter":187,"./router":193,"jquery":10,"lodash":11,"react":186}],195:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.

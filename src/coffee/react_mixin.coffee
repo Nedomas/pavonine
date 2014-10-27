@@ -1,9 +1,9 @@
 ReactMixin = module.exports = (->
+  Router = require './router'
   Memory = require './memory'
 
   getInitialState: ->
-    UI = require './ui'
-    Memory.get(UI.currentState() - 1)
+    Memory.get(Router.current())
   onChange: (attribute, e) ->
     attribute_hash = {}
     attribute_hash[attribute] = e.target.value
@@ -19,10 +19,8 @@ ReactMixin = module.exports = (->
     Persistance.act('destroy', e, @state)
   previous: (e) ->
     e.preventDefault()
-    UI = require './ui'
-    UI.previousState(@state)
+    Router.previous(@state)
   next: (e) ->
     e.preventDefault()
-    UI = require './ui'
-    UI.nextState(@state)
+    Router.next(@state)
 )()

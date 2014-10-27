@@ -1,53 +1,60 @@
 UI = module.exports = (->
-  React = require('react')
-  Memory = require './memory'
+  React = require 'react'
   Converter = require './converter'
   _ = require 'lodash'
   $ = require 'jquery'
 
-  current_state = 1
+  hideAll = ->
+    removePreviousSteps()
+    _.each elements(), (el) ->
+      step = el.attr('step') or 1
+      hide(step)
 
-  currentState = ->
-    current_state
+  hide = (step) ->
+    element(step).hide()
 
-  previousState = (results) ->
-    Memory.set(current_state, results)
-    state(current_state - 1)
+  removePreviousSteps = ->
+    _.each components(), (component) ->
+      component.remove()
 
-  nextState = (results) ->
-    Memory.set(current_state, results)
-    state(current_state + 1)
+  render = (step) ->
+    hideAll()
+    component = insertComponent(step)
+    $(component.getDOMNode()).show()
 
-  state = (i) ->
+  insertComponent = (i) ->
     return if _.isEmpty(element(i))
 
-    current_state = i
-    hideAllBut(i)
-    klass_name = "cornflake#{random()}"
-    component = Converter.htmlToReactComponent(klass_name,
-      outerHtml(element(i)))
-    element(i).before("<div id='#{klass_name}'>")
-    element(i).hide()
-    React.renderComponent(component(),
-      document.getElementById(klass_name))
+    rendered_component = renderComponent(i)
+    setProps(rendered_component, outerElement(i))
+    Router = require './router'
+    Router.setCurrent(i)
+    rendered_component
 
-  random = ->
-    min = 1
-    max = 10000
-    Math.floor(Math.random() * (max - min + 1)) + min
+  component = (i) ->
+    Converter.htmlToReactComponent(klassName(i), outerElementHtml(i))()
 
-  hideAllBut = (dont_hide_i) ->
-    _.each $('*[data-model], *[data-step]'), (element) ->
-      jelement = $(element)
-      step = jelement.data('step') or 1
+  renderComponent = (i) ->
+    container = insertContainter(i)
+    React.renderComponent(component(i), container)
 
-      if parseInt(step) == dont_hide_i
-        jelement.show()
-      else
-        if jelement.data('reactid')
-          jelement.remove()
-        else
-          jelement.hide()
+  insertContainter = (step) ->
+    element(step).before("<div class='#{klassName(step)}'>")
+    $(".#{klassName(step)}")[0]
+
+  klassName = (step) ->
+    "cornflake#{step}"
+
+  setProps = (rendered_component, el) ->
+    rendered_component.setState
+      model: el.attr('model')
+      step: el.attr('step')
+
+  outerElement = (i) ->
+    $(outerHtml(element(i)))
+
+  outerElementHtml = (i) ->
+    outerHtml(element(i))
 
   element = (i) ->
     idx()[i]
@@ -57,19 +64,18 @@ UI = module.exports = (->
 
   idx = ->
     _.inject(elements(), (result, element) ->
-      step = $(element).data('step') or 1
+      step = $(element).attr('step') or 1
       result[step] = $(element)
       result
     , {})
 
   elements = ->
-    $('*[data-model], *[data-step]')
+    _.map $('*[model], *[step]'), (el) -> $(el)
+
+  components = ->
+    _.map $("[class^='cornflake']"), (el) -> $(el)
 
   return {
-    previousState: previousState
-    nextState: nextState
-    currentState: currentState
-    state: state
-    element: element
+    render: render
   }
 )()

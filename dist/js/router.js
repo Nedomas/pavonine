@@ -55034,106 +55034,42 @@ module.exports = require('./lib/React');
 
 },{"../vendor/htmltojsx.min":195,"./react_mixin":191,"./replacer":192,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
 (function() {
-  var UI;
+  var Router;
 
-  UI = module.exports = (function() {
-    var $, Converter, React, component, components, element, elements, hide, hideAll, idx, insertComponent, insertContainter, klassName, outerElement, outerElementHtml, outerHtml, removePreviousSteps, render, renderComponent, setProps, _;
-    React = require('react');
-    Converter = require('./converter');
-    _ = require('lodash');
-    $ = require('jquery');
-    hideAll = function() {
-      removePreviousSteps();
-      return _.each(elements(), function(el) {
-        var step;
-        step = el.attr('step') || 1;
-        return hide(step);
-      });
+  Router = module.exports = (function() {
+    var Memory, UI, change, current, next, previous, setCurrent, step;
+    Memory = require('./memory');
+    UI = require('./ui');
+    step = 1;
+    setCurrent = function(_step) {
+      return step = _step;
     };
-    hide = function(step) {
-      return element(step).hide();
+    current = function() {
+      return step;
     };
-    removePreviousSteps = function() {
-      return _.each(components(), function(component) {
-        return component.remove();
-      });
+    change = function(step) {
+      return UI.render(step);
     };
-    render = function(step) {
-      var component;
-      hideAll();
-      component = insertComponent(step);
-      return $(component.getDOMNode()).show();
+    previous = function(results) {
+      Memory.set(step, results);
+      return change(step - 1);
     };
-    insertComponent = function(i) {
-      var Router, rendered_component;
-      if (_.isEmpty(element(i))) {
-        return;
-      }
-      rendered_component = renderComponent(i);
-      setProps(rendered_component, outerElement(i));
-      Router = require('./router');
-      Router.setCurrent(i);
-      return rendered_component;
-    };
-    component = function(i) {
-      return Converter.htmlToReactComponent(klassName(i), outerElementHtml(i))();
-    };
-    renderComponent = function(i) {
-      var container;
-      container = insertContainter(i);
-      return React.renderComponent(component(i), container);
-    };
-    insertContainter = function(step) {
-      element(step).before("<div class='" + (klassName(step)) + "'>");
-      return $("." + (klassName(step)))[0];
-    };
-    klassName = function(step) {
-      return "cornflake" + step;
-    };
-    setProps = function(rendered_component, el) {
-      return rendered_component.setState({
-        model: el.attr('model'),
-        step: el.attr('step')
-      });
-    };
-    outerElement = function(i) {
-      return $(outerHtml(element(i)));
-    };
-    outerElementHtml = function(i) {
-      return outerHtml(element(i));
-    };
-    element = function(i) {
-      return idx()[i];
-    };
-    outerHtml = function(element) {
-      return $('<div>').append(element.clone()).html();
-    };
-    idx = function() {
-      return _.inject(elements(), function(result, element) {
-        var step;
-        step = $(element).attr('step') || 1;
-        result[step] = $(element);
-        return result;
-      }, {});
-    };
-    elements = function() {
-      return _.map($('*[model], *[step]'), function(el) {
-        return $(el);
-      });
-    };
-    components = function() {
-      return _.map($("[class^='cornflake']"), function(el) {
-        return $(el);
-      });
+    next = function(results) {
+      Memory.set(step, results);
+      return change(step + 1);
     };
     return {
-      render: render
+      current: current,
+      setCurrent: setCurrent,
+      change: change,
+      previous: previous,
+      next: next
     };
   })();
 
 }).call(this);
 
-},{"./converter":187,"./router":193,"jquery":10,"lodash":11,"react":186}],189:[function(require,module,exports){
+},{"./memory":189,"./ui":194}],189:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -55303,44 +55239,108 @@ module.exports = require('./lib/React');
 }).call(this);
 
 },{"lodash":11}],193:[function(require,module,exports){
+module.exports=require(188)
+},{"./memory":189,"./ui":194}],194:[function(require,module,exports){
 (function() {
-  var Router;
+  var UI;
 
-  Router = module.exports = (function() {
-    var Memory, UI, change, current, next, previous, setCurrent, step;
-    Memory = require('./memory');
-    UI = require('./ui');
-    step = 1;
-    setCurrent = function(_step) {
-      return step = _step;
+  UI = module.exports = (function() {
+    var $, Converter, React, component, components, element, elements, hide, hideAll, idx, insertComponent, insertContainter, klassName, outerElement, outerElementHtml, outerHtml, removePreviousSteps, render, renderComponent, setProps, _;
+    React = require('react');
+    Converter = require('./converter');
+    _ = require('lodash');
+    $ = require('jquery');
+    hideAll = function() {
+      removePreviousSteps();
+      return _.each(elements(), function(el) {
+        var step;
+        step = el.attr('step') || 1;
+        return hide(step);
+      });
     };
-    current = function() {
-      return step;
+    hide = function(step) {
+      return element(step).hide();
     };
-    change = function(step) {
-      return UI.render(step);
+    removePreviousSteps = function() {
+      return _.each(components(), function(component) {
+        return component.remove();
+      });
     };
-    previous = function(results) {
-      Memory.set(step, results);
-      return change(step - 1);
+    render = function(step) {
+      var component;
+      hideAll();
+      component = insertComponent(step);
+      return $(component.getDOMNode()).show();
     };
-    next = function(results) {
-      Memory.set(step, results);
-      return change(step + 1);
+    insertComponent = function(i) {
+      var Router, rendered_component;
+      if (_.isEmpty(element(i))) {
+        return;
+      }
+      rendered_component = renderComponent(i);
+      setProps(rendered_component, outerElement(i));
+      Router = require('./router');
+      Router.setCurrent(i);
+      return rendered_component;
+    };
+    component = function(i) {
+      return Converter.htmlToReactComponent(klassName(i), outerElementHtml(i))();
+    };
+    renderComponent = function(i) {
+      var container;
+      container = insertContainter(i);
+      return React.renderComponent(component(i), container);
+    };
+    insertContainter = function(step) {
+      element(step).before("<div class='" + (klassName(step)) + "'>");
+      return $("." + (klassName(step)))[0];
+    };
+    klassName = function(step) {
+      return "cornflake" + step;
+    };
+    setProps = function(rendered_component, el) {
+      return rendered_component.setState({
+        model: el.attr('model'),
+        step: el.attr('step')
+      });
+    };
+    outerElement = function(i) {
+      return $(outerHtml(element(i)));
+    };
+    outerElementHtml = function(i) {
+      return outerHtml(element(i));
+    };
+    element = function(i) {
+      return idx()[i];
+    };
+    outerHtml = function(element) {
+      return $('<div>').append(element.clone()).html();
+    };
+    idx = function() {
+      return _.inject(elements(), function(result, element) {
+        var step;
+        step = $(element).attr('step') || 1;
+        result[step] = $(element);
+        return result;
+      }, {});
+    };
+    elements = function() {
+      return _.map($('*[model], *[step]'), function(el) {
+        return $(el);
+      });
+    };
+    components = function() {
+      return _.map($("[class^='cornflake']"), function(el) {
+        return $(el);
+      });
     };
     return {
-      current: current,
-      setCurrent: setCurrent,
-      change: change,
-      previous: previous,
-      next: next
+      render: render
     };
   })();
 
 }).call(this);
 
-},{"./memory":189,"./ui":194}],194:[function(require,module,exports){
-module.exports=require(188)
 },{"./converter":187,"./router":193,"jquery":10,"lodash":11,"react":186}],195:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.

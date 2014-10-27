@@ -1,14 +1,15 @@
 window.Cornflake = Cornflake = module.exports = (->
-  UI = require './ui'
+  Router = require './router'
 
   init = ->
     console.log('Here and now')
-    initializers()
-    UI.state(1)
+    configure()
+    Router.change(1)
 
-  initializers = ->
+  configure = ->
     Persistance = require './persistance'
-    Persistance.setApi('http://cornflake-backend.herokuapp.com')
+    # Persistance.setApi('http://cornflake-backend.herokuapp.com')
+    Persistance.setApi('http://10.30.0.1:3000')
     String::splice = (idx, rem, s) ->
       (@slice(0, idx) + s + @slice(idx + Math.abs(rem)))
 
