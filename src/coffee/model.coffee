@@ -1,45 +1,58 @@
 Model = module.exports = (->
   UI = require './ui'
   Memory = require './memory'
+  Router = require './router'
+  _ = require 'lodash'
 
-  save = (step, data) ->
+  forBackend = (attributes, without_relations) ->
+    main = _.omit(attributes, ['model', 'step'].concat(relationships()))
+    related = []
 
-  forStep = (step) ->
-    Memory.get(step - 1, modelAttr(step))
-    na = parsedName(step)
-    debugger
-#
-#     if result.model
-#       relationship_hash = {}
-#       relationship_hash[result.model] = _.clone(result)
-#       _.extend(result, relationship_hash)
-#
-#     result
+    unless without_relations
+      _.each relationships(), (relation) ->
+        main["#{relation}_id"] = attributes[relation].id
 
-  modelAttr = (step) ->
-    el = UI.element(step)
+      _.each relationships(), (relation) ->
+        model_data = forBackend(attributes[relation], true)
+        related.push(model_data.main)
+        # TODO: Add nested relations
+
+    { main: main, related: related }
+
+  current = ->
+    result = _.clone(Memory.get(name()))
+
+    _.each relationships(), (relation) ->
+      result[relation] = Memory.get(relation)
+
+    result
+
+  modelAttr = ->
+    el = UI.element(step())
     el.attr('model')
 
-  record = (step) ->
-    { name: modelAttr() }
+  name = ->
+    parsedModelAttr().name
 
-  name = (step) ->
-    # 'message'
-    debugger
+  relationships = ->
+    parsedModelAttr().relationships
 
-  relationships = (step) ->
-    # ['subscriber']
-    debugger
+  step = ->
+    Router.current()
 
-  parsedName = (step) ->
-    # message for subscri
-    relationships_string = modelAttr(step).match(
+  parsedModelAttr = ->
+    result = {}
+    result.name = modelAttr(step()).match(/([a-zA-Z_]+)/)[1]
+
+    relationships_string = modelAttr(step()).match(
       /[a-zA-Z_]+ for ([a-zA-Z_, ]+)/)?[1]
-    name = modelAttr(step).match(/([a-zA-Z_]+)/)[1]
-    relationships = relationships_string.split(', ')
-    { name: name, relationships: relationships }
+    result.relationships = relationships_string?.split(', ') || []
+
+    result
 
   return {
-    forStep: forStep
+    current: current
+    name: name
+    forBackend: forBackend
   }
 )()

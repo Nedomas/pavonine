@@ -1,5 +1,6 @@
 Replacer = module.exports = (->
   _ = require 'lodash'
+  actions = ['create', 'update', 'destroy', 'previous', 'next']
 
   toReactCode = (jsx_code) ->
     jsx_code = removeExtraQuotes(jsx_code)
@@ -24,16 +25,21 @@ Replacer = module.exports = (->
 
   replaceToActions = (jsx_code) ->
     # {create} => {this.create}
-    actions = ['create', 'update', 'destroy', 'previous', 'next']
-
     replace jsx_code, /{([a-z]*)}/gi, (attribute) ->
-      return "{#{attribute}}" unless _.include(actions, attribute)
+      return "{#{attribute}}" unless matchAction(attribute)
       "{this.#{attribute}}"
 
   replaceToState = (jsx_code) ->
     replace jsx_code, /{([a-zA-Z.]*)}/gi, (attribute) ->
-      return "{#{attribute}}" if attribute.match(/^this./)
+      initial = "{#{attribute}}"
+      return initial if attribute.match(/^this./)
+      return initial if matchAction(attribute)
+
       "{this.state.#{attribute}}"
+
+  matchAction = (attribute) ->
+    _.any actions, (action) ->
+      attribute.match(new RegExp("#{action}$"))
 
   replaceToBindings = (jsx_code) ->
     # value={email}

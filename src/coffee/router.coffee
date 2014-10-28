@@ -14,12 +14,12 @@ Router = module.exports = (->
     step = _step
     UI.render(step)
 
-  previous = (results) ->
-    Memory.set(step, results)
+  previous = (current_data) ->
+    Memory.set(current_data)
     change(step - 1)
 
-  next = (results) ->
-    Memory.set(step, results)
+  next = (current_data) ->
+    Memory.set(current_data)
     change(step + 1)
 
   return {

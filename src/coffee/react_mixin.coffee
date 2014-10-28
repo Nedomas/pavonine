@@ -1,12 +1,16 @@
 ReactMixin = module.exports = (->
   Router = require './router'
   Model = require './model'
+  _ = require 'lodash'
+  _.mixin require('lodash-deep')
 
   getInitialState: ->
-    Model.forStep(Router.current())
+    Model.current()
   onChange: (attribute, e) ->
+    console.log(attribute)
     attribute_hash = {}
-    attribute_hash[attribute] = e.target.value
+    _.deepSet(attribute_hash, attribute, e.target.value)
+    console.log(attribute_hash)
     @setState(attribute_hash)
   create: (e) ->
     Persistance = require './persistance'

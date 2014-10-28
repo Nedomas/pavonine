@@ -10,29 +10,31 @@ head
       | Its loading
 
     /! Dedu tiesiai ant inputu
-    form model='message for subscriber, user'
+    form model='subscriber'
       /div data-error=''
       /  | Invalid email
       input value='{email}'
         | {email}
       button onClick='{create}' Subscribe
 
-    form model='message for subscriber, user' step='2'
+    form model='message for subscriber' step='2'
       | {model}
       | You have been subscribed on {subscriber.email}
       | Enter message
       input value='{content}'
       button onClick='{create}' Post
-/
-/      h2 Change email
-/      input value='{subscriber.email}'
-/      button onClick='{subscriber.create}' Post
+
+      h2 Change email
+      input value='{subscriber.email}'
+      a
+        | {subscriber.email}
+      button onClick='{subscriber.update}' Post
 
     //! Visi su step pradzioj hidden
-    /form model='subscriber' step='2'
-    /  | You have been subscribed on {email}
-    /  input value='{name}'
-    /  button onClick='{update}' Save my name
+    form model='subscriber' step='2'
+      | You have been subscribed on {email}
+      input value='{name}'
+      button onClick='{update}' Save my name
 
     div model='subscriber' step='3'
       | You are {name} with email {email}
