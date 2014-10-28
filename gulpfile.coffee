@@ -12,19 +12,19 @@ rename = require 'gulp-rename'
 gulp.task 'default', ['coffee', 'slim']
 
 gulp.task 'watch', ->
-  gulp.watch('./src/coffee/*.coffee', ['coffee'])
+  gulp.watch('./src/coffee/**/*.coffee', ['coffee'])
   gulp.watch('./node_modules/**/*.js', ['coffee'])
-  gulp.watch('./src/slim/*.slim', ['slim'])
+  gulp.watch('./src/slim/**/*.slim', ['slim'])
 
 gulp.task 'coffee', ->
   gulp
-    .src('./src/coffee/**/*.coffee')
+    .src('./src/coffee/cornflake.coffee')
     .pipe(coffeeify())
     .pipe(gulp.dest('./dist/js/'))
 
 gulp.task 'ugly', ->
   gulp
-    .src('./src/coffee/**/*.coffee')
+    .src('./src/coffee/cornflake.coffee')
     .pipe(coffeeify())
     .pipe(uglify())
     .pipe(rename('cornflake.min.js'))

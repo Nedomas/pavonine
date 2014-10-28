@@ -55032,7 +55032,7 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":195,"./react_mixin":191,"./replacer":192,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":196,"./react_mixin":192,"./replacer":193,"lodash":11,"react":186,"react-tools":12}],188:[function(require,module,exports){
 (function() {
   var Cornflake;
 
@@ -55063,18 +55063,21 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./persistance":190,"./router":193}],189:[function(require,module,exports){
+},{"./persistance":191,"./router":194}],189:[function(require,module,exports){
 (function() {
   var Memory;
 
   Memory = module.exports = (function() {
-    var app_data, get, set;
+    var app_data, get, set, _;
+    _ = require('lodash');
     app_data = {};
-    set = function(state, state_data) {
-      return app_data[state] = state_data;
+    set = function(step, data) {
+      app_data[step] || (app_data[step] = {});
+      return app_data[step][data.model] = data;
     };
-    get = function(state) {
-      return app_data[state] || {};
+    get = function(step, model) {
+      var _ref;
+      return ((_ref = app_data[step]) != null ? _ref[model] : void 0) || {};
     };
     return {
       set: set,
@@ -55084,7 +55087,55 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{}],190:[function(require,module,exports){
+},{"lodash":11}],190:[function(require,module,exports){
+(function() {
+  var Model;
+
+  Model = module.exports = (function() {
+    var Memory, UI, forStep, modelAttr, name, parsedName, record, relationships, save;
+    UI = require('./ui');
+    Memory = require('./memory');
+    save = function(step, data) {};
+    forStep = function(step) {
+      var na;
+      Memory.get(step - 1, modelAttr(step));
+      na = parsedName(step);
+      debugger;
+    };
+    modelAttr = function(step) {
+      var el;
+      el = UI.element(step);
+      return el.attr('model');
+    };
+    record = function(step) {
+      return {
+        name: modelAttr()
+      };
+    };
+    name = function(step) {
+      debugger;
+    };
+    relationships = function(step) {
+      debugger;
+    };
+    parsedName = function(step) {
+      var relationships_string, _ref;
+      relationships_string = (_ref = modelAttr(step).match(/[a-zA-Z_]+ for ([a-zA-Z_, ]+)/)) != null ? _ref[1] : void 0;
+      name = modelAttr(step).match(/([a-zA-Z_]+)/)[1];
+      relationships = relationships_string.split(', ');
+      return {
+        name: name,
+        relationships: relationships
+      };
+    };
+    return {
+      forStep: forStep
+    };
+  })();
+
+}).call(this);
+
+},{"./memory":189,"./ui":195}],191:[function(require,module,exports){
 (function() {
   var Persistance;
 
@@ -55103,10 +55154,14 @@ module.exports = require('./lib/React');
       if (!attributes.model) {
         throw new Error('No model specified');
       }
+      debugger;
       connection = new Databound("" + attributes.model + "s");
       return connection[action](_.omit(attributes, 'model', 'step')).then(function(resp) {
         var record;
         record = _.isObject(resp) ? resp : null;
+        _.extend(record, {
+          model: attributes.model
+        });
         return Router.next(record);
       });
     };
@@ -55118,17 +55173,17 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./router":193,"databound":1,"jquery":10,"lodash":11}],191:[function(require,module,exports){
+},{"./router":194,"databound":1,"jquery":10,"lodash":11}],192:[function(require,module,exports){
 (function() {
   var ReactMixin;
 
   ReactMixin = module.exports = (function() {
-    var Memory, Router;
+    var Model, Router;
     Router = require('./router');
-    Memory = require('./memory');
+    Model = require('./model');
     return {
       getInitialState: function() {
-        return Memory.get(Router.current());
+        return Model.forStep(Router.current());
       },
       onChange: function(attribute, e) {
         var attribute_hash;
@@ -55164,7 +55219,7 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./memory":189,"./persistance":190,"./router":193}],192:[function(require,module,exports){
+},{"./model":190,"./persistance":191,"./router":194}],193:[function(require,module,exports){
 (function() {
   var Replacer;
 
@@ -55176,7 +55231,9 @@ module.exports = require('./lib/React');
       jsx_code = capitalizeActionCase(jsx_code);
       jsx_code = replaceToBindings(jsx_code);
       jsx_code = replaceToActions(jsx_code);
-      return replaceToState(jsx_code);
+      jsx_code = replaceToState(jsx_code);
+      console.log(jsx_code);
+      return jsx_code;
     };
     removeExtraQuotes = function(jsx_code) {
       return jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
@@ -55201,7 +55258,10 @@ module.exports = require('./lib/React');
       });
     };
     replaceToState = function(jsx_code) {
-      return replace(jsx_code, /{([a-zA-Z]*)}/gi, function(attribute) {
+      return replace(jsx_code, /{([a-zA-Z.]*)}/gi, function(attribute) {
+        if (attribute.match(/^this./)) {
+          return "{" + attribute + "}";
+        }
         return "{this.state." + attribute + "}";
       });
     };
@@ -55232,7 +55292,7 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"lodash":11}],193:[function(require,module,exports){
+},{"lodash":11}],194:[function(require,module,exports){
 (function() {
   var Router;
 
@@ -55247,7 +55307,8 @@ module.exports = require('./lib/React');
     current = function() {
       return step;
     };
-    change = function(step) {
+    change = function(_step) {
+      step = _step;
       return UI.render(step);
     };
     previous = function(results) {
@@ -55269,12 +55330,12 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./memory":189,"./ui":194}],194:[function(require,module,exports){
+},{"./memory":189,"./ui":195}],195:[function(require,module,exports){
 (function() {
   var UI;
 
   UI = module.exports = (function() {
-    var $, Converter, React, component, components, element, elements, hide, hideAll, idx, insertComponent, insertContainter, klassName, outerElement, outerElementHtml, outerHtml, removePreviousSteps, render, renderComponent, setProps, _;
+    var $, Converter, React, component, components, element, elements, hide, hideAll, idx, insertComponent, insertContainter, klassName, loading, outerElement, outerElementHtml, outerHtml, removePreviousSteps, render, renderComponent, setProps, _;
     React = require('react');
     Converter = require('./converter');
     _ = require('lodash');
@@ -55297,9 +55358,14 @@ module.exports = require('./lib/React');
     };
     render = function(step) {
       var component;
+      loading(true);
       hideAll();
       component = insertComponent(step);
-      return $(component.getDOMNode()).show();
+      $(component.getDOMNode()).show();
+      return loading(false);
+    };
+    loading = function(show) {
+      return $('[loading]').toggle(show);
     };
     insertComponent = function(i) {
       var Router, rendered_component;
@@ -55364,13 +55430,14 @@ module.exports = require('./lib/React');
       });
     };
     return {
-      render: render
+      render: render,
+      element: element
     };
   })();
 
 }).call(this);
 
-},{"./converter":187,"./router":193,"jquery":10,"lodash":11,"react":186}],195:[function(require,module,exports){
+},{"./converter":187,"./router":194,"jquery":10,"lodash":11,"react":186}],196:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.

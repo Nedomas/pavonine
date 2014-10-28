@@ -11,9 +11,11 @@ Persistance = module.exports = (->
     e.preventDefault()
     throw new Error 'No model specified' unless attributes.model
 
+    debugger
     connection = new Databound("#{attributes.model}s")
     connection[action](_.omit(attributes, 'model', 'step')).then (resp) ->
       record = if _.isObject(resp) then resp else null
+      _.extend(record, model: attributes.model)
       Router.next(record)
 
   return {

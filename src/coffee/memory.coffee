@@ -1,11 +1,13 @@
 Memory = module.exports = (->
+  _ = require 'lodash'
   app_data = {}
 
-  set = (state, state_data) ->
-    app_data[state] = state_data
+  set = (step, data) ->
+    app_data[step] ||= {}
+    app_data[step][data.model] = data
 
-  get = (state) ->
-    app_data[state] || {}
+  get = (step, model) ->
+    app_data[step]?[model] || {}
 
   return {
     set: set

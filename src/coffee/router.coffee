@@ -10,7 +10,8 @@ Router = module.exports = (->
   current = ->
     step
 
-  change = (step) ->
+  change = (_step) ->
+    step = _step
     UI.render(step)
 
   previous = (results) ->

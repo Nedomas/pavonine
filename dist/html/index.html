@@ -8,23 +8,15 @@
     </meta>
   </meta>
   <body>
+    <div loading="">
+      Its loading
+    </div>
     <!--Dedu tiesiai ant inputu-->
-    <form model="subscriber">
+    <form model="message for subscriber, user">
       <input value="{email}">{email}</input><button onClick="{create}">Subscribe</button>
     </form>
-    <!--Visi su step pradzioj hidden-->
-    <form model="subscriber" step="2">
-      You have been subscribed on {email}<input value="{name}" /><button onClick="{update}">Save my name</button>
+    <form model="message for subscriber, user" step="2">
+      {model}You have been subscribed on {subscriber.email}Enter message<input value="{content}" /><button onClick="{create}">Post</button>
     </form>
-    <div model="subscriber" step="3">
-      You are {name} with email {email}<button onClick="{previous}">Go previous</button><button onClick="{destroy}">Kill me</button>
-    </div>
-    <!--kitas stepas kaip ir success handleris gali but-->
-    <div step="4">
-      <p>
-        All steps were done!
-      </p>
-      <button onClick="{previous}">Go previous</button>
-    </div>
   </body>
 </head>

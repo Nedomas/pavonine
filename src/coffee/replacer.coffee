@@ -6,7 +6,9 @@ Replacer = module.exports = (->
     jsx_code = capitalizeActionCase(jsx_code)
     jsx_code = replaceToBindings(jsx_code)
     jsx_code = replaceToActions(jsx_code)
-    replaceToState(jsx_code)
+    jsx_code = replaceToState(jsx_code)
+    console.log(jsx_code)
+    jsx_code
 
   removeExtraQuotes = (jsx_code) ->
     jsx_code.replace(/"{/g, '{').replace(/}"/g, '}')
@@ -29,7 +31,8 @@ Replacer = module.exports = (->
       "{this.#{attribute}}"
 
   replaceToState = (jsx_code) ->
-    replace jsx_code, /{([a-zA-Z]*)}/gi, (attribute) ->
+    replace jsx_code, /{([a-zA-Z.]*)}/gi, (attribute) ->
+      return "{#{attribute}}" if attribute.match(/^this./)
       "{this.state.#{attribute}}"
 
   replaceToBindings = (jsx_code) ->

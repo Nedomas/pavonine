@@ -1,9 +1,9 @@
 ReactMixin = module.exports = (->
   Router = require './router'
-  Memory = require './memory'
+  Model = require './model'
 
   getInitialState: ->
-    Memory.get(Router.current())
+    Model.forStep(Router.current())
   onChange: (attribute, e) ->
     attribute_hash = {}
     attribute_hash[attribute] = e.target.value

@@ -18,9 +18,14 @@ UI = module.exports = (->
       component.remove()
 
   render = (step) ->
+    loading(true)
     hideAll()
     component = insertComponent(step)
     $(component.getDOMNode()).show()
+    loading(false)
+
+  loading = (show) ->
+    $('[loading]').toggle(show)
 
   insertComponent = (i) ->
     return if _.isEmpty(element(i))
@@ -77,5 +82,6 @@ UI = module.exports = (->
 
   return {
     render: render
+    element: element
   }
 )()
