@@ -3,6 +3,7 @@ Persistance = module.exports = (->
   Databound = require 'databound'
   Model = require './model'
   Router = require './router'
+  Memory = require './memory'
 
   setApi = (api_url) ->
     Databound.API_URL = api_url
@@ -21,6 +22,7 @@ Persistance = module.exports = (->
         relationships: new_attributes.relationships
 
       new_model = new Model(_.assign(new_attributes, metadata))
+      Memory.setArray(new_model.plural, connection.takeAll())
       Router.next(new_model.attributes)
 
   return {

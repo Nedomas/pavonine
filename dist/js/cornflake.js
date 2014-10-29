@@ -58836,7 +58836,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Handlebarser;
 
   Handlebarser = (function() {
-    var Handlebars, Replacer, actions, emptyMock, isAction, lookups, mock, patch, _;
+    var Handlebars, Replacer, actions, addLookup, emptyMock, isAction, lookups, mock, patch, _;
     Handlebars = require('handlebars');
     _ = require('lodash');
     _.mixin(require('lodash-deep'));
@@ -58860,6 +58860,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       };
       return Handlebars.registerHelper('each', function(context, options) {
         var iteration_result;
+        addLookup(context.split('.'));
         iteration_result = options.fn(mock());
         iteration_result = Replacer.replace(iteration_result, /{this\.state\.(.+?)}/, function(attribute, initial) {
           return "' + record." + attribute + " + '";
@@ -58892,10 +58893,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     isAction = function(lookup) {
       return _.include(actions, _.last(lookup));
     };
+    addLookup = function(lookup) {
+      return lookups.push(lookup);
+    };
     return {
       patch: patch,
       mock: mock,
-      emptyMock: emptyMock
+      emptyMock: emptyMock,
+      addLookup: addLookup
     };
   })();
 
@@ -59002,17 +59007,21 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Memory;
 
   Memory = module.exports = (function() {
-    var app_data, get, set, _;
+    var app_data, get, set, setArray, _;
     _ = require('lodash');
     app_data = {};
     set = function(data) {
       return app_data[data.model] = data;
+    };
+    setArray = function(name, records) {
+      return app_data[name] = records;
     };
     get = function(model) {
       return app_data[model] || {};
     };
     return {
       set: set,
+      setArray: setArray,
       get: get
     };
   })();
@@ -59074,11 +59083,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Persistance;
 
   Persistance = module.exports = (function() {
-    var Databound, Model, Router, act, setApi, _;
+    var Databound, Memory, Model, Router, act, setApi, _;
     _ = require('lodash');
     Databound = require('databound');
     Model = require('./model');
     Router = require('./router');
+    Memory = require('./memory');
     setApi = function(api_url) {
       return Databound.API_URL = api_url;
     };
@@ -59098,6 +59108,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           relationships: new_attributes.relationships
         };
         new_model = new Model(_.assign(new_attributes, metadata));
+        Memory.setArray(new_model.plural, connection.takeAll());
         return Router.next(new_model.attributes);
       });
     };
@@ -59109,7 +59120,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./model":211,"./router":215,"databound":1,"lodash":29}],213:[function(require,module,exports){
+},{"./memory":210,"./model":211,"./router":215,"databound":1,"lodash":29}],213:[function(require,module,exports){
 (function() {
   var ReactMixin,
     __slice = [].slice;

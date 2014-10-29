@@ -20,6 +20,7 @@ Handlebarser = (->
         parent + "['" + name + "']"
 
     Handlebars.registerHelper 'each', (context, options) ->
+      addLookup(context.split('.'))
       iteration_result = options.fn(mock())
       iteration_result = Replacer.replace iteration_result,
         /{this\.state\.(.+?)}/, (attribute, initial) ->
@@ -50,10 +51,14 @@ Handlebarser = (->
   isAction = (lookup) ->
     _.include(actions, _.last(lookup))
 
+  addLookup = (lookup) ->
+    lookups.push(lookup)
+
   return {
     patch: patch
     mock: mock
     emptyMock: emptyMock
+    addLookup: addLookup
   }
 )()
 
