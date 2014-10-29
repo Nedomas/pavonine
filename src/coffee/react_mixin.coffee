@@ -3,23 +3,26 @@ ReactMixin = module.exports = (->
   Model = require './model'
   _ = require 'lodash'
   _.mixin require('lodash-deep')
+  Persistance = require './persistance'
 
   getInitialState: ->
-    Model.current()
+    Model.main().attributes
   onChange: (attribute, e) ->
-    console.log(attribute)
-    attribute_hash = {}
-    _.deepSet(attribute_hash, attribute, e.target.value)
-    console.log(attribute_hash)
-    @setState(attribute_hash)
+    new_attributes = _.clone(@state)
+    new_attributes[attribute] = e.target.value
+    @setState(new_attributes)
+  relationshipOnChange: (attribute, e) ->
+    new_attributes = _.clone(@state)
+    _.deepSet(new_attributes, attribute, e.target.value)
+    @setState(new_attributes)
+  relationshipAction: (model, action, e) ->
+    debugger
+    Persistance.act(action, e, @state[model], model)
   create: (e) ->
-    Persistance = require './persistance'
     Persistance.act('create', e, @state)
   update: (e) ->
-    Persistance = require './persistance'
     Persistance.act('update', e, @state)
   destroy: (e) ->
-    Persistance = require './persistance'
     Persistance.act('destroy', e, @state)
   previous: (e) ->
     e.preventDefault()

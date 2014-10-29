@@ -1,27 +1,27 @@
 Persistance = module.exports = (->
-  Databound = require 'databound'
   _ = require 'lodash'
-  $ = require 'jquery'
-  Router = require './router'
+  Databound = require 'databound'
   Model = require './model'
+  Router = require './router'
 
   setApi = (api_url) ->
     Databound.API_URL = api_url
 
   act = (action, e, attributes) ->
     e.preventDefault()
-    throw new Error 'No model specified' unless Model.name()
+    throw new Error 'No model specified' unless attributes.model
 
-    connection = new Databound("#{Model.name()}s")
-    models = Model.forBackend(attributes)
-    requests = _.map models, (model) ->
-      connection
+    model = new Model(attributes)
+    connection = new Databound(model.plural)
 
-    debugger
-    connection[action](models.main).then (resp) ->
-      record = if _.isObject(resp) then resp else null
-      _.extend(record, model: Model.name())
-      Router.next(record)
+    connection[action](model.serialize()).then (resp) ->
+      new_attributes = if _.isObject(resp) then resp else {}
+      metadata =
+        model: model.model
+        relationships: new_attributes.relationships
+
+      new_model = new Model(_.assign(new_attributes, metadata))
+      Router.next(new_model.attributes)
 
   return {
     setApi: setApi

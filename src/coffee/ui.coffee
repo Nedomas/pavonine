@@ -31,7 +31,6 @@ UI = module.exports = (->
     return if _.isEmpty(element(i))
 
     rendered_component = renderComponent(i)
-    setProps(rendered_component, outerElement(i))
     Router = require './router'
     Router.setCurrent(i)
     rendered_component
@@ -49,11 +48,6 @@ UI = module.exports = (->
 
   klassName = (step) ->
     "cornflake#{step}"
-
-  setProps = (rendered_component, el) ->
-    rendered_component.setState
-      model: el.attr('model')
-      step: el.attr('step')
 
   outerElement = (i) ->
     $(outerHtml(element(i)))

@@ -19,19 +19,27 @@ Replacer = module.exports = (->
     result = jsx_code
 
     _.each words, (word) ->
-      result = result.replace word.toLowerCase(), word
+      result = replace(result, word.toLowerCase(), -> word)
 
     result
 
   replaceToActions = (jsx_code) ->
     # {create} => {this.create}
-    replace jsx_code, /{([a-z]*)}/gi, (attribute) ->
-      return "{#{attribute}}" unless matchAction(attribute)
-      "{this.#{attribute}}"
+    replace jsx_code, /{([a-z.]*)}/gi, (attribute, initial) ->
+      return initial unless matchAction(attribute)
+
+      if attribute.match(/\./)
+        # {subscriber.create}
+        # =>
+        # {_.partial(this.relationshipAction, 'subscriber', 'create')}
+
+        [model, action] = attribute.split('.')
+        "{_.partial(this.relationshipAction, '#{model}', '#{action}')}"
+      else
+        "{this.#{attribute}}"
 
   replaceToState = (jsx_code) ->
-    replace jsx_code, /{([a-zA-Z.]*)}/gi, (attribute) ->
-      initial = "{#{attribute}}"
+    replace jsx_code, /{([a-zA-Z.]*)}/gi, (attribute, initial) ->
       return initial if attribute.match(/^this./)
       return initial if matchAction(attribute)
 
@@ -46,18 +54,28 @@ Replacer = module.exports = (->
     # =>
     # value={email} onChange={_.partial(this.onChange, 'email')}
     replace jsx_code, /value={(.+?)}/gi, (attribute) ->
-      "value={#{attribute}} onChange={_.partial(this.onChange, '#{attribute}')}"
+      if attribute.match(/\./)
+        # {subscriber.create}
+        # =>
+        # {_.partial(this.relationshipAction, 'subscriber', 'create')}
+
+        [model, attr] = attribute.split('.')
+        "value={#{attribute}} onChange={_.partial(this.relationshipOnChange, '#{attribute}')}"
+      else
+        "value={#{attribute}} onChange={_.partial(this.onChange, '#{attribute}')}"
 
   replace = (code, from, to) ->
     result = code
+    regexp = new RegExp(from)
 
     loop
-      matched = from.exec(result)
+      matched = regexp.exec(result)
 
       if matched
+        full_match = matched[0]
         attribute = matched[1]
-        length = matched[0].length
-        result = result.splice(matched.index, length, to(attribute))
+        length = full_match.length
+        result = result.splice(matched.index, length, to(attribute, full_match))
       else
         break
 
