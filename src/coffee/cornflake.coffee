@@ -3,8 +3,9 @@ window.Cornflake = Cornflake = module.exports = (->
 
   init = ->
     console.log('Here and now')
-    configure()
-    Router.change(1)
+    debugger
+    # configure()
+    # Router.change(1)
     # Facebook.init()
 
   configure = ->
@@ -19,8 +20,7 @@ window.Cornflake = Cornflake = module.exports = (->
   }
 )()
 
-window.onload = ->
-  Cornflake.init()
+Cornflake.init()
 
 Facebook = (->
   $ = require 'jquery'

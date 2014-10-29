@@ -4,46 +4,64 @@ head
     title Cornflake
     meta content=('Cornflake') name='description'
     meta content='width=device-width' name='viewport'
-      script src='js/cornflake.js' type='text/javascript'
+      script src='js/compiler.js' type='text/javascript'
   body
-    div loading=''
-      | Its loading
+    | {#step 1}
+    /div data-error=''
+    /  | Invalid email
+    input value='{{subscriber.email}}'
+      | {{subscriber.email}}
+    button onClick='{{subscriber.create}}' Subscribe
+    | {#end}
 
-    /! Dedu tiesiai ant inputu
-    form model='subscriber'
-      /div data-error=''
-      /  | Invalid email
-      input value='{email}'
-        | {email}
-      button onClick='{create}' Subscribe
+    | {#step 2}
+    | {#scope 'message for subscriber'}
+    | {{model}}
+    | You have been subscribed on {{subscriber.email}}
+    | Enter message
+    input value='{{content}}'
+    button onClick='{{create}}' Post
+    | {#end}
+    | {#end}
 
-    form model='message for subscriber' step='2'
-      | {model}
-      | You have been subscribed on {subscriber.email}
-      | Enter message
-      input value='{content}'
-      button onClick='{create}' Post
-
-      h2 Change email
-      input value='{subscriber.email}'
-      a
-        | {subscriber.email}
-      button onClick='{subscriber.update}' Post
-
-    //! Visi su step pradzioj hidden
-    /form model='subscriber' step='2'
-    /  | You have been subscribed on {email}
-    /  input value='{name}'
-    /  button onClick='{update}' Save my name
-
-    div model='subscriber' step='3'
-      | You are {name} with email {email}
-      button onClick='{previous}' Go previous
-      button onClick='{destroy}' Kill me
-
-    /! kitas stepas kaip ir success handleris gali but
-    div step='4'
-      p All steps were done!
-      button onClick='{previous}' Go previous
-
-/    login model='user'
+/    div loading=''
+/      | Its loading}
+/
+/    /! Dedu tiesiai ant inputu
+/    form model='subscriber'
+/      /div data-error=''
+/      /  | Invalid email
+/      input value='{email}'
+/        | {email}
+/      button onClick='{create}' Subscribe
+/
+/    form model='message for subscriber' step='2'
+/      | {model}
+/      | You have been subscribed on {subscriber.email}
+/      | Enter message
+/      input value='{content}'
+/      button onClick='{create}' Post
+/
+/      h2 Change email
+/      input value='{subscriber.email}'
+/      a
+/        | {subscriber.email}
+/      button onClick='{subscriber.update}' Post
+/
+/    //! Visi su step pradzioj hidden
+/    /form model='subscriber' step='2'
+/    /  | You have been subscribed on {email}
+/    /  input value='{name}'
+/    /  button onClick='{update}' Save my name
+/
+/    div model='subscriber' step='3'
+/      | You are {name} with email {email}
+/      button onClick='{previous}' Go previous
+/      button onClick='{destroy}' Kill me
+/
+/    /! kitas stepas kaip ir success handleris gali but
+/    div step='4'
+/      p All steps were done!
+/      button onClick='{previous}' Go previous
+/
+//    login model='user'

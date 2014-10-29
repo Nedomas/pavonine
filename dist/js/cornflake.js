@@ -55299,8 +55299,7 @@ module.exports = require('./lib/React');
     Router = require('./router');
     init = function() {
       console.log('Here and now');
-      configure();
-      return Router.change(1);
+      debugger;
     };
     configure = function() {
       var Persistance;
@@ -55315,9 +55314,7 @@ module.exports = require('./lib/React');
     };
   })();
 
-  window.onload = function() {
-    return Cornflake.init();
-  };
+  Cornflake.init();
 
   Facebook = (function() {
     var $, init, loggedIn;
