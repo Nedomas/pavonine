@@ -58937,14 +58937,21 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         }
       });
       _.each(traverse(result).paths(), function(path) {
-        var old_value, path_str, value;
+        var existing, path_str, value;
         path_str = path.join('.');
         value = Memory.get(path_str);
         if (!_.isEmpty(value)) {
-          old_value = _.deepGet(result, path_str);
-          if (_.isObject(old_value)) {
-            return _.each(value, function(val, key) {
+          existing = _.deepGet(result, path_str);
+          if (_.isObject(existing)) {
+            _.each(value, function(val, key) {
               return _.deepSet(result, "" + path_str + "." + key, val);
+            });
+            return _.each(existing, function(val, key) {
+              var relation_id_path;
+              if (_.isObject(val) && !_.isArray(val)) {
+                relation_id_path = "" + path_str + "." + key + "." + value.model + "_id";
+                return _.deepSet(result, relation_id_path, value.id);
+              }
             });
           } else {
             return _.deepSet(result, path_str, value);
@@ -59083,6 +59090,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       }
       model = new Model(attributes);
       connection = new Databound(model.plural);
+      debugger;
       return connection[action](model.serialize()).then(function(resp) {
         var metadata, new_attributes, new_model;
         new_attributes = _.isObject(resp) ? resp : {};
