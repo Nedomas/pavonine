@@ -55292,7 +55292,7 @@ module.exports = require('./lib/React');
 
 },{"../vendor/htmltojsx.min":198,"./react_mixin":194,"./replacer":195,"lodash":12,"react":187,"react-tools":13}],189:[function(require,module,exports){
 (function() {
-  var Cornflake;
+  var Cornflake, Facebook;
 
   window.Cornflake = Cornflake = module.exports = (function() {
     var Router, configure, init;
@@ -55319,9 +55319,36 @@ module.exports = require('./lib/React');
     return Cornflake.init();
   };
 
+  Facebook = (function() {
+    var $, init, loggedIn;
+    $ = require('jquery');
+    init = function() {
+      $.ajaxSetup({
+        cache: true
+      });
+      return $.getScript('//connect.facebook.net/en_UK/all.js', function() {
+        FB.init({
+          appId: '776916785684160',
+          xfbml: true,
+          version: 'v2.1'
+        });
+        return FB.login(loggedIn, {
+          scope: 'user_about_me'
+        });
+      });
+    };
+    loggedIn = function(r) {
+      console.log(r);
+      debugger;
+    };
+    return {
+      init: init
+    };
+  })();
+
 }).call(this);
 
-},{"./persistance":193,"./router":196}],190:[function(require,module,exports){
+},{"./persistance":193,"./router":196,"jquery":10}],190:[function(require,module,exports){
 (function() {
   var MainModel;
 
