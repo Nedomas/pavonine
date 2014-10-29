@@ -1,6 +1,7 @@
 window.Compiler = Compiler = module.exports = (->
   # STEP_REGEX = /\{\#step\ (\d+)}(.+?)\{\#end\}/g
-  STEP_REGEX = /\{\#step\ (\d+)}([\s\S]*?)(.+?)([\s\S]*?)\{\#end\}/g
+  # STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?)(.+?)([\s\S]*?)\{\#end\}/g
+  STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?)(.+?)([\s\S]*?){{\/step}}/g
   steps = null
 
   init = ->
@@ -11,8 +12,12 @@ window.Compiler = Compiler = module.exports = (->
     console.log('Compiled')
     show()
 
-  getSteps = ->
-    steps
+  stepContent = (i) ->
+    for step in steps
+      if parseInt(step.step) == i
+        return step.content
+
+    throw new Error("No step #{i}")
 
   hide = ->
     document.write('<style class="hideBeforeCompilation" ' +
@@ -29,7 +34,7 @@ window.Compiler = Compiler = module.exports = (->
   removeFromBody = ->
     for step in steps
       document.body.innerHTML = document.body.innerHTML
-        .replace(step.full_match, '')
+        .replace(step.full_match, "<div step='#{step.step}'></div>")
 
   scanSteps = ->
     code = document.body.innerHTML
@@ -56,7 +61,7 @@ window.Compiler = Compiler = module.exports = (->
   return {
     init: init
     hide: hide
-    getSteps: getSteps
+    stepContent: stepContent
   }
 )()
 Compiler.hide()

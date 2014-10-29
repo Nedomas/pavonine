@@ -9,7 +9,8 @@
   </meta>
   <body>
     <h1>Hello</h1>
-    {#step 1}
+
+    {{#step 1}}
       <input value="{{subscriber.email}}">
         {{subscriber.email}}
       </input>
@@ -17,9 +18,9 @@
       <button onClick="{{subscriber.create}}">
         Subscribe
       </button>
-    {#end}
+    {{/step}}
 
-    {#step 2}
+    {{#step 2}}
       {{subscriber.model}}
       You have been subscribed on {{subscriber.email}}
       Enter message
@@ -27,6 +28,6 @@
       <button onClick="{{subscriber.message.create}}">
         Post
       </button>
-    {#end}
+    {{/step}}
   </body>
 </head>

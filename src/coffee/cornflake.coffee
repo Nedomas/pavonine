@@ -3,9 +3,8 @@ window.Cornflake = Cornflake = module.exports = (->
 
   init = ->
     console.log('Here and now')
-    debugger
-    # configure()
-    # Router.change(1)
+    configure()
+    Router.change(1)
     # Facebook.init()
 
   configure = ->

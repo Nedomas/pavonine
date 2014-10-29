@@ -1,9 +1,11 @@
 Converter = module.exports = (->
+  Handlebars = require 'handlebars'
   react_tools = require 'react-tools'
   HTMLtoJSX = require '../vendor/htmltojsx.min'
   Replacer = require './replacer'
 
   htmlToReactComponent = (klass_name, element) ->
+    debugger
     xhtml = toXHTML(element)
     jsx = toJSX(klass_name, xhtml)
     toComponent(klass_name, jsx)

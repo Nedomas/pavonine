@@ -9,7 +9,7 @@ concat = require 'gulp-concat'
 uglify = require 'gulp-uglify'
 rename = require 'gulp-rename'
 
-gulp.task 'default', ['coffee', 'slim']
+gulp.task 'default', ['coffee']
 
 gulp.task 'watch', ->
   gulp.watch('./src/coffee/**/*.coffee', ['coffee'])

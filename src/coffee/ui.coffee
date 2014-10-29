@@ -28,19 +28,16 @@ UI = module.exports = (->
     $('[loading]').toggle(show)
 
   insertComponent = (i) ->
-    return if _.isEmpty(element(i))
-
     rendered_component = renderComponent(i)
     Router = require './router'
     Router.setCurrent(i)
     rendered_component
 
   component = (i) ->
-    Converter.htmlToReactComponent(klassName(i), outerElementHtml(i))()
+    Converter.htmlToReactComponent(klassName(i), Compiler.stepContent(i))()
 
   renderComponent = (i) ->
-    container = insertContainter(i)
-    React.renderComponent(component(i), container)
+    React.renderComponent(component(i), container(i))
 
   insertContainter = (step) ->
     element(step).before("<div class='#{klassName(step)}'>")
@@ -49,17 +46,8 @@ UI = module.exports = (->
   klassName = (step) ->
     "cornflake#{step}"
 
-  outerElement = (i) ->
-    $(outerHtml(element(i)))
-
-  outerElementHtml = (i) ->
-    outerHtml(element(i))
-
-  element = (i) ->
+  container = (i) ->
     idx()[i]
-
-  outerHtml = (element) ->
-    $('<div>').append(element.clone()).html()
 
   idx = ->
     _.inject(elements(), (result, element) ->
@@ -69,13 +57,12 @@ UI = module.exports = (->
     , {})
 
   elements = ->
-    _.map $('*[model], *[step]'), (el) -> $(el)
+    _.map $('*[step]'), (el) -> $(el)
 
   components = ->
     _.map $("[class^='cornflake']"), (el) -> $(el)
 
   return {
     render: render
-    element: element
   }
 )()

@@ -3,8 +3,8 @@
   var Compiler;
 
   window.Compiler = Compiler = module.exports = (function() {
-    var STEP_REGEX, getSteps, hide, init, installMain, removeFromBody, scanSteps, show, steps;
-    STEP_REGEX = /\{\#step\ (\d+)}([\s\S]*?)(.+?)([\s\S]*?)\{\#end\}/g;
+    var STEP_REGEX, hide, init, installMain, removeFromBody, scanSteps, show, stepContent, steps;
+    STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?)(.+?)([\s\S]*?){{\/step}}/g;
     steps = null;
     init = function() {
       console.log('Compiling');
@@ -14,8 +14,15 @@
       console.log('Compiled');
       return show();
     };
-    getSteps = function() {
-      return steps;
+    stepContent = function(i) {
+      var step, _i, _len;
+      for (_i = 0, _len = steps.length; _i < _len; _i++) {
+        step = steps[_i];
+        if (parseInt(step.step) === i) {
+          return step.content;
+        }
+      }
+      throw new Error("No step " + i);
     };
     hide = function() {
       return document.write('<style class="hideBeforeCompilation" ' + 'type="text/css">body {display:none;}<\/style>');
@@ -34,7 +41,7 @@
       _results = [];
       for (_i = 0, _len = steps.length; _i < _len; _i++) {
         step = steps[_i];
-        _results.push(document.body.innerHTML = document.body.innerHTML.replace(step.full_match, ''));
+        _results.push(document.body.innerHTML = document.body.innerHTML.replace(step.full_match, "<div step='" + step.step + "'></div>"));
       }
       return _results;
     };
@@ -63,7 +70,7 @@
     return {
       init: init,
       hide: hide,
-      getSteps: getSteps
+      stepContent: stepContent
     };
   })();
 
