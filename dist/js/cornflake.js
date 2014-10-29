@@ -58399,11 +58399,12 @@ module.exports = require('./lib/React');
   var Converter;
 
   Converter = module.exports = (function() {
-    var HTMLtoJSX, Handlebars, Replacer, htmlToReactComponent, l, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
+    var HTMLtoJSX, Handlebars, Handlebarser, Replacer, htmlToReactComponent, l, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
     react_tools = require('react-tools');
     HTMLtoJSX = require('../vendor/htmltojsx.min');
     Replacer = require('./replacer');
     Handlebars = require('handlebars');
+    Handlebarser = require('./handlebarser');
     htmlToReactComponent = function(klass_name, element) {
       var jsx, xhtml;
       xhtml = toXHTML(element);
@@ -58420,23 +58421,12 @@ module.exports = require('./lib/React');
       return eval(klass_name);
     };
     toJSX = function(klass_name, html) {
-      var args, template;
+      var mocked, react_code, template, wrapped;
       template = Handlebars.compile(html);
-      args = {
-        subscriber: {
-          email: 'some@email',
-          messages: [
-            {
-              a: '1',
-              content: 'first message'
-            }, {
-              content: 'hehy'
-            }
-          ]
-        }
-      };
-      console.log(template());
-      return console.log(template(Handlebarser.mock()));
+      template();
+      mocked = template(Handlebarser.mock());
+      wrapped = wrapInJSX(klass_name, mocked);
+      return react_code = Replacer.toReactCode(wrapped);
     };
     wrapInJSX = function(klass_name, html) {
       var converter, jsx_code, render_index;
@@ -58466,46 +58456,29 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":215,"./react_mixin":211,"./replacer":212,"handlebars":26,"lodash":29,"react":204,"react-tools":30}],206:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":216,"./handlebarser":207,"./react_mixin":212,"./replacer":213,"handlebars":26,"lodash":29,"react":204,"react-tools":30}],206:[function(require,module,exports){
 (function() {
   var Cornflake, Facebook;
 
   window.Cornflake = Cornflake = module.exports = (function() {
-    var Handlebars, Persistance, Replacer, Router, configure, getReactMock, init, lookups, toState, _;
-    Handlebars = require('handlebars');
-    _ = require('lodash');
-    _.mixin(require('lodash-deep'));
+    var Handlebarser, Persistance, Router, configure, init;
     Persistance = require('./persistance');
+    Handlebarser = require('./handlebarser');
     Router = require('./router');
-    Replacer = require('./replacer');
-    lookups = [];
     init = function() {
       console.log('Here and now');
+      Handlebarser.patch();
       configure();
-      Router.change(1);
-      return Handlebarser.patch();
+      return Router.change(1);
     };
     configure = function() {
       Persistance.setApi('http://10.30.0.1:3000');
-      String.prototype.splice = function(idx, rem, s) {
+      return String.prototype.splice = function(idx, rem, s) {
         return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
       };
-      return overrideHandlebars();
-    };
-    getReactMock = function() {
-      var result;
-      result = {};
-      _.each(lookups, function(lookup) {
-        return _.deepSet(result, lookup, "{" + (toState(lookup)) + "}");
-      });
-      return result;
-    };
-    toState = function(initial) {
-      return "this.state." + initial;
     };
     return {
-      init: init,
-      getReactMock: getReactMock
+      init: init
     };
   })();
 
@@ -58540,7 +58513,68 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./persistance":210,"./replacer":212,"./router":213,"handlebars":26,"jquery":27,"lodash":29,"lodash-deep":28}],207:[function(require,module,exports){
+},{"./handlebarser":207,"./persistance":211,"./router":214,"jquery":27}],207:[function(require,module,exports){
+(function() {
+  var Handlebarser;
+
+  Handlebarser = (function() {
+    var Handlebars, Replacer, actions, isAction, lookups, mock, patch, _;
+    Handlebars = require('handlebars');
+    _ = require('lodash');
+    _.mixin(require('lodash-deep'));
+    Replacer = require('./replacer');
+    lookups = [];
+    actions = ['create', 'update', 'destroy', 'previous', 'next'];
+    patch = function() {
+      Handlebars.JavaScriptCompiler.prototype.nameLookup = function(parent, name, type) {
+        _.each(this.environment.opcodes, function(opcode) {
+          var lookup;
+          if (opcode.opcode === 'lookupOnContext') {
+            lookup = opcode.args[0];
+            return lookups.push(lookup);
+          }
+        });
+        if (Handlebars.JavaScriptCompiler.isValidJavaScriptVariableName(name)) {
+          return "" + parent + "." + name;
+        } else {
+          return parent + "['" + name + "']";
+        }
+      };
+      return Handlebars.registerHelper('each', function(context, options) {
+        var iteration_result;
+        iteration_result = options.fn(mock());
+        iteration_result = Replacer.replace(iteration_result, /{this\.state\.(.+?)}/, function(attribute, initial) {
+          return "' + record." + attribute + " + '";
+        });
+        return ("{_.map(" + (Replacer.toState(context.split('.'))) + ", function(record, i) {") + (" return '" + iteration_result + "'") + '})}';
+      });
+    };
+    mock = function() {
+      var result;
+      result = {};
+      _.each(lookups, function(lookup) {
+        if (isAction(lookup)) {
+          return _.deepSet(result, lookup, "{" + (Replacer.toAction(lookup)) + "}");
+        } else {
+          return _.deepSet(result, lookup, "{" + (Replacer.toState(lookup)) + "}");
+        }
+      });
+      return result;
+    };
+    isAction = function(lookup) {
+      return _.include(actions, _.last(lookup));
+    };
+    return {
+      patch: patch,
+      mock: mock
+    };
+  })();
+
+  module.exports = Handlebarser;
+
+}).call(this);
+
+},{"./replacer":213,"handlebars":26,"lodash":29,"lodash-deep":28}],208:[function(require,module,exports){
 (function() {
   var MainModel;
 
@@ -58608,7 +58642,7 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./memory":208,"./router":213,"./ui":214,"lodash":29}],208:[function(require,module,exports){
+},{"./memory":209,"./router":214,"./ui":215,"lodash":29}],209:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -58630,7 +58664,7 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"lodash":29}],209:[function(require,module,exports){
+},{"lodash":29}],210:[function(require,module,exports){
 (function() {
   var Model;
 
@@ -58680,7 +58714,7 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./main_model":207,"./memory":208,"lodash":29}],210:[function(require,module,exports){
+},{"./main_model":208,"./memory":209,"lodash":29}],211:[function(require,module,exports){
 (function() {
   var Persistance;
 
@@ -58720,7 +58754,7 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./model":209,"./router":213,"databound":1,"lodash":29}],211:[function(require,module,exports){
+},{"./model":210,"./router":214,"databound":1,"lodash":29}],212:[function(require,module,exports){
 (function() {
   var ReactMixin;
 
@@ -58773,28 +58807,22 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./model":209,"./persistance":210,"./router":213,"lodash":29,"lodash-deep":28}],212:[function(require,module,exports){
+},{"./model":210,"./persistance":211,"./router":214,"lodash":29,"lodash-deep":28}],213:[function(require,module,exports){
 (function() {
   var Replacer;
 
   Replacer = module.exports = (function() {
-    var Handlebars, actions, capitalizeActionCase, matchAction, removeExtraQuotes, replace, replaceToActions, replaceToBindings2, replaceToState, toReactCode, _;
+    var Handlebars, actions, capitalizeActionCase, removeExtraQuotes, replace, replaceToBindings, toAction, toReactCode, toState, _;
     Handlebars = require('handlebars');
     _ = require('lodash');
     actions = ['create', 'update', 'destroy', 'previous', 'next'];
     toReactCode = function(jsx_code) {
-      jsx_code = replaceToBindings(jsx_code);
-      debugger;
       jsx_code = removeExtraQuotes(jsx_code);
       jsx_code = capitalizeActionCase(jsx_code);
-      jsx_code = replaceToBindings(jsx_code);
-      jsx_code = replaceToActions(jsx_code);
-      jsx_code = replaceToState(jsx_code);
-      console.log(jsx_code);
-      return jsx_code;
+      return jsx_code = replaceToBindings(jsx_code);
     };
     removeExtraQuotes = function(jsx_code) {
-      return jsx_code.replace(/"{{/g, '{{').replace(/}}"/g, '}}');
+      return jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
     };
     capitalizeActionCase = function(jsx_code) {
       var result, words;
@@ -58807,55 +58835,9 @@ module.exports = require('./lib/React');
       });
       return result;
     };
-    replaceToActions = function(jsx_code) {
-      return replace(jsx_code, /{{([a-z.]*)}}/gi, function(attribute, initial) {
-        var action, model, _ref;
-        if (!matchAction(attribute)) {
-          return initial;
-        }
-        if (attribute.match(/\./)) {
-          _ref = attribute.split('.'), model = _ref[0], action = _ref[1];
-          return "{_.partial(this.relationshipAction, '" + model + "', '" + action + "')}";
-        } else {
-          return "{this." + attribute + "}";
-        }
-      });
-    };
-    replaceToState = function(jsx_code) {
-      return replace(jsx_code, /{{([a-zA-Z.]*)}}/gi, function(attribute, initial) {
-        if (attribute.match(/^this./)) {
-          return initial;
-        }
-        if (matchAction(attribute)) {
-          return initial;
-        }
-        return "{this.state." + attribute + "}";
-      });
-    };
-    matchAction = function(attribute) {
-      _.any(actions, function(action) {
-        return attribute.match(new RegExp("" + action + "$"));
-      });
-      debugger;
-      return replace(jsx_code, /value={{(.+?)}}/gi, function(attribute) {
-        var attr, model, _ref;
-        if (attribute.match(/\./)) {
-          _ref = attribute.split('.'), model = _ref[0], attr = _ref[1];
-          return "value={" + attribute + "} onChange={_.partial(this.relationshipOnChange, '" + attribute + "')}";
-        } else {
-          return "value={" + attribute + "} onChange={_.partial(this.onChange, '" + attribute + "')}";
-        }
-      });
-    };
-    replaceToBindings2 = function(jsx_code) {
-      return replace(jsx_code, /value={{(.+?)}}/gi, function(attribute) {
-        var attr, model, _ref;
-        if (attribute.match(/\./)) {
-          _ref = attribute.split('.'), model = _ref[0], attr = _ref[1];
-          return "value={" + attribute + "} onChange={_.partial(this.relationshipOnChange, '" + attribute + "')}";
-        } else {
-          return "value={" + attribute + "} onChange={_.partial(this.onChange, '" + attribute + "')}";
-        }
+    replaceToBindings = function(jsx_code) {
+      return replace(jsx_code, /value={(.+?)}/gi, function(attribute) {
+        return "value={" + attribute + "} onChange={_.partial(this.onChange, '" + attribute + "')}";
       });
     };
     replace = function(code, from, to) {
@@ -58875,15 +58857,23 @@ module.exports = require('./lib/React');
       }
       return result;
     };
+    toState = function(initial) {
+      return "this.state." + (initial.join('.'));
+    };
+    toAction = function(initial) {
+      return "_.partial(this.action, '" + (initial.join('.')) + "')";
+    };
     return {
       toReactCode: toReactCode,
-      replace: replace
+      replace: replace,
+      toState: toState,
+      toAction: toAction
     };
   })();
 
 }).call(this);
 
-},{"handlebars":26,"lodash":29}],213:[function(require,module,exports){
+},{"handlebars":26,"lodash":29}],214:[function(require,module,exports){
 (function() {
   var Router;
 
@@ -58922,7 +58912,7 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./memory":208,"./ui":214}],214:[function(require,module,exports){
+},{"./memory":209,"./ui":215}],215:[function(require,module,exports){
 (function() {
   var UI;
 
@@ -59003,7 +58993,7 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./converter":205,"./router":213,"jquery":27,"lodash":29,"react":204}],215:[function(require,module,exports){
+},{"./converter":205,"./router":214,"jquery":27,"lodash":29,"react":204}],216:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.

@@ -4,18 +4,12 @@ Replacer = module.exports = (->
   actions = ['create', 'update', 'destroy', 'previous', 'next']
 
   toReactCode = (jsx_code) ->
-    jsx_code = replaceToBindings(jsx_code)
-    debugger
     jsx_code = removeExtraQuotes(jsx_code)
     jsx_code = capitalizeActionCase(jsx_code)
     jsx_code = replaceToBindings(jsx_code)
-    jsx_code = replaceToActions(jsx_code)
-    jsx_code = replaceToState(jsx_code)
-    console.log(jsx_code)
-    jsx_code
 
   removeExtraQuotes = (jsx_code) ->
-    jsx_code.replace(/"{{/g, '{{').replace(/}}"/g, '}}')
+    jsx_code.replace(/"{/g, '{').replace(/}"/g, '}')
 
   capitalizeActionCase = (jsx_code) ->
     words = ['onChange', 'onClick']
@@ -26,62 +20,12 @@ Replacer = module.exports = (->
 
     result
 
-  replaceToActions = (jsx_code) ->
-    # {create} => {this.create}
-    replace jsx_code, /{{([a-z.]*)}}/gi, (attribute, initial) ->
-      return initial unless matchAction(attribute)
-
-      if attribute.match(/\./)
-        # {subscriber.create}
-        # =>
-        # {_.partial(this.relationshipAction, 'subscriber', 'create')}
-
-        [model, action] = attribute.split('.')
-        "{_.partial(this.relationshipAction, '#{model}', '#{action}')}"
-      else
-        "{this.#{attribute}}"
-
-  replaceToState = (jsx_code) ->
-    replace jsx_code, /{{([a-zA-Z.]*)}}/gi, (attribute, initial) ->
-      return initial if attribute.match(/^this./)
-      return initial if matchAction(attribute)
-
-      "{this.state.#{attribute}}"
-
-  matchAction = (attribute) ->
-    _.any actions, (action) ->
-      attribute.match(new RegExp("#{action}$"))
-
-    #
-    debugger
+  replaceToBindings = (jsx_code) ->
     # value={email}
     # =>
-    # value={email} onChange={_.partial(this.onChange, 'email')}
-    replace jsx_code, /value={{(.+?)}}/gi, (attribute) ->
-      if attribute.match(/\./)
-        # {subscriber.create}
-        # =>
-        # {_.partial(this.relationshipAction, 'subscriber', 'create')}
-
-        [model, attr] = attribute.split('.')
-        "value={#{attribute}} onChange={_.partial(this.relationshipOnChange, '#{attribute}')}"
-      else
-        "value={#{attribute}} onChange={_.partial(this.onChange, '#{attribute}')}"
-
-  replaceToBindings2 = (jsx_code) ->
-    # value={email}
-    # =>
-    # value={email} onChange={_.partial(this.onChange, 'email')}
-    replace jsx_code, /value={{(.+?)}}/gi, (attribute) ->
-      if attribute.match(/\./)
-        # {subscriber.create}
-        # =>
-        # {_.partial(this.relationshipAction, 'subscriber', 'create')}
-
-        [model, attr] = attribute.split('.')
-        "value={#{attribute}} onChange={_.partial(this.relationshipOnChange, '#{attribute}')}"
-      else
-        "value={#{attribute}} onChange={_.partial(this.onChange, '#{attribute}')}"
+    # value={email} onChange={_.partial(this.onChange, 'subscriber.email')}
+    replace jsx_code, /value={(.+?)}/gi, (attribute) ->
+      "value={#{attribute}} onChange={_.partial(this.onChange, '#{attribute}')}"
 
   replace = (code, from, to) ->
     result = code
@@ -100,8 +44,16 @@ Replacer = module.exports = (->
 
     result
 
+  toState = (initial) ->
+    "this.state.#{initial.join('.')}"
+
+  toAction = (initial) ->
+    "_.partial(this.action, '#{initial.join('.')}')"
+
   return {
     toReactCode: toReactCode
     replace: replace
+    toState: toState
+    toAction: toAction
   }
 )()
