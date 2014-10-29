@@ -58400,12 +58400,11 @@ module.exports = require('./lib/React');
 
   Converter = module.exports = (function() {
     var HTMLtoJSX, Handlebars, Replacer, htmlToReactComponent, l, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
-    Handlebars = require('handlebars');
     react_tools = require('react-tools');
     HTMLtoJSX = require('../vendor/htmltojsx.min');
     Replacer = require('./replacer');
+    Handlebars = require('handlebars');
     htmlToReactComponent = function(klass_name, element) {
-      debugger;
       var jsx, xhtml;
       xhtml = toXHTML(element);
       jsx = toJSX(klass_name, xhtml);
@@ -58421,9 +58420,23 @@ module.exports = require('./lib/React');
       return eval(klass_name);
     };
     toJSX = function(klass_name, html) {
-      var jsx_code;
-      jsx_code = wrapInJSX(klass_name, html);
-      return Replacer.toReactCode(jsx_code);
+      var args, template;
+      template = Handlebars.compile(html);
+      args = {
+        subscriber: {
+          email: 'some@email',
+          messages: [
+            {
+              a: '1',
+              content: 'first message'
+            }, {
+              content: 'hehy'
+            }
+          ]
+        }
+      };
+      console.log(template());
+      return console.log(template(Handlebarser.mock()));
     };
     wrapInJSX = function(klass_name, html) {
       var converter, jsx_code, render_index;
@@ -58458,23 +58471,41 @@ module.exports = require('./lib/React');
   var Cornflake, Facebook;
 
   window.Cornflake = Cornflake = module.exports = (function() {
-    var Router, configure, init;
+    var Handlebars, Persistance, Replacer, Router, configure, getReactMock, init, lookups, toState, _;
+    Handlebars = require('handlebars');
+    _ = require('lodash');
+    _.mixin(require('lodash-deep'));
+    Persistance = require('./persistance');
     Router = require('./router');
+    Replacer = require('./replacer');
+    lookups = [];
     init = function() {
       console.log('Here and now');
       configure();
-      return Router.change(1);
+      Router.change(1);
+      return Handlebarser.patch();
     };
     configure = function() {
-      var Persistance;
-      Persistance = require('./persistance');
       Persistance.setApi('http://10.30.0.1:3000');
-      return String.prototype.splice = function(idx, rem, s) {
+      String.prototype.splice = function(idx, rem, s) {
         return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
       };
+      return overrideHandlebars();
+    };
+    getReactMock = function() {
+      var result;
+      result = {};
+      _.each(lookups, function(lookup) {
+        return _.deepSet(result, lookup, "{" + (toState(lookup)) + "}");
+      });
+      return result;
+    };
+    toState = function(initial) {
+      return "this.state." + initial;
     };
     return {
-      init: init
+      init: init,
+      getReactMock: getReactMock
     };
   })();
 
@@ -58509,7 +58540,7 @@ module.exports = require('./lib/React');
 
 }).call(this);
 
-},{"./persistance":210,"./router":213,"jquery":27}],207:[function(require,module,exports){
+},{"./persistance":210,"./replacer":212,"./router":213,"handlebars":26,"jquery":27,"lodash":29,"lodash-deep":28}],207:[function(require,module,exports){
 (function() {
   var MainModel;
 
@@ -58747,10 +58778,13 @@ module.exports = require('./lib/React');
   var Replacer;
 
   Replacer = module.exports = (function() {
-    var actions, capitalizeActionCase, matchAction, removeExtraQuotes, replace, replaceToActions, replaceToBindings, replaceToState, toReactCode, _;
+    var Handlebars, actions, capitalizeActionCase, matchAction, removeExtraQuotes, replace, replaceToActions, replaceToBindings2, replaceToState, toReactCode, _;
+    Handlebars = require('handlebars');
     _ = require('lodash');
     actions = ['create', 'update', 'destroy', 'previous', 'next'];
     toReactCode = function(jsx_code) {
+      jsx_code = replaceToBindings(jsx_code);
+      debugger;
       jsx_code = removeExtraQuotes(jsx_code);
       jsx_code = capitalizeActionCase(jsx_code);
       jsx_code = replaceToBindings(jsx_code);
@@ -58760,7 +58794,7 @@ module.exports = require('./lib/React');
       return jsx_code;
     };
     removeExtraQuotes = function(jsx_code) {
-      return jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
+      return jsx_code.replace(/"{{/g, '{{').replace(/}}"/g, '}}');
     };
     capitalizeActionCase = function(jsx_code) {
       var result, words;
@@ -58774,7 +58808,7 @@ module.exports = require('./lib/React');
       return result;
     };
     replaceToActions = function(jsx_code) {
-      return replace(jsx_code, /{([a-z.]*)}/gi, function(attribute, initial) {
+      return replace(jsx_code, /{{([a-z.]*)}}/gi, function(attribute, initial) {
         var action, model, _ref;
         if (!matchAction(attribute)) {
           return initial;
@@ -58788,7 +58822,7 @@ module.exports = require('./lib/React');
       });
     };
     replaceToState = function(jsx_code) {
-      return replace(jsx_code, /{([a-zA-Z.]*)}/gi, function(attribute, initial) {
+      return replace(jsx_code, /{{([a-zA-Z.]*)}}/gi, function(attribute, initial) {
         if (attribute.match(/^this./)) {
           return initial;
         }
@@ -58799,12 +58833,22 @@ module.exports = require('./lib/React');
       });
     };
     matchAction = function(attribute) {
-      return _.any(actions, function(action) {
+      _.any(actions, function(action) {
         return attribute.match(new RegExp("" + action + "$"));
       });
+      debugger;
+      return replace(jsx_code, /value={{(.+?)}}/gi, function(attribute) {
+        var attr, model, _ref;
+        if (attribute.match(/\./)) {
+          _ref = attribute.split('.'), model = _ref[0], attr = _ref[1];
+          return "value={" + attribute + "} onChange={_.partial(this.relationshipOnChange, '" + attribute + "')}";
+        } else {
+          return "value={" + attribute + "} onChange={_.partial(this.onChange, '" + attribute + "')}";
+        }
+      });
     };
-    replaceToBindings = function(jsx_code) {
-      return replace(jsx_code, /value={(.+?)}/gi, function(attribute) {
+    replaceToBindings2 = function(jsx_code) {
+      return replace(jsx_code, /value={{(.+?)}}/gi, function(attribute) {
         var attr, model, _ref;
         if (attribute.match(/\./)) {
           _ref = attribute.split('.'), model = _ref[0], attr = _ref[1];
@@ -58832,13 +58876,14 @@ module.exports = require('./lib/React');
       return result;
     };
     return {
-      toReactCode: toReactCode
+      toReactCode: toReactCode,
+      replace: replace
     };
   })();
 
 }).call(this);
 
-},{"lodash":29}],213:[function(require,module,exports){
+},{"handlebars":26,"lodash":29}],213:[function(require,module,exports){
 (function() {
   var Router;
 
@@ -58882,7 +58927,7 @@ module.exports = require('./lib/React');
   var UI;
 
   UI = module.exports = (function() {
-    var $, Converter, React, component, components, container, elements, hide, hideAll, idx, insertComponent, insertContainter, klassName, loading, removePreviousSteps, render, renderComponent, _;
+    var $, Converter, React, component, components, container, elements, hide, hideAll, idx, insertComponent, klassName, loading, removePreviousSteps, render, renderComponent, _;
     React = require('react');
     Converter = require('./converter');
     _ = require('lodash');
@@ -58896,7 +58941,7 @@ module.exports = require('./lib/React');
       });
     };
     hide = function(step) {
-      return element(step).hide();
+      return container(step).hide();
     };
     removePreviousSteps = function() {
       return _.each(components(), function(component) {
@@ -58926,10 +58971,6 @@ module.exports = require('./lib/React');
     };
     renderComponent = function(i) {
       return React.renderComponent(component(i), container(i));
-    };
-    insertContainter = function(step) {
-      element(step).before("<div class='" + (klassName(step)) + "'>");
-      return $("." + (klassName(step)))[0];
     };
     klassName = function(step) {
       return "cornflake" + step;

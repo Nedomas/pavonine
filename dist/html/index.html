@@ -18,6 +18,12 @@
       <button onClick="{{subscriber.create}}">
         Subscribe
       </button>
+
+      {{#each 'subscriber.messages'}}
+        Im a message
+        {{content}}
+        And a is: {{a}}
+      {{/each}}
     {{/step}}
 
     {{#step 2}}

@@ -1,11 +1,10 @@
 Converter = module.exports = (->
-  Handlebars = require 'handlebars'
   react_tools = require 'react-tools'
   HTMLtoJSX = require '../vendor/htmltojsx.min'
   Replacer = require './replacer'
+  Handlebars = require 'handlebars'
 
   htmlToReactComponent = (klass_name, element) ->
-    debugger
     xhtml = toXHTML(element)
     jsx = toJSX(klass_name, xhtml)
     toComponent(klass_name, jsx)
@@ -19,8 +18,22 @@ Converter = module.exports = (->
     eval(klass_name)
 
   toJSX = (klass_name, html) ->
-    jsx_code = wrapInJSX(klass_name, html)
-    Replacer.toReactCode(jsx_code)
+    template = Handlebars.compile(html)
+
+    args = (
+      subscriber: {
+        email: 'some@email'
+        messages: [
+          { a: '1', content: 'first message' },
+          { content: 'hehy' }
+        ]
+      }
+    )
+    console.log template()
+    console.log template(Handlebarser.mock())
+    # t = eval(template)
+    # jsx_code = wrapInJSX(klass_name, html)
+    # Replacer.toReactCode(jsx_code)
 
   wrapInJSX = (klass_name, html) ->
     converter = new HTMLtoJSX

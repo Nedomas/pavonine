@@ -11,7 +11,7 @@ UI = module.exports = (->
       hide(step)
 
   hide = (step) ->
-    element(step).hide()
+    container(step).hide()
 
   removePreviousSteps = ->
     _.each components(), (component) ->
@@ -39,9 +39,9 @@ UI = module.exports = (->
   renderComponent = (i) ->
     React.renderComponent(component(i), container(i))
 
-  insertContainter = (step) ->
-    element(step).before("<div class='#{klassName(step)}'>")
-    $(".#{klassName(step)}")[0]
+  # insertContainter = (step) ->
+  #   element(step).before("<div class='#{klassName(step)}'>")
+  #   $(".#{klassName(step)}")[0]
 
   klassName = (step) ->
     "cornflake#{step}"
