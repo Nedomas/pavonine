@@ -24,6 +24,8 @@ Converter = module.exports = (->
     mocked = template(Handlebarser.mock())
     wrapped = wrapInJSX(klass_name, mocked)
     react_code = Replacer.toReactCode(wrapped)
+    console.log(react_code)
+    react_code
 
   wrapInJSX = (klass_name, html) ->
     converter = new HTMLtoJSX

@@ -50,10 +50,14 @@ Replacer = module.exports = (->
   toAction = (initial) ->
     "_.partial(this.action, '#{initial.join('.')}')"
 
+  toAttribute = (initial) ->
+    initial.replace('this.state.', '')
+
   return {
     toReactCode: toReactCode
     replace: replace
     toState: toState
     toAction: toAction
+    toAttribute: toAttribute
   }
 )()

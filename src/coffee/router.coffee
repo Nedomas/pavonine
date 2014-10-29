@@ -15,7 +15,6 @@ Router = module.exports = (->
     UI.render(step)
 
   previous = (current_data) ->
-    debugger
     Memory.set(current_data)
     change(step - 1)
 

@@ -19,9 +19,10 @@ UI = module.exports = (->
 
   render = (step) ->
     loading(true)
-    hideAll()
+    # hideAll()
     component = insertComponent(step)
     $(component.getDOMNode()).show()
+    # debugger
     loading(false)
 
   loading = (show) ->
@@ -37,7 +38,7 @@ UI = module.exports = (->
     Converter.htmlToReactComponent(klassName(i), Compiler.stepContent(i))()
 
   renderComponent = (i) ->
-    React.renderComponent(component(i), container(i))
+    React.renderComponent(component(i), container(i)[0])
 
   # insertContainter = (step) ->
   #   element(step).before("<div class='#{klassName(step)}'>")

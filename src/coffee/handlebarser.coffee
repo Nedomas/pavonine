@@ -39,12 +39,21 @@ Handlebarser = (->
 
     result
 
+  emptyMock = ->
+    result = {}
+    _.each lookups, (lookup) ->
+      unless isAction(lookup)
+        _.deepSet(result, lookup, '')
+
+    result
+
   isAction = (lookup) ->
     _.include(actions, _.last(lookup))
 
   return {
     patch: patch
     mock: mock
+    emptyMock: emptyMock
   }
 )()
 
