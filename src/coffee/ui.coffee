@@ -40,10 +40,6 @@ UI = module.exports = (->
   renderComponent = (i) ->
     React.renderComponent(component(i), container(i)[0])
 
-  # insertContainter = (step) ->
-  #   element(step).before("<div class='#{klassName(step)}'>")
-  #   $(".#{klassName(step)}")[0]
-
   klassName = (step) ->
     "cornflake#{step}"
 

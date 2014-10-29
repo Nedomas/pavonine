@@ -14,7 +14,6 @@ Persistance = module.exports = (->
     model = new Model(attributes)
     connection = new Databound(model.plural)
 
-    debugger
     connection[action](model.serialize()).then (resp) ->
       new_attributes = if _.isObject(resp) then resp else {}
       metadata =

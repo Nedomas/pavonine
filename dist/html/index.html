@@ -19,11 +19,6 @@
         Subscribe
       </button>
 
-      {{#each 'subscriber.messages'}}
-        Im a message
-        {{content}}
-        And a is: {{a}}
-      {{/each}}
     {{/step}}
 
     {{#step 2}}
@@ -34,6 +29,16 @@
       <button onClick="{{subscriber.message.create}}">
         Post
       </button>
+    {{/step}}
+
+    {{#step 3}}
+      <h2>All messages</h2>
+
+      {{#each 'messages'}}
+        Im a message
+        {{content}}
+        And a is: {{a}}
+      {{/each}}
     {{/step}}
   </body>
 </head>
