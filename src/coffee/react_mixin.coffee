@@ -24,7 +24,8 @@ ReactMixin = module.exports = (->
 
     attributes = _.deepGet(@state, model_path_str)
     attributes.model = _.last(model_path_str.split('.'))
-    Persistance.act(action, e, attributes)
+    Persistance.act(action, e, attributes).then (new_model) ->
+      Router.next(new_model.attributes)
   # previous: (e) ->
   #   e.preventDefault()
   #   Router.previous(@state)

@@ -20,14 +20,19 @@ UI = (->
   render = (step) ->
     loading(true)
     # hideAll()
-    component = insertComponent(step)
-    $(component.getDOMNode()).show()
+    content = Compiler.stepContent(step)
+    componentF = component(klassName(step), content)
+    rendered_component = renderComponent(componentF, stepContainer(step))
+    $(rendered_component.getDOMNode()).show()
     # debugger
     loading(false)
 
   login = ->
     loading(true)
-    debugger
+    content = Compiler.loginContent()
+    componentF = component(klassName('login'), content)
+    rendered_component = renderComponent(componentF, loginContainer())
+    $(rendered_component.getDOMNode()).show()
     # hideAll()
     # component = insertComponent(step)
     # $(component.getDOMNode()).show()
@@ -36,20 +41,20 @@ UI = (->
   loading = (show) ->
     $('[loading]').toggle(show)
 
-  insertComponent = (i) ->
-    renderComponent(i)
+  component = (klass_name, content) ->
+    Converter.htmlToReactComponent(klass_name, content)()
 
-  component = (i) ->
-    Converter.htmlToReactComponent(klassName(i), Compiler.stepContent(i))()
+  renderComponent = (component, container) ->
+    React.renderComponent(component, container)
 
-  renderComponent = (i) ->
-    React.renderComponent(component(i), container(i)[0])
+  klassName = (suffix) ->
+    "cornflake_#{suffix}"
 
-  klassName = (step) ->
-    "cornflake#{step}"
+  stepContainer = (i) ->
+    idx()[i][0]
 
-  container = (i) ->
-    idx()[i]
+  loginContainer = ->
+    $('*[login]')[0]
 
   idx = ->
     _.inject(elements(), (result, element) ->

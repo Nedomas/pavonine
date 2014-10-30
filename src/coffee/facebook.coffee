@@ -1,5 +1,10 @@
 Facebook = (->
   $ = require 'jquery'
+  _ = require 'lodash'
+  _.mixin require('lodash-deep')
+  Router = require './router'
+  Memory = require './memory'
+  Persistance = require './persistance'
 
   init = ->
     $.ajaxSetup
@@ -10,9 +15,16 @@ Facebook = (->
         xfbml: true
         version: 'v2.1'
 
-  loggedIn = (r) ->
-    console.log r
-    debugger
+  loggedIn = (resp) ->
+    access_token = _.deepGet(resp, 'authResponse.accessToken')
+
+    attributes =
+      access_token: access_token
+      model: 'current_user'
+
+    Persistance.communicate('create', attributes).then (current_user) ->
+      Memory.set(current_user.attributes)
+      Router.goOn()
 
   login = ->
     FB.login(loggedIn, scope: 'user_about_me')

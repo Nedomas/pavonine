@@ -19,6 +19,9 @@ Router = module.exports = (->
       UI.render(step)
       setCurrent(step)
     catch e
+      # console.log Data.missingVariables()
+      # console.log Memory.get('current_user')
+
       if e.message == 'get_missing'
         getMissing()
       else
@@ -32,6 +35,9 @@ Router = module.exports = (->
     Memory.set(current_data)
     change(step + 1)
 
+  goOn = ->
+    change(step)
+
   getMissing = ->
     _.each Data.missingVariables(), (variable) ->
       if variable == 'current_user'
@@ -44,6 +50,7 @@ Router = module.exports = (->
     current: current
     change: change
     login: login
+    goOn: goOn
     previous: previous
     next: next
   }

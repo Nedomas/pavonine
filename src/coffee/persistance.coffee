@@ -8,8 +8,7 @@ Persistance = module.exports = (->
   setApi = (api_url) ->
     Databound.API_URL = api_url
 
-  act = (action, e, attributes) ->
-    e.preventDefault()
+  communicate = (action, attributes) ->
     throw new Error 'No model specified' unless attributes.model
 
     model = new Model(attributes)
@@ -19,14 +18,19 @@ Persistance = module.exports = (->
       new_attributes = if _.isObject(resp) then resp else {}
       metadata =
         model: model.model
-        relationships: new_attributes.relationships
+        # relationships: new_attributes.relationships
 
       new_model = new Model(_.assign(new_attributes, metadata))
       Memory.setArray(new_model.plural, connection.takeAll())
-      Router.next(new_model.attributes)
+      Databound::promise(new_model)
+
+  act = (action, e, attributes) ->
+    e.preventDefault()
+    communicate(action, attributes)
 
   return {
     setApi: setApi
     act: act
+    communicate: communicate
   }
 )()

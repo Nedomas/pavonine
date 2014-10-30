@@ -109,13 +109,12 @@ Databound.prototype.requestAndRefresh = function(action, params) {
     if (!(resp != null ? resp.success : void 0)) {
       throw new Error('Error in the backend');
     }
-    return _this.where().then(function() {
-      if (resp.id) {
-        return _this.promise(_this.take(resp.id));
-      } else {
-        return _this.promise(resp.success);
-      }
-    });
+    _this.records = _.sortBy(JSON.parse(resp.scoped_records), 'id');
+    if (resp.id) {
+      return _this.promise(_this.take(resp.id));
+    } else {
+      return _this.promise(resp.success);
+    }
   });
 };
 
@@ -58819,8 +58818,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Facebook;
 
   Facebook = (function() {
-    var $, init, loggedIn, login;
+    var $, Memory, Persistance, Router, init, loggedIn, login, _;
     $ = require('jquery');
+    _ = require('lodash');
+    _.mixin(require('lodash-deep'));
+    Router = require('./router');
+    Memory = require('./memory');
+    Persistance = require('./persistance');
     init = function() {
       $.ajaxSetup({
         cache: true
@@ -58833,9 +58837,17 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         });
       });
     };
-    loggedIn = function(r) {
-      console.log(r);
-      debugger;
+    loggedIn = function(resp) {
+      var access_token, attributes;
+      access_token = _.deepGet(resp, 'authResponse.accessToken');
+      attributes = {
+        access_token: access_token,
+        model: 'current_user'
+      };
+      return Persistance.communicate('create', attributes).then(function(current_user) {
+        Memory.set(current_user.attributes);
+        return Router.goOn();
+      });
     };
     login = function() {
       return FB.login(loggedIn, {
@@ -58852,7 +58864,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"jquery":27}],209:[function(require,module,exports){
+},{"./memory":212,"./persistance":214,"./router":217,"jquery":27,"lodash":29,"lodash-deep":28}],209:[function(require,module,exports){
 (function() {
   var Cornflake;
 
@@ -59140,7 +59152,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Persistance;
 
   Persistance = module.exports = (function() {
-    var Databound, Memory, Model, Router, act, setApi, _;
+    var Databound, Memory, Model, Router, act, communicate, setApi, _;
     _ = require('lodash');
     Databound = require('databound');
     Model = require('./model');
@@ -59149,9 +59161,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     setApi = function(api_url) {
       return Databound.API_URL = api_url;
     };
-    act = function(action, e, attributes) {
+    communicate = function(action, attributes) {
       var connection, model;
-      e.preventDefault();
       if (!attributes.model) {
         throw new Error('No model specified');
       }
@@ -59161,17 +59172,21 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         var metadata, new_attributes, new_model;
         new_attributes = _.isObject(resp) ? resp : {};
         metadata = {
-          model: model.model,
-          relationships: new_attributes.relationships
+          model: model.model
         };
         new_model = new Model(_.assign(new_attributes, metadata));
         Memory.setArray(new_model.plural, connection.takeAll());
-        return Router.next(new_model.attributes);
+        return Databound.prototype.promise(new_model);
       });
+    };
+    act = function(action, e, attributes) {
+      e.preventDefault();
+      return communicate(action, attributes);
     };
     return {
       setApi: setApi,
-      act: act
+      act: act,
+      communicate: communicate
     };
   })();
 
@@ -59216,7 +59231,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         }
         attributes = _.deepGet(this.state, model_path_str);
         attributes.model = _.last(model_path_str.split('.'));
-        return Persistance.act(action, e, attributes);
+        return Persistance.act(action, e, attributes).then(function(new_model) {
+          return Router.next(new_model.attributes);
+        });
       }
     };
   })();
@@ -59297,7 +59314,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Router;
 
   Router = module.exports = (function() {
-    var Data, Memory, UI, change, current, getMissing, login, next, previous, setCurrent, step, _;
+    var Data, Memory, UI, change, current, getMissing, goOn, login, next, previous, setCurrent, step, _;
     Memory = require('./memory');
     UI = require('./ui');
     Data = require('./data');
@@ -59332,6 +59349,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       Memory.set(current_data);
       return change(step + 1);
     };
+    goOn = function() {
+      return change(step);
+    };
     getMissing = function() {
       return _.each(Data.missingVariables(), function(variable) {
         if (variable === 'current_user') {
@@ -59346,6 +59366,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       current: current,
       change: change,
       login: login,
+      goOn: goOn,
       previous: previous,
       next: next
     };
@@ -59358,7 +59379,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var UI;
 
   UI = (function() {
-    var $, Converter, React, component, components, container, elements, hide, hideAll, idx, insertComponent, klassName, loading, login, removePreviousSteps, render, renderComponent, _;
+    var $, Converter, React, component, components, elements, hide, hideAll, idx, klassName, loading, login, loginContainer, removePreviousSteps, render, renderComponent, stepContainer, _;
     React = require('react');
     _ = require('lodash');
     $ = require('jquery');
@@ -59380,34 +59401,40 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       });
     };
     render = function(step) {
-      var component;
+      var componentF, content, rendered_component;
       loading(true);
-      component = insertComponent(step);
-      $(component.getDOMNode()).show();
+      content = Compiler.stepContent(step);
+      componentF = component(klassName(step), content);
+      rendered_component = renderComponent(componentF, stepContainer(step));
+      $(rendered_component.getDOMNode()).show();
       return loading(false);
     };
     login = function() {
+      var componentF, content, rendered_component;
       loading(true);
-      debugger;
+      content = Compiler.loginContent();
+      componentF = component(klassName('login'), content);
+      rendered_component = renderComponent(componentF, loginContainer());
+      $(rendered_component.getDOMNode()).show();
       return loading(false);
     };
     loading = function(show) {
       return $('[loading]').toggle(show);
     };
-    insertComponent = function(i) {
-      return renderComponent(i);
+    component = function(klass_name, content) {
+      return Converter.htmlToReactComponent(klass_name, content)();
     };
-    component = function(i) {
-      return Converter.htmlToReactComponent(klassName(i), Compiler.stepContent(i))();
+    renderComponent = function(component, container) {
+      return React.renderComponent(component, container);
     };
-    renderComponent = function(i) {
-      return React.renderComponent(component(i), container(i)[0]);
+    klassName = function(suffix) {
+      return "cornflake_" + suffix;
     };
-    klassName = function(step) {
-      return "cornflake" + step;
+    stepContainer = function(i) {
+      return idx()[i][0];
     };
-    container = function(i) {
-      return idx()[i];
+    loginContainer = function() {
+      return $('*[login]')[0];
     };
     idx = function() {
       return _.inject(elements(), function(result, element) {
