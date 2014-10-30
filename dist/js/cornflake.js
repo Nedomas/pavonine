@@ -58858,7 +58858,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         model: 'current_user'
       };
       return Persistance.communicate('create', attributes).then(function(current_user) {
-        Memory.set(current_user.attributes);
+        Memory.setForever(current_user.attributes);
         return Router.goOn();
       });
     };
@@ -59104,11 +59104,24 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Memory;
 
   Memory = module.exports = (function() {
-    var app_data, get, has, set, setArray, _;
+    var app_data, get, getForever, has, set, setArray, setForever, _;
     _ = require('lodash');
     app_data = {};
     set = function(data) {
       return app_data[data.model] = data;
+    };
+    setForever = function(data) {
+      set(data);
+      return localStorage[data.model] = JSON.stringify(data);
+    };
+    getForever = function(model) {
+      var data, json;
+      json = localStorage[model];
+      if (!json) {
+        return;
+      }
+      data = JSON.parse(json);
+      return set(data);
     };
     setArray = function(name, records) {
       return app_data[name] = records;
@@ -59121,8 +59134,10 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     return {
       set: set,
+      setForever: setForever,
       setArray: setArray,
       get: get,
+      getForever: getForever,
       has: has
     };
   })();
@@ -59392,12 +59407,20 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return change(step);
     };
     getMissing = function() {
-      var attributes, variable;
+      var attributes, for_request, variable;
+      Persistance = require('./persistance');
       variable = _.first(Data.missingVariables());
       if (variable === 'current_user') {
-        return login();
+        if (attributes = Memory.getForever('current_user')) {
+          for_request = _.pick(attributes, 'id', 'access_token', 'model');
+          return Persistance.communicate('update', for_request).then(function(current_user) {
+            Memory.setForever(current_user.attributes);
+            return goOn();
+          });
+        } else {
+          return login();
+        }
       } else {
-        Persistance = require('./persistance');
         attributes = {
           model: singularize(variable)
         };

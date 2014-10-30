@@ -23,7 +23,7 @@ Facebook = (->
       model: 'current_user'
 
     Persistance.communicate('create', attributes).then (current_user) ->
-      Memory.set(current_user.attributes)
+      Memory.setForever(current_user.attributes)
       Router.goOn()
 
   login = ->

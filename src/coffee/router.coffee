@@ -40,12 +40,18 @@ Router = (->
     change(step)
 
   getMissing = ->
+    Persistance = require './persistance'
     variable = _.first(Data.missingVariables())
 
     if variable == 'current_user'
-      login()
+      if attributes = Memory.getForever('current_user')
+        for_request = _.pick(attributes, 'id', 'access_token', 'model')
+        Persistance.communicate('update', for_request).then (current_user) ->
+          Memory.setForever(current_user.attributes)
+          goOn()
+      else
+        login()
     else
-      Persistance = require './persistance'
       attributes =
         model: singularize(variable)
 
