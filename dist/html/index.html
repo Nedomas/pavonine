@@ -17,44 +17,27 @@
     {{/login}}
 
     {{#step 1}}
-      <h2>All messages</h2>
-
-      {{#each 'messages'}}
-        Im a message
-        {{content}}
-        And a is: {{a}}
-      {{/each}}
-    {{/step}}
-
-    {{#step 4}}
-      <input value="{{subscriber.email}}">
-        {{subscriber.email}}
+      <input value="{{current_user.message.content}}">
+        MSG: {{current_user.message.content}}
       </input>
       <p>Hello, current user: {{current_user.first_name}}</p>
 
-      <button onClick="{{{subscriber.create}}}">
-        Subscribe
+      <button onClick="{{{current_user.message.create}}}">
+        Post as User
       </button>
     {{/step}}
 
     {{#step 2}}
-      {{subscriber.model}}
-      You have been subscribed on {{subscriber.email}}
-      Enter message
-      <input value="{{subscriber.message.content}}" />
-      <button onClick="{{subscriber.message.create}}">
-        Post
-      </button>
-    {{/step}}
-
-    {{#step 3}}
-      <h2>All messages</h2>
-
-      {{#each 'messages'}}
-        Im a message
-        {{content}}
-        And a is: {{a}}
-      {{/each}}
+      Messages
+      <ul>
+        {{#each 'current_user.messages'}}
+          <li>
+            Im a message
+            {{content}}
+            DOT
+          </li>
+        {{/each}}
+      </ul>
     {{/step}}
   </body>
 </head>

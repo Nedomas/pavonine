@@ -18,7 +18,9 @@ class Model
 
     _this = @
     _.each @relationships, (relationship) ->
-      result["#{relationship}_id"] = _this.attributes[relationship].id
+      key = relationship
+
+      result["#{key}_id"] = _this.attributes[relationship].id
       result = _.omit(result, relationship)
 
     result

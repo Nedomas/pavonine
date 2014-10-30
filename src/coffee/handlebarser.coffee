@@ -25,10 +25,12 @@ Handlebarser = (->
       iteration_result = options.fn(mock())
       iteration_result = Replacer.replace iteration_result,
         /{this\.state\.(.+?)}/, (attribute, initial) ->
-          "' + record.#{attribute} + '"
+          "{record.#{attribute}}"
+
+      console.log iteration_result
 
       "{_.map(#{Replacer.toState(context.split('.'))}, function(record, i) {" +
-      " return '#{iteration_result}'" +
+      " return #{iteration_result}" +
       '})}'
 
   mock = ->

@@ -58737,6 +58737,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       React = require('react');
       _ = require('lodash');
       eval(component_code);
+      console.log(component_code);
       return eval(klass_name);
     };
     toJSX = function(klass_name, html) {
@@ -58941,9 +58942,10 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         addArrayLookup(context.split('.'));
         iteration_result = options.fn(mock());
         iteration_result = Replacer.replace(iteration_result, /{this\.state\.(.+?)}/, function(attribute, initial) {
-          return "' + record." + attribute + " + '";
+          return "{record." + attribute + "}";
         });
-        return ("{_.map(" + (Replacer.toState(context.split('.'))) + ", function(record, i) {") + (" return '" + iteration_result + "'") + '})}';
+        console.log(iteration_result);
+        return ("{_.map(" + (Replacer.toState(context.split('.'))) + ", function(record, i) {") + (" return " + iteration_result) + '})}';
       });
     };
     mock = function() {
@@ -59159,7 +59161,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       result = _.omit(this.attributes, KEYWORDS);
       _this = this;
       _.each(this.relationships, function(relationship) {
-        result["" + relationship + "_id"] = _this.attributes[relationship].id;
+        var key;
+        key = relationship;
+        result["" + key + "_id"] = _this.attributes[relationship].id;
         return result = _.omit(result, relationship);
       });
       return result;

@@ -17,6 +17,7 @@ Converter = (->
     React = require 'react'
     _ = require 'lodash'
     eval(component_code)
+    console.log(component_code)
     eval(klass_name)
 
   toJSX = (klass_name, html) ->
