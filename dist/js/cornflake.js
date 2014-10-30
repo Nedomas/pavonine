@@ -109,7 +109,10 @@ Databound.prototype.requestAndRefresh = function(action, params) {
     if (!(resp != null ? resp.success : void 0)) {
       throw new Error('Error in the backend');
     }
-    _this.records = _.sortBy(JSON.parse(resp.scoped_records), 'id');
+    if (_.isString(resp.scoped_records)) {
+      resp.scoped_records = JSON.parse(resp.scoped_records);
+    }
+    _this.records = _.sortBy(resp.scoped_records, 'id');
     if (resp.id) {
       return _this.promise(_this.take(resp.id));
     } else {
@@ -58792,16 +58795,25 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       if (used('current_user') && !loggedIn()) {
         result.push('current_user');
       }
+      _.each(Handlebarser.getArrayLookups(), function(lookup) {
+        var array_name;
+        array_name = lookup[0];
+        if (!Memory.has(array_name)) {
+          return result.push(array_name);
+        }
+      });
       return result;
     };
     missing = function() {
       return !_.isEmpty(missingVariables());
     };
     used = function(key) {
-      return !!Handlebarser.mock()[key];
+      return _.any(Handlebarser.getLookups(), function(lookup) {
+        return lookup[0] === key;
+      });
     };
     loggedIn = function() {
-      return !_.isEmpty(Memory.get('current_user'));
+      return Memory.has('current_user');
     };
     return {
       missing: missing,
@@ -58901,12 +58913,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Handlebarser;
 
   Handlebarser = (function() {
-    var Handlebars, Replacer, actions, addLookup, clean, emptyMock, isAction, lookups, mock, patch, _;
+    var Handlebars, Replacer, actions, addArrayLookup, addLookup, array_lookups, clean, emptyMock, getArrayLookups, getLookups, isAction, lookups, mock, patch, _;
     Handlebars = require('handlebars');
     _ = require('lodash');
     _.mixin(require('lodash-deep'));
     Replacer = require('./replacer');
     lookups = [];
+    array_lookups = [];
     actions = ['create', 'update', 'destroy', 'previous', 'next', 'login'];
     patch = function() {
       Handlebars.JavaScriptCompiler.prototype.nameLookup = function(parent, name, type) {
@@ -58925,7 +58938,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       };
       return Handlebars.registerHelper('each', function(context, options) {
         var iteration_result;
-        addLookup(context.split('.'));
+        addArrayLookup(context.split('.'));
         iteration_result = options.fn(mock());
         iteration_result = Replacer.replace(iteration_result, /{this\.state\.(.+?)}/, function(attribute, initial) {
           return "' + record." + attribute + " + '";
@@ -58961,15 +58974,28 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     addLookup = function(lookup) {
       return lookups.push(lookup);
     };
+    addArrayLookup = function(lookup) {
+      array_lookups.push(lookup);
+      return addLookup(lookup);
+    };
     clean = function() {
-      return lookups = [];
+      lookups = [];
+      return array_lookups = [];
+    };
+    getArrayLookups = function() {
+      return array_lookups;
+    };
+    getLookups = function() {
+      return lookups;
     };
     return {
       patch: patch,
       mock: mock,
       emptyMock: emptyMock,
       clean: clean,
-      addLookup: addLookup
+      addLookup: addLookup,
+      getArrayLookups: getArrayLookups,
+      getLookups: getLookups
     };
   })();
 
@@ -59076,7 +59102,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Memory;
 
   Memory = module.exports = (function() {
-    var app_data, get, set, setArray, _;
+    var app_data, get, has, set, setArray, _;
     _ = require('lodash');
     app_data = {};
     set = function(data) {
@@ -59088,10 +59114,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     get = function(model) {
       return app_data[model] || {};
     };
+    has = function(key) {
+      return !!app_data[key];
+    };
     return {
       set: set,
       setArray: setArray,
-      get: get
+      get: get,
+      has: has
     };
   })();
 
@@ -59176,7 +59206,11 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         };
         new_model = new Model(_.assign(new_attributes, metadata));
         Memory.setArray(new_model.plural, connection.takeAll());
-        return Databound.prototype.promise(new_model);
+        if (_.isArray(resp)) {
+          return Databound.prototype.promise(connection.takeAll());
+        } else {
+          return Databound.prototype.promise(new_model);
+        }
       });
     };
     act = function(action, e, attributes) {
@@ -59313,12 +59347,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 (function() {
   var Router;
 
-  Router = module.exports = (function() {
-    var Data, Memory, UI, change, current, getMissing, goOn, login, next, previous, setCurrent, step, _;
+  Router = (function() {
+    var Data, Memory, Persistance, UI, change, current, getMissing, goOn, login, next, previous, setCurrent, singularize, step, _;
     Memory = require('./memory');
     UI = require('./ui');
     Data = require('./data');
     _ = require('lodash');
+    Persistance = require('./persistance');
     step = 1;
     setCurrent = function(_step) {
       return step = _step;
@@ -59353,11 +59388,22 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return change(step);
     };
     getMissing = function() {
-      return _.each(Data.missingVariables(), function(variable) {
-        if (variable === 'current_user') {
-          return login();
-        }
-      });
+      var attributes, variable;
+      variable = _.first(Data.missingVariables());
+      if (variable === 'current_user') {
+        return login();
+      } else {
+        Persistance = require('./persistance');
+        attributes = {
+          model: singularize(variable)
+        };
+        return Persistance.communicate('where', attributes).then(function(records) {
+          return goOn();
+        });
+      }
+    };
+    singularize = function(string) {
+      return string.replace(/s$/, '');
     };
     login = function() {
       return UI.login();
@@ -59372,9 +59418,11 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
   })();
 
+  module.exports = Router;
+
 }).call(this);
 
-},{"./data":207,"./memory":212,"./ui":218,"lodash":29}],218:[function(require,module,exports){
+},{"./data":207,"./memory":212,"./persistance":214,"./ui":218,"lodash":29}],218:[function(require,module,exports){
 (function() {
   var UI;
 

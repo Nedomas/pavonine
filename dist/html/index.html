@@ -17,6 +17,16 @@
     {{/login}}
 
     {{#step 1}}
+      <h2>All messages</h2>
+
+      {{#each 'messages'}}
+        Im a message
+        {{content}}
+        And a is: {{a}}
+      {{/each}}
+    {{/step}}
+
+    {{#step 4}}
       <input value="{{subscriber.email}}">
         {{subscriber.email}}
       </input>

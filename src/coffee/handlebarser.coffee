@@ -5,6 +5,7 @@ Handlebarser = (->
   Replacer = require './replacer'
 
   lookups = []
+  array_lookups = []
   actions = ['create', 'update', 'destroy', 'previous', 'next', 'login']
 
   patch = ->
@@ -20,7 +21,7 @@ Handlebarser = (->
         parent + "['" + name + "']"
 
     Handlebars.registerHelper 'each', (context, options) ->
-      addLookup(context.split('.'))
+      addArrayLookup(context.split('.'))
       iteration_result = options.fn(mock())
       iteration_result = Replacer.replace iteration_result,
         /{this\.state\.(.+?)}/, (attribute, initial) ->
@@ -54,8 +55,19 @@ Handlebarser = (->
   addLookup = (lookup) ->
     lookups.push(lookup)
 
+  addArrayLookup = (lookup) ->
+    array_lookups.push(lookup)
+    addLookup(lookup)
+
   clean = ->
     lookups = []
+    array_lookups = []
+
+  getArrayLookups = ->
+    array_lookups
+
+  getLookups = ->
+    lookups
 
   return {
     patch: patch
@@ -63,6 +75,8 @@ Handlebarser = (->
     emptyMock: emptyMock
     clean: clean
     addLookup: addLookup
+    getArrayLookups: getArrayLookups
+    getLookups: getLookups
   }
 )()
 

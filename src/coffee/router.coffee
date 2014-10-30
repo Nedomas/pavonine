@@ -1,8 +1,9 @@
-Router = module.exports = (->
+Router = (->
   Memory = require './memory'
   UI = require './ui'
   Data = require './data'
   _ = require 'lodash'
+  Persistance = require './persistance'
 
   step = 1
 
@@ -39,9 +40,20 @@ Router = module.exports = (->
     change(step)
 
   getMissing = ->
-    _.each Data.missingVariables(), (variable) ->
-      if variable == 'current_user'
-        login()
+    variable = _.first(Data.missingVariables())
+
+    if variable == 'current_user'
+      login()
+    else
+      Persistance = require './persistance'
+      attributes =
+        model: singularize(variable)
+
+      Persistance.communicate('where', attributes).then (records) ->
+        goOn()
+
+  singularize = (string) ->
+    string.replace(/s$/, '')
 
   login = ->
     UI.login()
@@ -55,3 +67,5 @@ Router = module.exports = (->
     next: next
   }
 )()
+
+module.exports = Router
