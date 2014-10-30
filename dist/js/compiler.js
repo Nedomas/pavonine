@@ -3,12 +3,15 @@
   var Compiler;
 
   window.Compiler = Compiler = module.exports = (function() {
-    var STEP_REGEX, hide, init, installMain, removeFromBody, scanSteps, show, stepContent, steps;
+    var LOGIN_REGEX, STEP_REGEX, findLogin, hide, init, installMain, login, loginContent, removeFromBody, scanSteps, show, stepContent, steps;
     STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?)(.+?)([\s\S]*?){{\/step}}/g;
+    LOGIN_REGEX = /{{\#login}}([\s\S]*?)(.+?)([\s\S]*?){{\/login}}/;
     steps = null;
+    login = {};
     init = function() {
       console.log('Compiling');
       scanSteps();
+      findLogin();
       removeFromBody();
       installMain();
       console.log('Compiled');
@@ -24,6 +27,9 @@
       }
       throw new Error("No step " + i);
     };
+    loginContent = function() {
+      return login.content;
+    };
     hide = function() {
       return document.write('<style class="hideBeforeCompilation" ' + 'type="text/css">body {display:none;}<\/style>');
     };
@@ -37,13 +43,28 @@
       return document.body.appendChild(script);
     };
     removeFromBody = function() {
-      var step, _i, _len, _results;
-      _results = [];
+      var step, _i, _len;
       for (_i = 0, _len = steps.length; _i < _len; _i++) {
         step = steps[_i];
-        _results.push(document.body.innerHTML = document.body.innerHTML.replace(step.full_match, "<div step='" + step.step + "'></div>"));
+        document.body.innerHTML = document.body.innerHTML.replace(step.full_match, "<div step='" + step.step + "'></div>");
       }
-      return _results;
+      if (login.full_match) {
+        return document.body.innerHTML = document.body.innerHTML.replace(login.full_match, "<div login=''></div>");
+      }
+    };
+    findLogin = function() {
+      var code, content, full_match, matched;
+      code = document.body.innerHTML;
+      matched = LOGIN_REGEX.exec(code);
+      if (matched) {
+        full_match = matched[0];
+        content = matched[3];
+        login = {
+          full_match: full_match,
+          content: content
+        };
+      }
+      return login;
     };
     scanSteps = function() {
       var code, content, full_match, matched, regexp, step;
@@ -70,7 +91,8 @@
     return {
       init: init,
       hide: hide,
-      stepContent: stepContent
+      stepContent: stepContent,
+      loginContent: loginContent
     };
   })();
 

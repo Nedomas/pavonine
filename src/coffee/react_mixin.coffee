@@ -5,6 +5,7 @@ ReactMixin = module.exports = (->
   _.mixin require('lodash-deep')
   Persistance = require './persistance'
   Replacer = require './replacer'
+  Facebook = require './facebook'
 
   getInitialState: ->
     Model.main().attributes
@@ -19,6 +20,8 @@ ReactMixin = module.exports = (->
   action: (path, e) ->
     [model_path..., action] = path.split('.')
     model_path_str = model_path.join('.')
+    return Facebook.login() if model_path_str == 'facebook'
+
     attributes = _.deepGet(@state, model_path_str)
     attributes.model = _.last(model_path_str.split('.'))
     Persistance.act(action, e, attributes)

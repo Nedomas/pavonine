@@ -1,7 +1,6 @@
 Replacer = module.exports = (->
   Handlebars = require 'handlebars'
   _ = require 'lodash'
-  actions = ['create', 'update', 'destroy', 'previous', 'next']
 
   toReactCode = (jsx_code) ->
     jsx_code = removeExtraQuotes(jsx_code)

@@ -1,9 +1,10 @@
-Converter = module.exports = (->
+Converter = (->
   react_tools = require 'react-tools'
   HTMLtoJSX = require '../vendor/htmltojsx.min'
   Replacer = require './replacer'
   Handlebars = require 'handlebars'
   Handlebarser = require './handlebarser'
+  Data = require './data'
 
   htmlToReactComponent = (klass_name, element) ->
     xhtml = toXHTML(element)
@@ -19,8 +20,12 @@ Converter = module.exports = (->
     eval(klass_name)
 
   toJSX = (klass_name, html) ->
+    Handlebarser.clean()
     template = Handlebars.compile(html)
     template() # gather data
+
+    throw new Error('get_missing') if Data.missing()
+
     mocked = template(Handlebarser.mock())
     wrapped = wrapInJSX(klass_name, mocked)
     react_code = Replacer.toReactCode(wrapped)
@@ -47,9 +52,9 @@ Converter = module.exports = (->
     #   l('    );') +
     #   l('  }') +
     #   l('});')
-
-  l = (code) ->
-    "#{code}\n"
+#
+#   l = (code) ->
+#     "#{code}\n"
 
   toXHTML = (input) ->
     without_spaces = input.replace('\n', '').replace(/\s{2,}/g, '')
@@ -62,3 +67,5 @@ Converter = module.exports = (->
     htmlToReactComponent: htmlToReactComponent
   }
 )()
+
+module.exports = Converter

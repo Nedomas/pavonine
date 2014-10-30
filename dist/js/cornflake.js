@@ -58714,13 +58714,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 (function() {
   var Converter;
 
-  Converter = module.exports = (function() {
-    var HTMLtoJSX, Handlebars, Handlebarser, Replacer, htmlToReactComponent, l, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
+  Converter = (function() {
+    var Data, HTMLtoJSX, Handlebars, Handlebarser, Replacer, htmlToReactComponent, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
     react_tools = require('react-tools');
     HTMLtoJSX = require('../vendor/htmltojsx.min');
     Replacer = require('./replacer');
     Handlebars = require('handlebars');
     Handlebarser = require('./handlebarser');
+    Data = require('./data');
     htmlToReactComponent = function(klass_name, element) {
       var jsx, xhtml;
       xhtml = toXHTML(element);
@@ -58738,8 +58739,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     toJSX = function(klass_name, html) {
       var mocked, react_code, template, wrapped;
+      Handlebarser.clean();
       template = Handlebars.compile(html);
       template();
+      if (Data.missing()) {
+        throw new Error('get_missing');
+      }
       mocked = template(Handlebarser.mock());
       wrapped = wrapInJSX(klass_name, mocked);
       react_code = Replacer.toReactCode(wrapped);
@@ -58756,9 +58761,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       render_index = jsx_code.match('render').index;
       return jsx_code = jsx_code.splice(render_index, 0, 'mixins: [ReactMixin],\n  ');
     };
-    l = function(code) {
-      return "" + code + "\n";
-    };
     toXHTML = function(input) {
       var doc, result, without_spaces;
       without_spaces = input.replace('\n', '').replace(/\s{2,}/g, '');
@@ -58772,22 +58774,100 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
   })();
 
+  module.exports = Converter;
+
 }).call(this);
 
-},{"../vendor/htmltojsx.min":217,"./handlebarser":208,"./react_mixin":213,"./replacer":214,"handlebars":26,"lodash":29,"react":204,"react-tools":30}],207:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":219,"./data":207,"./handlebarser":210,"./react_mixin":215,"./replacer":216,"handlebars":26,"lodash":29,"react":204,"react-tools":30}],207:[function(require,module,exports){
 (function() {
-  var Cornflake, Facebook;
+  var Data;
+
+  Data = (function() {
+    var Handlebarser, Memory, loggedIn, missing, missingVariables, used, _;
+    _ = require('lodash');
+    Handlebarser = require('./handlebarser');
+    Memory = require('./memory');
+    missingVariables = function() {
+      var result;
+      result = [];
+      if (used('current_user') && !loggedIn()) {
+        result.push('current_user');
+      }
+      return result;
+    };
+    missing = function() {
+      return !_.isEmpty(missingVariables());
+    };
+    used = function(key) {
+      return !!Handlebarser.mock()[key];
+    };
+    loggedIn = function() {
+      return !_.isEmpty(Memory.get('current_user'));
+    };
+    return {
+      missing: missing,
+      missingVariables: missingVariables
+    };
+  })();
+
+  module.exports = Data;
+
+}).call(this);
+
+},{"./handlebarser":210,"./memory":212,"lodash":29}],208:[function(require,module,exports){
+(function() {
+  var Facebook;
+
+  Facebook = (function() {
+    var $, init, loggedIn, login;
+    $ = require('jquery');
+    init = function() {
+      $.ajaxSetup({
+        cache: true
+      });
+      return $.getScript('//connect.facebook.net/en_UK/all.js', function() {
+        return FB.init({
+          appId: '776916785684160',
+          xfbml: true,
+          version: 'v2.1'
+        });
+      });
+    };
+    loggedIn = function(r) {
+      console.log(r);
+      debugger;
+    };
+    login = function() {
+      return FB.login(loggedIn, {
+        scope: 'user_about_me'
+      });
+    };
+    return {
+      init: init,
+      login: login
+    };
+  })();
+
+  module.exports = Facebook;
+
+}).call(this);
+
+},{"jquery":27}],209:[function(require,module,exports){
+(function() {
+  var Cornflake;
 
   window.Cornflake = Cornflake = module.exports = (function() {
-    var Handlebarser, Persistance, Router, configure, init;
+    var Facebook, Handlebarser, Persistance, Router, configure, init;
     Persistance = require('./persistance');
     Handlebarser = require('./handlebarser');
     Router = require('./router');
+    Facebook = require('./facebook');
     init = function() {
       console.log('Here and now');
       Handlebarser.patch();
       configure();
-      return Router.change(1);
+      Router.change(1);
+      return Facebook.init();
     };
     configure = function() {
       Persistance.setApi('http://10.30.0.1:3000');
@@ -58802,47 +58882,20 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
   Cornflake.init();
 
-  Facebook = (function() {
-    var $, init, loggedIn;
-    $ = require('jquery');
-    init = function() {
-      $.ajaxSetup({
-        cache: true
-      });
-      return $.getScript('//connect.facebook.net/en_UK/all.js', function() {
-        FB.init({
-          appId: '776916785684160',
-          xfbml: true,
-          version: 'v2.1'
-        });
-        return FB.login(loggedIn, {
-          scope: 'user_about_me'
-        });
-      });
-    };
-    loggedIn = function(r) {
-      console.log(r);
-      debugger;
-    };
-    return {
-      init: init
-    };
-  })();
-
 }).call(this);
 
-},{"./handlebarser":208,"./persistance":212,"./router":215,"jquery":27}],208:[function(require,module,exports){
+},{"./facebook":208,"./handlebarser":210,"./persistance":214,"./router":217}],210:[function(require,module,exports){
 (function() {
   var Handlebarser;
 
   Handlebarser = (function() {
-    var Handlebars, Replacer, actions, addLookup, emptyMock, isAction, lookups, mock, patch, _;
+    var Handlebars, Replacer, actions, addLookup, clean, emptyMock, isAction, lookups, mock, patch, _;
     Handlebars = require('handlebars');
     _ = require('lodash');
     _.mixin(require('lodash-deep'));
     Replacer = require('./replacer');
     lookups = [];
-    actions = ['create', 'update', 'destroy', 'previous', 'next'];
+    actions = ['create', 'update', 'destroy', 'previous', 'next', 'login'];
     patch = function() {
       Handlebars.JavaScriptCompiler.prototype.nameLookup = function(parent, name, type) {
         _.each(this.environment.opcodes, function(opcode) {
@@ -58896,10 +58949,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     addLookup = function(lookup) {
       return lookups.push(lookup);
     };
+    clean = function() {
+      return lookups = [];
+    };
     return {
       patch: patch,
       mock: mock,
       emptyMock: emptyMock,
+      clean: clean,
       addLookup: addLookup
     };
   })();
@@ -58908,7 +58965,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./replacer":214,"handlebars":26,"lodash":29,"lodash-deep":28}],209:[function(require,module,exports){
+},{"./replacer":216,"handlebars":26,"lodash":29,"lodash-deep":28}],211:[function(require,module,exports){
 (function() {
   var MainModel;
 
@@ -59002,7 +59059,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebarser":208,"./memory":210,"./router":215,"./ui":216,"lodash":29,"traverse":205}],210:[function(require,module,exports){
+},{"./handlebarser":210,"./memory":212,"./router":217,"./ui":218,"lodash":29,"traverse":205}],212:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -59028,7 +59085,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":29}],211:[function(require,module,exports){
+},{"lodash":29}],213:[function(require,module,exports){
 (function() {
   var Model;
 
@@ -59078,7 +59135,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./main_model":209,"./memory":210,"lodash":29}],212:[function(require,module,exports){
+},{"./main_model":211,"./memory":212,"lodash":29}],214:[function(require,module,exports){
 (function() {
   var Persistance;
 
@@ -59120,19 +59177,20 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":210,"./model":211,"./router":215,"databound":1,"lodash":29}],213:[function(require,module,exports){
+},{"./memory":212,"./model":213,"./router":217,"databound":1,"lodash":29}],215:[function(require,module,exports){
 (function() {
   var ReactMixin,
     __slice = [].slice;
 
   ReactMixin = module.exports = (function() {
-    var Model, Persistance, Replacer, Router, _;
+    var Facebook, Model, Persistance, Replacer, Router, _;
     Router = require('./router');
     Model = require('./model');
     _ = require('lodash');
     _.mixin(require('lodash-deep'));
     Persistance = require('./persistance');
     Replacer = require('./replacer');
+    Facebook = require('./facebook');
     return {
       getInitialState: function() {
         return Model.main().attributes;
@@ -59153,6 +59211,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         var action, attributes, model_path, model_path_str, _i, _ref;
         _ref = path.split('.'), model_path = 2 <= _ref.length ? __slice.call(_ref, 0, _i = _ref.length - 1) : (_i = 0, []), action = _ref[_i++];
         model_path_str = model_path.join('.');
+        if (model_path_str === 'facebook') {
+          return Facebook.login();
+        }
         attributes = _.deepGet(this.state, model_path_str);
         attributes.model = _.last(model_path_str.split('.'));
         return Persistance.act(action, e, attributes);
@@ -59162,15 +59223,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./model":211,"./persistance":212,"./replacer":214,"./router":215,"lodash":29,"lodash-deep":28}],214:[function(require,module,exports){
+},{"./facebook":208,"./model":213,"./persistance":214,"./replacer":216,"./router":217,"lodash":29,"lodash-deep":28}],216:[function(require,module,exports){
 (function() {
   var Replacer;
 
   Replacer = module.exports = (function() {
-    var Handlebars, actions, capitalizeActionCase, removeExtraQuotes, replace, replaceToBindings, toAction, toAttribute, toReactCode, toState, _;
+    var Handlebars, capitalizeActionCase, removeExtraQuotes, replace, replaceToBindings, toAction, toAttribute, toReactCode, toState, _;
     Handlebars = require('handlebars');
     _ = require('lodash');
-    actions = ['create', 'update', 'destroy', 'previous', 'next'];
     toReactCode = function(jsx_code) {
       jsx_code = removeExtraQuotes(jsx_code);
       jsx_code = capitalizeActionCase(jsx_code);
@@ -59232,14 +59292,16 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"handlebars":26,"lodash":29}],215:[function(require,module,exports){
+},{"handlebars":26,"lodash":29}],217:[function(require,module,exports){
 (function() {
   var Router;
 
   Router = module.exports = (function() {
-    var Memory, UI, change, current, next, previous, setCurrent, step;
+    var Data, Memory, UI, change, current, getMissing, login, next, previous, setCurrent, step, _;
     Memory = require('./memory');
     UI = require('./ui');
+    Data = require('./data');
+    _ = require('lodash');
     step = 1;
     setCurrent = function(_step) {
       return step = _step;
@@ -59248,8 +59310,19 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return step;
     };
     change = function(_step) {
+      var e;
       step = _step;
-      return UI.render(step);
+      try {
+        UI.render(step);
+        return setCurrent(step);
+      } catch (_error) {
+        e = _error;
+        if (e.message === 'get_missing') {
+          return getMissing();
+        } else {
+          throw e;
+        }
+      }
     };
     previous = function(current_data) {
       Memory.set(current_data);
@@ -59259,10 +59332,20 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       Memory.set(current_data);
       return change(step + 1);
     };
+    getMissing = function() {
+      return _.each(Data.missingVariables(), function(variable) {
+        if (variable === 'current_user') {
+          return login();
+        }
+      });
+    };
+    login = function() {
+      return UI.login();
+    };
     return {
       current: current,
-      setCurrent: setCurrent,
       change: change,
+      login: login,
       previous: previous,
       next: next
     };
@@ -59270,16 +59353,16 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":210,"./ui":216}],216:[function(require,module,exports){
+},{"./data":207,"./memory":212,"./ui":218,"lodash":29}],218:[function(require,module,exports){
 (function() {
   var UI;
 
-  UI = module.exports = (function() {
-    var $, Converter, React, component, components, container, elements, hide, hideAll, idx, insertComponent, klassName, loading, removePreviousSteps, render, renderComponent, _;
+  UI = (function() {
+    var $, Converter, React, component, components, container, elements, hide, hideAll, idx, insertComponent, klassName, loading, login, removePreviousSteps, render, renderComponent, _;
     React = require('react');
-    Converter = require('./converter');
     _ = require('lodash');
     $ = require('jquery');
+    Converter = require('./converter');
     hideAll = function() {
       removePreviousSteps();
       return _.each(elements(), function(el) {
@@ -59303,15 +59386,16 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       $(component.getDOMNode()).show();
       return loading(false);
     };
+    login = function() {
+      loading(true);
+      debugger;
+      return loading(false);
+    };
     loading = function(show) {
       return $('[loading]').toggle(show);
     };
     insertComponent = function(i) {
-      var Router, rendered_component;
-      rendered_component = renderComponent(i);
-      Router = require('./router');
-      Router.setCurrent(i);
-      return rendered_component;
+      return renderComponent(i);
     };
     component = function(i) {
       return Converter.htmlToReactComponent(klassName(i), Compiler.stepContent(i))();
@@ -59344,13 +59428,16 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       });
     };
     return {
-      render: render
+      render: render,
+      login: login
     };
   })();
 
+  module.exports = UI;
+
 }).call(this);
 
-},{"./converter":206,"./router":215,"jquery":27,"lodash":29,"react":204}],217:[function(require,module,exports){
+},{"./converter":206,"jquery":27,"lodash":29,"react":204}],219:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.
@@ -59361,4 +59448,4 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 	 *
 	 */
 "use strict";function e(t,e){if(1===e)return t;if(0>e)throw new Error;for(var n="";e;)1&e&&(n+=t),(e>>=1)&&(t+=t);return n}function n(t,e){return t.slice(-e.length)===e}function i(t,e){return n(t,e)?t.slice(0,-e.length):t}function s(t){return t.replace(/-(.)/g,function(t,e){return e.toUpperCase()})}function o(t){return!/[^\s]/.test(t)}function r(t){return void 0!==t&&null!==t&&("number"==typeof t||parseInt(t,10)==t)}var u={ELEMENT:1,TEXT:3,COMMENT:8},c={"for":"htmlFor","class":"className"},h=function(t){this.config=t||{},void 0===this.config.createClass&&(this.config.createClass=!0),this.config.indent||(this.config.indent="  "),this.config.outputClassName||(this.config.outputClassName="NewComponent")};h.prototype={reset:function(){this.output="",this.level=0},convert:function(t){this.reset();var e,e;return e=document.createElement("div"),e.innerHTML="\n"+this._cleanInput(t)+"\n",this.config.createClass&&(this.output=this.config.outputClassName?"var "+this.config.outputClassName+" = React.createClass({\n":"React.createClass({\n",this.output+=this.config.indent+"render: function() {\n",this.output+=this.config.indent+this.config.indent+"return (\n"),this._onlyOneTopLevel(e)?this._traverse(e):(this.output+=this.config.indent+this.config.indent+this.config.indent,this.level++,this._visit(e)),this.output=this.output.trim()+"\n",this.config.createClass&&(this.output+=this.config.indent+this.config.indent+");\n",this.output+=this.config.indent+"}\n",this.output+="});"),this.output},_cleanInput:function(t){return t=t.trim(),t=t.replace(/<script([\s\S]*?)<\/script>/g,"")},_onlyOneTopLevel:function(t){if(1===t.childNodes.length&&t.childNodes[0].nodeType===u.ELEMENT)return!0;for(var e=!1,n=0,i=t.childNodes.length;i>n;n++){var s=t.childNodes[n];if(s.nodeType===u.ELEMENT){if(e)return!1;e=!0}else if(s.nodeType===u.TEXT&&!o(s.textContent))return!1}return!0},_getIndentedNewline:function(){return"\n"+e(this.config.indent,this.level+2)},_visit:function(t){this._beginVisit(t),this._traverse(t),this._endVisit(t)},_traverse:function(t){this.level++;for(var e=0,n=t.childNodes.length;n>e;e++)this._visit(t.childNodes[e]);this.level--},_beginVisit:function(t){switch(t.nodeType){case u.ELEMENT:this._beginVisitElement(t);break;case u.TEXT:this._visitText(t);break;case u.COMMENT:this._visitComment(t);break;default:console.warn("Unrecognised node type: "+t.nodeType)}},_endVisit:function(t){switch(t.nodeType){case u.ELEMENT:this._endVisitElement(t);break;case u.TEXT:case u.COMMENT:}},_beginVisitElement:function(t){for(var e=t.tagName.toLowerCase(),n=[],i=0,s=t.attributes.length;s>i;i++)n.push(this._getElementAttribute(t,t.attributes[i]));this.output+="<"+e,n.length>0&&(this.output+=" "+n.join(" ")),t.firstChild&&(this.output+=">")},_endVisitElement:function(t){this.output=i(this.output,this.config.indent),this.output+=t.firstChild?"</"+t.tagName.toLowerCase()+">":" />"},_visitText:function(t){var e=t.textContent;e.indexOf("\n")>-1&&(e=t.textContent.replace(/\n\s*/g,this._getIndentedNewline())),this.output+=e},_visitComment:function(t){this.output+="{/*"+t.textContent.replace("*/","* /")+"*/}"},_getElementAttribute:function(t,e){switch(e.name){case"style":return this._getStyleAttribute(e.value);default:var n=c[e.name]||e.name,i=n+"=";return i+=r(e.value)?"{"+e.value+"}":'"'+e.value.replace('"',"&quot;")+'"'}},_getStyleAttribute:function(t){var e=new a(t).toJSXString();return"style={{"+e+"}}"}};var a=function(t){this.parse(t)};a.prototype={parse:function(t){this.styles={},t.split(";").forEach(function(t){t=t.trim();var e=t.indexOf(":"),n=t.substr(0,e),i=t.substr(e+1).trim();""!==n&&(this.styles[n]=i)},this)},toJSXString:function(){var t=[];for(var e in this.styles)this.styles.hasOwnProperty(e)&&t.push(this.toJSXKey(e)+": "+this.toJSXValue(this.styles[e]));return t.join(", ")},toJSXKey:function(t){return s(t)},toJSXValue:function(t){return r(t)?t:n(t,"px")?i(t,"px"):"'"+t.replace(/'/g,'"')+"'"}},t.exports=h}])});
-},{}]},{},[207])
+},{}]},{},[209])

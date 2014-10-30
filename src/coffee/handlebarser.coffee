@@ -5,7 +5,7 @@ Handlebarser = (->
   Replacer = require './replacer'
 
   lookups = []
-  actions = ['create', 'update', 'destroy', 'previous', 'next']
+  actions = ['create', 'update', 'destroy', 'previous', 'next', 'login']
 
   patch = ->
     Handlebars.JavaScriptCompiler::nameLookup = (parent, name, type) ->
@@ -54,10 +54,14 @@ Handlebarser = (->
   addLookup = (lookup) ->
     lookups.push(lookup)
 
+  clean = ->
+    lookups = []
+
   return {
     patch: patch
     mock: mock
     emptyMock: emptyMock
+    clean: clean
     addLookup: addLookup
   }
 )()

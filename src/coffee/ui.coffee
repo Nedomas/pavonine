@@ -1,8 +1,8 @@
-UI = module.exports = (->
+UI = (->
   React = require 'react'
-  Converter = require './converter'
   _ = require 'lodash'
   $ = require 'jquery'
+  Converter = require './converter'
 
   hideAll = ->
     removePreviousSteps()
@@ -25,14 +25,19 @@ UI = module.exports = (->
     # debugger
     loading(false)
 
+  login = ->
+    loading(true)
+    debugger
+    # hideAll()
+    # component = insertComponent(step)
+    # $(component.getDOMNode()).show()
+    loading(false)
+
   loading = (show) ->
     $('[loading]').toggle(show)
 
   insertComponent = (i) ->
-    rendered_component = renderComponent(i)
-    Router = require './router'
-    Router.setCurrent(i)
-    rendered_component
+    renderComponent(i)
 
   component = (i) ->
     Converter.htmlToReactComponent(klassName(i), Compiler.stepContent(i))()
@@ -61,5 +66,8 @@ UI = module.exports = (->
 
   return {
     render: render
+    login: login
   }
 )()
+
+module.exports = UI

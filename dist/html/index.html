@@ -10,15 +10,21 @@
   <body>
     <h1>Hello</h1>
 
+    {{#login}}
+      <button onClick="{{{facebook.login}}}">
+        Login with Facebook
+      </button>
+    {{/login}}
+
     {{#step 1}}
       <input value="{{subscriber.email}}">
         {{subscriber.email}}
       </input>
+      <p>Current user: {{current_user.name}}</p>
 
       <button onClick="{{{subscriber.create}}}">
         Subscribe
       </button>
-
     {{/step}}
 
     {{#step 2}}

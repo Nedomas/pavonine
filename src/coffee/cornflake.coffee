@@ -2,13 +2,14 @@ window.Cornflake = Cornflake = module.exports = (->
   Persistance = require './persistance'
   Handlebarser = require './handlebarser'
   Router = require './router'
+  Facebook = require './facebook'
 
   init = ->
     console.log('Here and now')
     Handlebarser.patch()
     configure()
     Router.change(1)
-    # Facebook.init()
+    Facebook.init()
 
   configure = ->
     # Persistance.setApi('http://cornflake-backend.herokuapp.com')
@@ -22,25 +23,3 @@ window.Cornflake = Cornflake = module.exports = (->
 )()
 
 Cornflake.init()
-
-Facebook = (->
-  $ = require 'jquery'
-
-  init = ->
-    $.ajaxSetup
-      cache: true
-    $.getScript '//connect.facebook.net/en_UK/all.js', ->
-      FB.init
-        appId: '776916785684160'
-        xfbml: true
-        version: 'v2.1'
-      FB.login(loggedIn, scope: 'user_about_me')
-
-  loggedIn = (r) ->
-    console.log r
-    debugger
-
-  return {
-    init: init
-  }
-)()

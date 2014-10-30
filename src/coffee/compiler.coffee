@@ -2,11 +2,14 @@ window.Compiler = Compiler = module.exports = (->
   # STEP_REGEX = /\{\#step\ (\d+)}(.+?)\{\#end\}/g
   # STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?)(.+?)([\s\S]*?)\{\#end\}/g
   STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?)(.+?)([\s\S]*?){{\/step}}/g
+  LOGIN_REGEX = /{{\#login}}([\s\S]*?)(.+?)([\s\S]*?){{\/login}}/
   steps = null
+  login = {}
 
   init = ->
     console.log('Compiling')
     scanSteps()
+    findLogin()
     removeFromBody()
     installMain()
     console.log('Compiled')
@@ -18,6 +21,9 @@ window.Compiler = Compiler = module.exports = (->
         return step.content
 
     throw new Error("No step #{i}")
+
+  loginContent = ->
+    login.content
 
   hide = ->
     document.write('<style class="hideBeforeCompilation" ' +
@@ -35,6 +41,24 @@ window.Compiler = Compiler = module.exports = (->
     for step in steps
       document.body.innerHTML = document.body.innerHTML
         .replace(step.full_match, "<div step='#{step.step}'></div>")
+
+    if login.full_match
+      document.body.innerHTML = document.body.innerHTML
+        .replace(login.full_match, "<div login=''></div>")
+
+  findLogin = ->
+    code = document.body.innerHTML
+    matched = LOGIN_REGEX.exec(code)
+
+    if matched
+      full_match = matched[0]
+      content = matched[3]
+
+      login =
+        full_match: full_match
+        content: content
+
+    login
 
   scanSteps = ->
     code = document.body.innerHTML
@@ -62,6 +86,7 @@ window.Compiler = Compiler = module.exports = (->
     init: init
     hide: hide
     stepContent: stepContent
+    loginContent: loginContent
   }
 )()
 Compiler.hide()
