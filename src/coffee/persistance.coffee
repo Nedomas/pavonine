@@ -12,9 +12,10 @@ Persistance = module.exports = (->
     throw new Error 'No model specified' unless attributes.model
 
     model = new Model(attributes)
-    connection = new Databound(model.plural)
+    connection = new Databound('models')
 
     connection[action](model.serialize()).then (resp) ->
+      debugger
       new_attributes = if _.isObject(resp) then resp else {}
       metadata =
         model: model.model

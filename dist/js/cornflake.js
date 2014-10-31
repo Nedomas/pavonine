@@ -74,8 +74,10 @@ Databound.prototype.destroy = function(params) {
 };
 
 Databound.prototype.take = function(id) {
+  var _this;
+  _this = this;
   return _.detect(this.records, function(record) {
-    return parseInt(record.id) === parseInt(id);
+    return JSON.stringify(id) === JSON.stringify(record.id);
   });
 };
 
@@ -59216,8 +59218,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         throw new Error('No model specified');
       }
       model = new Model(attributes);
-      connection = new Databound(model.plural);
+      connection = new Databound('models');
       return connection[action](model.serialize()).then(function(resp) {
+        debugger;
         var metadata, new_attributes, new_model;
         new_attributes = _.isObject(resp) ? resp : {};
         metadata = {
