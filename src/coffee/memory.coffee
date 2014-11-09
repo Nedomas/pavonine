@@ -21,6 +21,9 @@ Memory = module.exports = (->
   get = (model) ->
     app_data[model] || {}
 
+  getAll = ->
+    app_data
+
   has = (key) ->
     !!app_data[key]
 
@@ -30,6 +33,7 @@ Memory = module.exports = (->
     setArray: setArray
     get: get
     getForever: getForever
+    getAll: getAll
     has: has
   }
 )()

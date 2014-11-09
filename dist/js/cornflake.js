@@ -59106,7 +59106,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Memory;
 
   Memory = module.exports = (function() {
-    var app_data, get, getForever, has, set, setArray, setForever, _;
+    var app_data, get, getAll, getForever, has, set, setArray, setForever, _;
     _ = require('lodash');
     app_data = {};
     set = function(data) {
@@ -59131,6 +59131,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     get = function(model) {
       return app_data[model] || {};
     };
+    getAll = function() {
+      return app_data;
+    };
     has = function(key) {
       return !!app_data[key];
     };
@@ -59140,6 +59143,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       setArray: setArray,
       get: get,
       getForever: getForever,
+      getAll: getAll,
       has: has
     };
   })();
@@ -59151,7 +59155,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Model;
 
   Model = (function() {
-    var KEYWORDS, MainModel, Memory, _;
+    var MainModel, Memory, _;
 
     _ = require('lodash');
 
@@ -59159,13 +59163,10 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
     MainModel = require('./main_model');
 
-    KEYWORDS = ['model', 'step', 'relationships'];
-
     function Model(attributes) {
       var _this;
       this.attributes = attributes;
       this.model = this.attributes.model;
-      this.relationships = this.attributes.relationships || [];
       this.plural = "" + this.model + "s";
       _this = this;
       _.each(this.relationships, function(relation) {
@@ -59174,16 +59175,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     }
 
     Model.prototype.serialize = function() {
-      var result, _this;
-      result = _.omit(this.attributes, KEYWORDS);
-      _this = this;
-      _.each(this.relationships, function(relationship) {
-        var key;
-        key = relationship;
-        result["" + key + "_id"] = _this.attributes[relationship].id;
-        return result = _.omit(result, relationship);
-      });
-      return result;
+      return this.attributes;
     };
 
     Model.main = function() {

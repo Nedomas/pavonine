@@ -2,11 +2,11 @@ class Model
   _ = require 'lodash'
   Memory = require './memory'
   MainModel = require './main_model'
-  KEYWORDS = ['model', 'step', 'relationships']
+  # KEYWORDS = ['model']
 
   constructor: (@attributes) ->
     @model = @attributes.model
-    @relationships = @attributes.relationships || []
+    # @relationships = @attributes.relationships || []
     @plural = "#{@model}s"
 
     _this = @
@@ -14,16 +14,18 @@ class Model
       _this.attributes[relation] = Memory.get(relation)
 
   serialize: ->
-    result = _.omit(@attributes, KEYWORDS)
+    @attributes
+    # result = _.omit(@attributes, KEYWORDS)
 
-    _this = @
-    _.each @relationships, (relationship) ->
-      key = relationship
+    # _this = @
+    # debugger
+#     _.each @relationships, (relationship) ->
+#       key = relationship
+#
+#       result["#{key}_id"] = _this.attributes[relationship].id
+#       result = _.omit(result, relationship)
 
-      result["#{key}_id"] = _this.attributes[relationship].id
-      result = _.omit(result, relationship)
-
-    result
+    # result
 
   @main = ->
     new Model(MainModel.attributes())
