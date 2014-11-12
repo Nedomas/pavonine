@@ -27,6 +27,9 @@ Memory = module.exports = (->
   has = (key) ->
     !!app_data[key]
 
+  clean = ->
+    app_data = {}
+
   return {
     set: set
     setForever: setForever
@@ -35,5 +38,8 @@ Memory = module.exports = (->
     getForever: getForever
     getAll: getAll
     has: has
+    clean: clean
   }
 )()
+
+window.M = Memory

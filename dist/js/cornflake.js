@@ -32,13 +32,8 @@ Databound.prototype.where = function(params) {
   var _this;
   _this = this;
   return this.request('where', params).then(function(records) {
-    var computed_records;
     records = records.concat(_this.seeds);
-    computed_records = _.map(records, function(record) {
-      return _this.withComputedProps(record);
-    });
-    _this.properties = _.keys(records[0]);
-    _this.records = _.sortBy(computed_records, 'id');
+    _this.records = _.sortBy(records, 'id');
     return _this.promise(_this.records);
   });
 };
@@ -77,7 +72,7 @@ Databound.prototype.take = function(id) {
   var _this;
   _this = this;
   return _.detect(this.records, function(record) {
-    return JSON.stringify(id) === JSON.stringify(record.id);
+    return id.toString() === record.id.toString();
   });
 };
 
@@ -89,46 +84,25 @@ Databound.prototype.injectSeedRecords = function(records) {
   return this.seeds = records;
 };
 
-Databound.prototype.syncDiff = function(new_records, old_records) {
-  var dirty_records, _this;
-  _this = this;
-  dirty_records = _.select(new_records, function(new_record) {
-    var record_with_same_id;
-    record_with_same_id = _.detect(old_records, function(old_record) {
-      return new_record.id === old_record.id;
-    });
-    return JSON.stringify(_.pick(record_with_same_id, _this.properties)) !== JSON.stringify(_.pick(new_record, _this.properties));
-  });
-  return _.each(dirty_records, function(record) {
-    return _this.update(record);
-  });
-};
-
 Databound.prototype.requestAndRefresh = function(action, params) {
   var _this;
   _this = this;
   return this.request(action, params).then(function(resp) {
+    var records;
     if (!(resp != null ? resp.success : void 0)) {
       throw new Error('Error in the backend');
     }
     if (_.isString(resp.scoped_records)) {
       resp.scoped_records = JSON.parse(resp.scoped_records);
     }
-    _this.records = _.sortBy(resp.scoped_records, 'id');
+    records = resp.scoped_records.concat(_this.seeds);
+    _this.records = _.sortBy(records, 'id');
     if (resp.id) {
       return _this.promise(_this.take(resp.id));
     } else {
       return _this.promise(resp.success);
     }
   });
-};
-
-Databound.prototype.withComputedProps = function(record) {
-  if (this.computed) {
-    return _.extend(record, this.computed(record));
-  } else {
-    return record;
-  }
 };
 
 Databound.prototype.url = function(action) {
@@ -59033,13 +59007,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     MainModel.attributes = function() {
       var result;
       result = {};
-      _.each(traverse(Handlebarser.emptyMock()).paths(), function(path) {
-        var path_str;
-        if (path.length) {
-          path_str = path.join('.');
-          return _.deepSet(result, path_str, '');
-        }
-      });
+      this.setEmptyFromMock(result);
       _.each(traverse(result).paths(), function(path) {
         var existing, path_str, value;
         path_str = path.join('.');
@@ -59060,6 +59028,17 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           } else {
             return _.deepSet(result, path_str, value);
           }
+        }
+      });
+      return result;
+    };
+
+    MainModel.setEmptyFromMock = function(result) {
+      _.each(traverse(Handlebarser.emptyMock()).paths(), function(path) {
+        var path_str;
+        if (path.length) {
+          path_str = path.join('.');
+          return _.deepSet(result, path_str, '');
         }
       });
       return result;
@@ -59106,7 +59085,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Memory;
 
   Memory = module.exports = (function() {
-    var app_data, get, getAll, getForever, has, set, setArray, setForever, _;
+    var app_data, clean, get, getAll, getForever, has, set, setArray, setForever, _;
     _ = require('lodash');
     app_data = {};
     set = function(data) {
@@ -59137,6 +59116,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     has = function(key) {
       return !!app_data[key];
     };
+    clean = function() {
+      return app_data = {};
+    };
     return {
       set: set,
       setForever: setForever,
@@ -59144,9 +59126,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       get: get,
       getForever: getForever,
       getAll: getAll,
-      has: has
+      has: has,
+      clean: clean
     };
   })();
+
+  window.M = Memory;
 
 }).call(this);
 
@@ -59164,14 +59149,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     MainModel = require('./main_model');
 
     function Model(attributes) {
-      var _this;
       this.attributes = attributes;
       this.model = this.attributes.model;
       this.plural = "" + this.model + "s";
-      _this = this;
-      _.each(this.relationships, function(relation) {
-        return _this.attributes[relation] = Memory.get(relation);
-      });
     }
 
     Model.prototype.serialize = function() {
@@ -59212,7 +59192,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       model = new Model(attributes);
       connection = new Databound('models');
       return connection[action](model.serialize()).then(function(resp) {
-        debugger;
         var metadata, new_attributes, new_model;
         new_attributes = _.isObject(resp) ? resp : {};
         metadata = {
@@ -59375,8 +59354,11 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     current = function() {
       return step;
     };
-    change = function(_step) {
+    change = function(_step, dont_clean) {
       var e;
+      if (!dont_clean) {
+        Memory.clean();
+      }
       step = _step;
       try {
         UI.render(step);
@@ -59399,7 +59381,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return change(step + 1);
     };
     goOn = function() {
-      return change(step);
+      return change(step, true);
     };
     getMissing = function() {
       var attributes, for_request, variable;

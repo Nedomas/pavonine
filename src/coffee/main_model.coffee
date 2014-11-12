@@ -10,11 +10,7 @@ class MainModel
 
   @attributes: ->
     result = {}
-
-    _.each traverse(Handlebarser.emptyMock()).paths(), (path) ->
-      if path.length
-        path_str = path.join('.')
-        _.deepSet(result, path_str, '')
+    @setEmptyFromMock(result)
 
     _.each traverse(result).paths(), (path) ->
       path_str = path.join('.')
@@ -33,6 +29,14 @@ class MainModel
               _.deepSet(result, relation_id_path, value.id)
         else
           _.deepSet(result, path_str, value)
+
+    result
+
+  @setEmptyFromMock = (result) ->
+    _.each traverse(Handlebarser.emptyMock()).paths(), (path) ->
+      if path.length
+        path_str = path.join('.')
+        _.deepSet(result, path_str, '')
 
     result
 

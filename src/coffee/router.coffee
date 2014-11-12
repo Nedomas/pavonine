@@ -13,7 +13,8 @@ Router = (->
   current = ->
     step
 
-  change = (_step) ->
+  change = (_step, dont_clean) ->
+    Memory.clean() unless dont_clean
     step = _step
 
     try
@@ -37,7 +38,7 @@ Router = (->
     change(step + 1)
 
   goOn = ->
-    change(step)
+    change(step, true)
 
   getMissing = ->
     Persistance = require './persistance'

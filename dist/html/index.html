@@ -16,6 +16,19 @@
       </button>
     {{/login}}
 
+    {{#step 15}}
+      Messages
+      <ul>
+        {{#each 'messages'}}
+          <li>
+            Im a message
+            {{content}}
+            DOT
+          </li>
+        {{/each}}
+      </ul>
+    {{/step}}
+
     {{#step 1}}
       <input value="{{current_user.message.content}}">
         MSG: {{current_user.message.content}}
