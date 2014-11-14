@@ -35,12 +35,23 @@ Handlebarser = (->
       sorted_subject = "_.sortBy(#{iteration_subject}, '#{sort_column}')"
       sorted_subject += ".reverse()" if sort_by == 'DESC'
 
-      "{_.map(#{sorted_subject}, function(record, i) {" +
-      " return <div>#{iteration_result}</div>" +
-      '})}'
+      fn = "_.map(#{sorted_subject}, function(record, i) {" +
+      " return #{iteration_result}" +
+      '})'
+
+      inverse = options.inverse(mock())
+      "<div>{#{sorted_subject}.length ? #{fn} : #{inverse}}</div>"
 
     Handlebars.registerHelper 'if', (context, options) ->
-      debugger
+      raw = rawSubject(context)
+      state_subject = Replacer.toState(raw.split('.'))
+      fn = options.fn(mock())
+      inverse = options.inverse(mock())
+
+      "<div>{#{state_subject} ? #{fn} : #{inverse}}</div>"
+
+  rawSubject = (subject_string) ->
+    subject_string.replace('{', '').replace('}', '').replace('this.state.', '')
 
   mock = ->
     result = {}

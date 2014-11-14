@@ -39,7 +39,7 @@ head
           .text-center
             h2 Last gym sessions
           {{#each 'current_user.roles' sortBy='bench DESC'}}
-          {{#if 'created_at'}}
+          {{#if created_at}}
           div.panel.panel-default
             div.panel-heading
               | Sukurtas: {{created_at}}
@@ -59,7 +59,11 @@ head
               tr
                 td Power clean
                 td {{powerclean}}
+          {{else}}
+          p Nope
           {{/if}}
+          {{else}}
+          p There are no records
           {{/each}}
           button.btn.btn-lg.btn-primary.btn-block(onClick='{{{previous}}}') Add gym session
           {{/step}}

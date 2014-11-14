@@ -58891,7 +58891,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Handlebarser;
 
   Handlebarser = (function() {
-    var Handlebars, Replacer, actions, addArrayLookup, addLookup, array_lookups, clean, emptyMock, getArrayLookups, getLookups, isAction, lookups, mock, patch, _;
+    var Handlebars, Replacer, actions, addArrayLookup, addLookup, array_lookups, clean, emptyMock, getArrayLookups, getLookups, isAction, lookups, mock, patch, rawSubject, _;
     Handlebars = require('handlebars');
     _ = require('lodash');
     _.mixin(require('lodash-deep'));
@@ -58915,7 +58915,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         }
       };
       Handlebars.registerHelper('each', function(context, options) {
-        var iteration_result, iteration_subject, sort_by, sort_column, sorted_subject, _ref;
+        var fn, inverse, iteration_result, iteration_subject, sort_by, sort_column, sorted_subject, _ref;
         _ref = options.hash.sortBy.split(' '), sort_column = _ref[0], sort_by = _ref[1];
         sort_column || (sort_column = 'created_at');
         sort_by || (sort_by = 'ASC');
@@ -58929,11 +58929,21 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         if (sort_by === 'DESC') {
           sorted_subject += ".reverse()";
         }
-        return ("{_.map(" + sorted_subject + ", function(record, i) {") + (" return <div>" + iteration_result + "</div>") + '})}';
+        fn = ("_.map(" + sorted_subject + ", function(record, i) {") + (" return " + iteration_result) + '})';
+        inverse = options.inverse(mock());
+        return "<div>{" + sorted_subject + ".length ? " + fn + " : " + inverse + "}</div>";
       });
       return Handlebars.registerHelper('if', function(context, options) {
-        debugger;
+        var fn, inverse, raw, state_subject;
+        raw = rawSubject(context);
+        state_subject = Replacer.toState(raw.split('.'));
+        fn = options.fn(mock());
+        inverse = options.inverse(mock());
+        return "<div>{" + state_subject + " ? " + fn + " : " + inverse + "}</div>";
       });
+    };
+    rawSubject = function(subject_string) {
+      return subject_string.replace('{', '').replace('}', '').replace('this.state.', '');
     };
     mock = function() {
       var result;
