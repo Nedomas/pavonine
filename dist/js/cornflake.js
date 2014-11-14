@@ -59481,15 +59481,16 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var UI;
 
   UI = (function() {
-    var $, Converter, React, component, components, elements, idx, klassName, loading, login, loginContainer, removeAll, render, renderComponent, stepContainer, _;
+    var $, Converter, React, component, components, elements, idx, klassName, loading, loadingElement, login, loginContainer, removeAll, render, renderComponent, stepContainer, _;
     React = require('react');
     _ = require('lodash');
     $ = require('jquery');
     Converter = require('./converter');
     removeAll = function() {
-      return _.each(elements(), function(el) {
+      _.each(elements(), function(el) {
         return el.html('');
       });
+      return $(loginContainer()).html('');
     };
     render = function(step) {
       var componentF, content, rendered_component;
@@ -59512,7 +59513,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return loading(false);
     };
     loading = function(show) {
-      return $('[loading]').toggle(show);
+      return $('*[loading]').toggle(show);
     };
     component = function(klass_name, content) {
       return Converter.htmlToReactComponent(klass_name, content)();
@@ -59528,6 +59529,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     loginContainer = function() {
       return $('*[login]')[0];
+    };
+    loadingElement = function() {
+      return $('*[loading]');
     };
     idx = function() {
       return _.inject(elements(), function(result, element) {

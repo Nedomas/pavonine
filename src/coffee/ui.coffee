@@ -8,6 +8,8 @@ UI = (->
     _.each elements(), (el) ->
       el.html('')
 
+    $(loginContainer()).html('')
+
   render = (step) ->
     loading(true)
     removeAll()
@@ -27,7 +29,7 @@ UI = (->
     loading(false)
 
   loading = (show) ->
-    $('[loading]').toggle(show)
+    $('*[loading]').toggle(show)
 
   component = (klass_name, content) ->
     Converter.htmlToReactComponent(klass_name, content)()
@@ -43,6 +45,9 @@ UI = (->
 
   loginContainer = ->
     $('*[login]')[0]
+
+  loadingElement = ->
+    $('*[loading]')
 
   idx = ->
     _.inject(elements(), (result, element) ->

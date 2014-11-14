@@ -2,14 +2,17 @@ window.Compiler = Compiler = module.exports = (->
   # STEP_REGEX = /\{\#step\ (\d+)}(.+?)\{\#end\}/g
   # STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?)(.+?)([\s\S]*?)\{\#end\}/g
   STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?.+?[\s\S]*?){{\/step}}/g
-  LOGIN_REGEX = /{{\#login}}([\s]*?)(.+?)([\s]*?){{\/login}}/
+  LOGIN_REGEX = /{{\#login}}([\s\S]*?.+?[\s\S]*?){{\/login}}/g
+  LOADING_REGEX = /{{\#loading}}([\s\S]*?.+?[\s\S]*?){{\/loading}}/g
   steps = null
   login = {}
+  loading = {}
 
   init = ->
     console.log('Compiling')
     scanSteps()
     findLogin()
+    findLoading()
     removeFromBody()
     installMain()
     console.log('Compiled')
@@ -47,19 +50,37 @@ window.Compiler = Compiler = module.exports = (->
       document.body.innerHTML = document.body.innerHTML
         .replace(login.full_match, "<div login=''></div>")
 
+    if loading.full_match
+      document.body.innerHTML = document.body.innerHTML
+        .replace(loading.full_match, "<div loading=''></div>")
+
   findLogin = ->
     code = document.body.innerHTML
     matched = LOGIN_REGEX.exec(code)
 
     if matched
       full_match = matched[0]
-      content = matched[2]
+      content = matched[1]
 
       login =
         full_match: full_match
         content: content
 
     login
+
+  findLoading = ->
+    code = document.body.innerHTML
+    matched = LOADING_REGEX.exec(code)
+
+    if matched
+      full_match = matched[0]
+      content = matched[1]
+
+      loading =
+        full_match: full_match
+        content: content
+
+    loading
 
   scanSteps = ->
     code = document.body.innerHTML

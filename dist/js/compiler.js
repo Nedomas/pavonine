@@ -3,15 +3,18 @@
   var Compiler;
 
   window.Compiler = Compiler = module.exports = (function() {
-    var LOGIN_REGEX, STEP_REGEX, findLogin, hide, init, installMain, login, loginContent, removeFromBody, scanSteps, show, stepContent, steps;
+    var LOADING_REGEX, LOGIN_REGEX, STEP_REGEX, findLoading, findLogin, hide, init, installMain, loading, login, loginContent, removeFromBody, scanSteps, show, stepContent, steps;
     STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?.+?[\s\S]*?){{\/step}}/g;
-    LOGIN_REGEX = /{{\#login}}([\s]*?)(.+?)([\s]*?){{\/login}}/;
+    LOGIN_REGEX = /{{\#login}}([\s\S]*?.+?[\s\S]*?){{\/login}}/g;
+    LOADING_REGEX = /{{\#loading}}([\s\S]*?.+?[\s\S]*?){{\/loading}}/g;
     steps = null;
     login = {};
+    loading = {};
     init = function() {
       console.log('Compiling');
       scanSteps();
       findLogin();
+      findLoading();
       removeFromBody();
       installMain();
       console.log('Compiled');
@@ -52,7 +55,10 @@
         document.body.innerHTML = document.body.innerHTML.replace(step.full_match, "<div step='" + step.step + "'></div>");
       }
       if (login.full_match) {
-        return document.body.innerHTML = document.body.innerHTML.replace(login.full_match, "<div login=''></div>");
+        document.body.innerHTML = document.body.innerHTML.replace(login.full_match, "<div login=''></div>");
+      }
+      if (loading.full_match) {
+        return document.body.innerHTML = document.body.innerHTML.replace(loading.full_match, "<div loading=''></div>");
       }
     };
     findLogin = function() {
@@ -61,13 +67,27 @@
       matched = LOGIN_REGEX.exec(code);
       if (matched) {
         full_match = matched[0];
-        content = matched[2];
+        content = matched[1];
         login = {
           full_match: full_match,
           content: content
         };
       }
       return login;
+    };
+    findLoading = function() {
+      var code, content, full_match, matched;
+      code = document.body.innerHTML;
+      matched = LOADING_REGEX.exec(code);
+      if (matched) {
+        full_match = matched[0];
+        content = matched[1];
+        loading = {
+          full_match: full_match,
+          content: content
+        };
+      }
+      return loading;
     };
     scanSteps = function() {
       var code, content, full_match, matched, regexp, step;
