@@ -43,12 +43,29 @@ Handlebarser = (->
       "<div>{#{sorted_subject}.length ? #{fn} : #{inverse}}</div>"
 
     Handlebars.registerHelper 'if', (context, options) ->
-      raw = rawSubject(context)
-      state_subject = Replacer.toState(raw.split('.'))
+      raw = rawSubject(context).split('.')
+      addLookup(raw)
+      state_subject = Replacer.toState(raw)
       fn = options.fn(mock())
       inverse = options.inverse(mock())
 
       "<div>{#{state_subject} ? #{fn} : #{inverse}}</div>"
+
+    Handlebars.registerHelper 'with', (context, options) ->
+      fn = options.fn(mock())
+      context_path = context.split('.')
+
+      result = Replacer.replace fn, /{this\.state\.(.+?)}/g, (attribute, initial) ->
+        updated_path = context_path.concat(attribute.split('.'))
+        addLookup(updated_path)
+        "{#{Replacer.toState(updated_path)}}"
+
+      result = Replacer.replace result, /this\.action\,\ \'(.+?)\'/g, (attribute, initial) ->
+        updated_path = context_path.concat(attribute.split('.'))
+        addLookup(updated_path)
+        "#{Replacer.toAction(updated_path)}"
+
+      "<div>#{result}</div>"
 
   rawSubject = (subject_string) ->
     subject_string.replace('{', '').replace('}', '').replace('this.state.', '')

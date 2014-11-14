@@ -58933,13 +58933,32 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         inverse = options.inverse(mock());
         return "<div>{" + sorted_subject + ".length ? " + fn + " : " + inverse + "}</div>";
       });
-      return Handlebars.registerHelper('if', function(context, options) {
+      Handlebars.registerHelper('if', function(context, options) {
         var fn, inverse, raw, state_subject;
-        raw = rawSubject(context);
-        state_subject = Replacer.toState(raw.split('.'));
+        raw = rawSubject(context).split('.');
+        addLookup(raw);
+        state_subject = Replacer.toState(raw);
         fn = options.fn(mock());
         inverse = options.inverse(mock());
         return "<div>{" + state_subject + " ? " + fn + " : " + inverse + "}</div>";
+      });
+      return Handlebars.registerHelper('with', function(context, options) {
+        var context_path, fn, result;
+        fn = options.fn(mock());
+        context_path = context.split('.');
+        result = Replacer.replace(fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
+          var updated_path;
+          updated_path = context_path.concat(attribute.split('.'));
+          addLookup(updated_path);
+          return "{" + (Replacer.toState(updated_path)) + "}";
+        });
+        result = Replacer.replace(result, /this\.action\,\ \'(.+?)\'/g, function(attribute, initial) {
+          var updated_path;
+          updated_path = context_path.concat(attribute.split('.'));
+          addLookup(updated_path);
+          return "" + (Replacer.toAction(updated_path));
+        });
+        return "<div>" + result + "</div>";
       });
     };
     rawSubject = function(subject_string) {

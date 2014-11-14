@@ -18,19 +18,21 @@ head
           {{#step 1}}
           div.text-center
             h2 What r your scores man?
+          {{#with 'current_user.role'}}
           div.form-group
-            input(value='{{current_user.role.squat}}' placeholder='Squat' class='form-control')
+            input(value='{{squat}}' placeholder='Squat' class='form-control')
           div.form-group
-            input(value='{{current_user.role.bench}}' placeholder='Bench' class='form-control')
+            input(value='{{bench}}' placeholder='Bench' class='form-control')
           div.form-group
-            input(value='{{current_user.role.deadlift}}' placeholder='Deadlift' class='form-control')
+            input(value='{{deadlift}}' placeholder='Deadlift' class='form-control')
           div.form-group
-            input(value='{{current_user.role.press}}' placeholder='Press' class='form-control')
+            input(value='{{press}}' placeholder='Press' class='form-control')
           div.form-group
-            input(value='{{current_user.role.powerclean}}' placeholder='Power clean' class='form-control')
+            input(value='{{powerclean}}' placeholder='Power clean' class='form-control')
           div.row
             .col-md-4
-              button.btn-block.btn.btn-lg.btn-success(onClick='{{{current_user.role.create}}}') Add
+              button.btn-block.btn.btn-lg.btn-success(onClick='{{{create}}}') Add
+            {{/with}}
             .col-md-8
               button.btn-block.btn.btn-lg.btn-primary(onClick='{{{next}}}') Last gym sessions
           {{/step}}
