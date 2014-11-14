@@ -58941,16 +58941,19 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       LODASH_ACCESSED_KEYS = _.without.apply(_, [_.keys(_)].concat(__slice.call(BLACKLISTED)));
       _.each(LODASH_ACCESSED_KEYS, function(method) {
         return Handlebars.registerHelper(method, function(context, options) {
-          var fn, inverse, method_with_state, result;
+          var fn, inverse, new_wrapped_subject, result, subject, wrapped_subject, wrapper;
           if (_.isString(options)) {
             return "_." + method + "(" + context + ", '" + options + "')";
           } else {
             result = "_." + method + "(" + context + ")";
             if (_.isFunction(options.fn)) {
+              subject = getSubject(context);
+              wrapper = getWrapper(context);
               fn = options.fn(mock());
               inverse = options.inverse(mock());
-              method_with_state = "_." + method + "(this.state." + context + ")";
-              fn = fn.replace('this.state', method_with_state);
+              wrapped_subject = wrapper(Replacer.toState(subject));
+              new_wrapped_subject = "_." + method + "(" + wrapped_subject + ")";
+              fn = fn.replace('this.state', new_wrapped_subject);
               result = "<div>{" + fn + "}</div>";
             }
             return result;

@@ -47,7 +47,10 @@ head
           {{#step 2}}
           .text-center
             h2 Last gym sessions
-          {{#each 'current_user.roles'}}
+          {{#first (sortBy 'current_user.roles' 'squat')}}
+          p {{squat}}
+          {{/first}}
+          {{#each (sortBy 'current_user.roles' 'squat')}}
           {{#if created_at}}
           div.panel.panel-default
             div.panel-heading

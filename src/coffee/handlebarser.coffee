@@ -49,10 +49,14 @@ Handlebarser = (->
           result = "_.#{method}(#{context})"
 
           if _.isFunction(options.fn)
+            subject = getSubject(context)
+            wrapper = getWrapper(context)
+
             fn = options.fn(mock())
             inverse = options.inverse(mock())
-            method_with_state = "_.#{method}(this.state.#{context})"
-            fn = fn.replace('this.state', method_with_state)
+            wrapped_subject = wrapper(Replacer.toState(subject))
+            new_wrapped_subject = "_.#{method}(#{wrapped_subject})"
+            fn = fn.replace('this.state', new_wrapped_subject)
             result = "<div>{#{fn}}</div>"
 
           result
