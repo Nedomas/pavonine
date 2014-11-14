@@ -58888,10 +58888,11 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 },{"./facebook":208,"./handlebarser":210,"./persistance":214,"./router":217}],210:[function(require,module,exports){
 (function() {
-  var Handlebarser;
+  var Handlebarser,
+    __slice = [].slice;
 
   Handlebarser = (function() {
-    var Handlebars, Replacer, actions, addArrayLookup, addLookup, array_lookups, clean, emptyMock, getArrayLookups, getLookups, isAction, lookups, mock, patch, rawSubject, _;
+    var Handlebars, Replacer, actions, addArrayLookup, addLookup, array_lookups, clean, emptyMock, getArrayLookups, getLookups, getSubject, getWrapper, isAction, lookups, mock, patch, rawSubject, _;
     Handlebars = require('handlebars');
     _ = require('lodash');
     _.mixin(require('lodash-deep'));
@@ -58899,7 +58900,29 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     lookups = [];
     array_lookups = [];
     actions = ['create', 'update', 'destroy', 'previous', 'next', 'login'];
+    getSubject = function(string) {
+      var match, options, result, _ref;
+      if (match = string.match(/\((.*?)\)/)) {
+        _ref = match[1].split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+      } else {
+        result = string;
+      }
+      result = result.replace('this.state.', '');
+      return result.split('.');
+    };
+    getWrapper = function(string) {
+      var after, before, matched, regex, _ref;
+      regex = new RegExp("(.*?)" + (getSubject(string).join('.')) + "(.*)");
+      matched = string.match(regex);
+      if (matched) {
+        _ref = [matched[1], matched[2]], before = _ref[0], after = _ref[1];
+      }
+      return function(input) {
+        return before + input + after;
+      };
+    };
     patch = function() {
+      var BLACKLISTED, LODASH_ACCESSED_KEYS;
       Handlebars.JavaScriptCompiler.prototype.nameLookup = function(parent, name, type) {
         _.each(this.environment.opcodes, function(opcode) {
           var lookup;
@@ -58914,24 +58937,39 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           return parent + "['" + name + "']";
         }
       };
+      BLACKLISTED = ['create'];
+      LODASH_ACCESSED_KEYS = _.without.apply(_, [_.keys(_)].concat(__slice.call(BLACKLISTED)));
+      _.each(LODASH_ACCESSED_KEYS, function(method) {
+        return Handlebars.registerHelper(method, function(context, options) {
+          var fn, inverse, method_with_state, result;
+          if (_.isString(options)) {
+            return "_." + method + "(" + context + ", '" + options + "')";
+          } else {
+            result = "_." + method + "(" + context + ")";
+            if (_.isFunction(options.fn)) {
+              fn = options.fn(mock());
+              inverse = options.inverse(mock());
+              method_with_state = "_." + method + "(this.state." + context + ")";
+              fn = fn.replace('this.state', method_with_state);
+              result = "<div>{" + fn + "}</div>";
+            }
+            return result;
+          }
+        });
+      });
       Handlebars.registerHelper('each', function(context, options) {
-        var fn, inverse, iteration_result, iteration_subject, sort_by, sort_column, sorted_subject, _ref;
-        _ref = options.hash.sortBy.split(' '), sort_column = _ref[0], sort_by = _ref[1];
-        sort_column || (sort_column = 'created_at');
-        sort_by || (sort_by = 'ASC');
-        addArrayLookup(context.split('.'));
+        var collection, fn, inverse, iteration_result, subject, wrapper;
+        subject = getSubject(context);
+        wrapper = getWrapper(context);
+        addArrayLookup(subject);
         iteration_result = options.fn(mock());
         iteration_result = Replacer.replace(iteration_result, /{this\.state\.(.+?)}/, function(attribute, initial) {
           return "{record." + attribute + "}";
         });
-        iteration_subject = Replacer.toState(context.split('.'));
-        sorted_subject = "_.sortBy(" + iteration_subject + ", '" + sort_column + "')";
-        if (sort_by === 'DESC') {
-          sorted_subject += ".reverse()";
-        }
-        fn = ("_.map(" + sorted_subject + ", function(record, i) {") + (" return " + iteration_result) + '})';
+        collection = wrapper(Replacer.toState(subject));
+        fn = ("_.map(" + collection + ", function(record, i) {") + (" return " + iteration_result) + '})';
         inverse = options.inverse(mock());
-        return "<div>{" + sorted_subject + ".length ? " + fn + " : " + inverse + "}</div>";
+        return "<div>{" + collection + ".length ? " + fn + " : " + inverse + "}</div>";
       });
       Handlebars.registerHelper('if', function(context, options) {
         var fn, inverse, raw, state_subject;

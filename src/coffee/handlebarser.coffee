@@ -8,6 +8,25 @@ Handlebarser = (->
   array_lookups = []
   actions = ['create', 'update', 'destroy', 'previous', 'next', 'login']
 
+  getSubject = (string) ->
+    if match = string.match(/\((.*?)\)/)
+      [result, options...] = match[1].split(', ')
+    else
+      result = string
+
+    result = result.replace('this.state.', '')
+    result.split('.')
+
+  getWrapper = (string) ->
+    regex = new RegExp "(.*?)#{getSubject(string).join('.')}(.*)"
+    matched = string.match(regex)
+
+    if matched
+      [before, after] = [matched[1], matched[2]]
+
+    (input) ->
+      before + input + after
+
   patch = ->
     Handlebars.JavaScriptCompiler::nameLookup = (parent, name, type) ->
       _.each @environment.opcodes, (opcode) ->
@@ -20,27 +39,42 @@ Handlebarser = (->
       else
         parent + "['" + name + "']"
 
-    Handlebars.registerHelper 'each', (context, options) ->
-      [sort_column, sort_by] = options.hash.sortBy.split(' ')
-      sort_column ||= 'created_at'
-      sort_by ||= 'ASC'
+    BLACKLISTED = ['create']
+    LODASH_ACCESSED_KEYS = _.without(_.keys(_), BLACKLISTED...)
+    _.each LODASH_ACCESSED_KEYS, (method) ->
+      Handlebars.registerHelper method, (context, options) ->
+        if _.isString(options)
+          "_.#{method}(#{context}, '#{options}')"
+        else
+          result = "_.#{method}(#{context})"
 
-      addArrayLookup(context.split('.'))
+          if _.isFunction(options.fn)
+            fn = options.fn(mock())
+            inverse = options.inverse(mock())
+            method_with_state = "_.#{method}(this.state.#{context})"
+            fn = fn.replace('this.state', method_with_state)
+            result = "<div>{#{fn}}</div>"
+
+          result
+
+    Handlebars.registerHelper 'each', (context, options) ->
+      subject = getSubject(context)
+      wrapper = getWrapper(context)
+
+      addArrayLookup(subject)
       iteration_result = options.fn(mock())
       iteration_result = Replacer.replace iteration_result,
         /{this\.state\.(.+?)}/, (attribute, initial) ->
           "{record.#{attribute}}"
 
-      iteration_subject = Replacer.toState(context.split('.'))
-      sorted_subject = "_.sortBy(#{iteration_subject}, '#{sort_column}')"
-      sorted_subject += ".reverse()" if sort_by == 'DESC'
+      collection = wrapper(Replacer.toState(subject))
 
-      fn = "_.map(#{sorted_subject}, function(record, i) {" +
+      fn = "_.map(#{collection}, function(record, i) {" +
       " return #{iteration_result}" +
       '})'
 
       inverse = options.inverse(mock())
-      "<div>{#{sorted_subject}.length ? #{fn} : #{inverse}}</div>"
+      "<div>{#{collection}.length ? #{fn} : #{inverse}}</div>"
 
     Handlebars.registerHelper 'if', (context, options) ->
       raw = rawSubject(context).split('.')

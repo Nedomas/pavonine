@@ -10,7 +10,7 @@ rename = require 'gulp-rename'
 jade = require 'gulp-jade'
 sass = require 'gulp-sass'
 
-gulp.task 'default', ['coffee']
+gulp.task 'default', ['build']
 
 gulp.task 'watch', ->
   gulp.watch('./src/coffee/**/*.coffee', ['coffee'])
@@ -49,4 +49,4 @@ gulp.task 'ugly', ->
     .pipe(rename('cornflake.min.js'))
     .pipe(gulp.dest('./dist/js/'))
 
-gulp.task 'build', ['coffee', 'jade', 'ugly']
+gulp.task 'build', ['coffee', 'jade', 'ugly', 'watch']
