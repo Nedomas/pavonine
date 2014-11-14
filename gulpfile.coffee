@@ -8,13 +8,23 @@ source = require 'vinyl-source-stream'
 concat = require 'gulp-concat'
 uglify = require 'gulp-uglify'
 rename = require 'gulp-rename'
+jade = require 'gulp-jade'
 
 gulp.task 'default', ['coffee']
 
 gulp.task 'watch', ->
   gulp.watch('./src/coffee/**/*.coffee', ['coffee'])
   gulp.watch('./node_modules/**/*.js', ['coffee'])
+  gulp.watch('./src/jade/*.jade', ['jade'])
   # gulp.watch('./src/slim/**/*.slim', ['slim'])
+
+
+gulp.task 'jade', ->
+  gulp.src('./src/jade/*.jade')
+  .pipe(jade({
+    locals: {}
+  }))
+  .pipe(gulp.dest('./dist/html/'))
 
 gulp.task 'coffee', ->
   gulp

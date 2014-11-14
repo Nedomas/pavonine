@@ -1,14 +1,31 @@
 <!DOCTYPE html>
 <head>
   <meta charset="utf-8">
-    <title>Cornflake</title>
+    <title>Bro app</title>
     <meta content="Cornflake" name="description" />
     <meta content="width=device-width" name="viewport">
       <script src="js/compiler.js" type="text/javascript"></script>
     </meta>
   </meta>
   <body>
-    <h1>Hello</h1>
+    <h1>Last gym sessions</h1>
+    {{#each 'current_user.gym_sessions'}}
+      <h2>{{created_at}}</h2>
+      <table>
+        <tr>
+          <td>
+            Squat
+          </td>
+          <td>
+            {{squat}}
+          </td>
+        </tr>
+        <tr>
+          <td>
+            {{bench}}
+          </td>
+        </tr>
+    {{/each}}
 
     {{#login}}
       <button onClick="{{{facebook.login}}}">

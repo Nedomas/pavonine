@@ -4,7 +4,7 @@
 
   window.Compiler = Compiler = module.exports = (function() {
     var LOGIN_REGEX, STEP_REGEX, findLogin, hide, init, installMain, login, loginContent, removeFromBody, scanSteps, show, stepContent, steps;
-    STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?)(.+?)([\s\S]*?){{\/step}}/g;
+    STEP_REGEX = /{{\#step\ (\d+)}}([\s]*?)(.+?)([\s]*?){{\/step}}/g;
     LOGIN_REGEX = /{{\#login}}([\s\S]*?)(.+?)([\s\S]*?){{\/login}}/;
     steps = null;
     login = {};
@@ -28,6 +28,9 @@
       throw new Error("No step " + i);
     };
     loginContent = function() {
+      if (!login.content) {
+        throw new Error('No login step');
+      }
       return login.content;
     };
     hide = function() {
@@ -76,7 +79,7 @@
         if (matched) {
           full_match = matched[0];
           step = matched[1];
-          content = matched[4];
+          content = matched[3];
           steps.push({
             full_match: full_match,
             step: step,

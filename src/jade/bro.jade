@@ -1,0 +1,25 @@
+doctype html
+head
+    meta(charset='utf-8')
+    title Bro app
+    meta(content='Cornflake', name='description')
+    meta(content='width=device-width', name='viewport')
+    script(src='js/compiler.js', type='text/javascript')
+  body
+    h1 Last gym sessions
+    {{#step 1}}
+    {{#each 'current_user.gym_sessions'}}
+    h2 {{created_at}}
+    table
+      tr
+        td
+          | Squat
+        td
+          {{squat}}
+      tr
+        td
+          | Bench
+        td
+          {{bench}}
+    {{/each}}
+    {{/step}}
