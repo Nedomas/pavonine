@@ -1,0 +1,30 @@
+<button type="button" class="js-menu-trigger sliding-menu-button">
+  <img src="images/menu.png" alt="">
+</button>
+
+<nav class="js-menu sliding-menu-content">
+  <ul>
+    <li><a href="javascript:void(0)">Item 1</a></li>
+    <li><a href="javascript:void(0)">Item 2</a></li>
+    <li><a href="javascript:void(0)">Item 3</a></li>
+  </ul>
+</nav>
+
+<div class="js-menu-screen menu-screen"></div>
+
+<script>
+  $(document).ready(function(){
+
+    $('.js-menu-trigger').on('click touchstart', function(e){
+      $('.js-menu').toggleClass('is-visible');
+      $('.js-menu-screen').toggleClass('is-visible');
+      e.preventDefault();
+    });
+
+    $('.js-menu-screen').on('click touchstart', function(e){
+      $('.js-menu').toggleClass('is-visible');
+      $('.js-menu-screen').toggleClass('is-visible');
+      e.preventDefault();
+    });
+  });
+</script>

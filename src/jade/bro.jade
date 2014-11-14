@@ -5,21 +5,61 @@ head
     meta(content='Cornflake', name='description')
     meta(content='width=device-width', name='viewport')
     script(src='js/compiler.js', type='text/javascript')
+    link(href='css/bootstrap.min.css', rel='stylesheet')
   body
-    h1 Last gym sessions
-    {{#step 1}}
-    {{#each 'current_user.gym_sessions'}}
-    h2 {{created_at}}
-    table
-      tr
-        td
-          | Squat
-        td
-          {{squat}}
-      tr
-        td
-          | Bench
-        td
-          {{bench}}
-    {{/each}}
-    {{/step}}
+    div.container
+      div.row
+        div.col-md-4.col-md-offset-4
+          {{#login}}
+          h2 You need to login man
+          button.btn.btn-lg.btn-primary.btn-block(onClick='{{{facebook.login}}}') Login with Facebook
+          {{/login}}
+
+          {{#step 1}}
+          div.text-center
+            h2 What r your scores man?
+          div.form-group
+            input(value='{{current_user.role.squat}}' placeholder='Squat' class='form-control')
+          div.form-group
+            input(value='{{current_user.role.bench}}' placeholder='Bench' class='form-control')
+          div.form-group
+            input(value='{{current_user.role.deadlift}}' placeholder='Deadlift' class='form-control')
+          div.form-group
+            input(value='{{current_user.role.press}}' placeholder='Press' class='form-control')
+          div.form-group
+            input(value='{{current_user.role.powerclean}}' placeholder='Power clean' class='form-control')
+          div.row
+            .col-md-4
+              button.btn-block.btn.btn-lg.btn-success(onClick='{{{current_user.role.create}}}') Add
+            .col-md-8
+              button.btn-block.btn.btn-lg.btn-primary(onClick='{{{next}}}') Last gym sessions
+          {{/step}}
+
+          {{#step 2}}
+          .text-center
+            h2 Last gym sessions
+          {{#each 'current_user.roles' sortBy='bench DESC'}}
+          {{#if 'created_at'}}
+          div.panel.panel-default
+            div.panel-heading
+              | Sukurtas: {{created_at}}
+            table.table
+              tr
+                td Squat
+                td {{squat}}
+              tr
+                td Bench
+                td {{bench}}
+              tr
+                td Deadlift
+                td {{deadlift}}
+              tr
+                td Press
+                td {{press}}
+              tr
+                td Power clean
+                td {{powerclean}}
+          {{/if}}
+          {{/each}}
+          button.btn.btn-lg.btn-primary.btn-block(onClick='{{{previous}}}') Add gym session
+          {{/step}}

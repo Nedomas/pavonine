@@ -58693,7 +58693,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Converter;
 
   Converter = (function() {
-    var Data, HTMLtoJSX, Handlebars, Handlebarser, Replacer, htmlToReactComponent, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
+    var Data, HTMLtoJSX, Handlebars, Handlebarser, INNER_BODY_REGEX, Replacer, htmlToReactComponent, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
     react_tools = require('react-tools');
     HTMLtoJSX = require('../vendor/htmltojsx.min');
     Replacer = require('./replacer');
@@ -58740,12 +58740,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       render_index = jsx_code.match('render').index;
       return jsx_code = jsx_code.splice(render_index, 0, 'mixins: [ReactMixin],\n  ');
     };
+    INNER_BODY_REGEX = /<body>([\s\S]*?.*[\s\S*?])<\/body>/;
     toXHTML = function(input) {
       var doc, result, without_spaces;
       without_spaces = input.replace('\n', '').replace(/\s{2,}/g, '');
       doc = new DOMParser().parseFromString(without_spaces, 'text/html');
       result = new XMLSerializer().serializeToString(doc);
-      /<body>(.*)<\/body>/im.exec(result);
+      INNER_BODY_REGEX.exec(result);
       return RegExp.$1;
     };
     return {
@@ -58913,15 +58914,25 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           return parent + "['" + name + "']";
         }
       };
-      return Handlebars.registerHelper('each', function(context, options) {
-        var iteration_result;
+      Handlebars.registerHelper('each', function(context, options) {
+        var iteration_result, iteration_subject, sort_by, sort_column, sorted_subject, _ref;
+        _ref = options.hash.sortBy.split(' '), sort_column = _ref[0], sort_by = _ref[1];
+        sort_column || (sort_column = 'created_at');
+        sort_by || (sort_by = 'ASC');
         addArrayLookup(context.split('.'));
         iteration_result = options.fn(mock());
         iteration_result = Replacer.replace(iteration_result, /{this\.state\.(.+?)}/, function(attribute, initial) {
           return "{record." + attribute + "}";
         });
-        console.log(iteration_result);
-        return ("{_.map(" + (Replacer.toState(context.split('.'))) + ", function(record, i) {") + (" return " + iteration_result) + '})}';
+        iteration_subject = Replacer.toState(context.split('.'));
+        sorted_subject = "_.sortBy(" + iteration_subject + ", '" + sort_column + "')";
+        if (sort_by === 'DESC') {
+          sorted_subject += ".reverse()";
+        }
+        return ("{_.map(" + sorted_subject + ", function(record, i) {") + (" return <div>" + iteration_result + "</div>") + '})}';
+      });
+      return Handlebars.registerHelper('if', function(context, options) {
+        debugger;
       });
     };
     mock = function() {
@@ -59251,6 +59262,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       },
       action: function(path, e) {
         var action, attributes, model_path, model_path_str, _i, _ref;
+        if (path === 'next') {
+          return Router.next();
+        }
+        if (path === 'previous') {
+          return Router.previous();
+        }
         _ref = path.split('.'), model_path = 2 <= _ref.length ? __slice.call(_ref, 0, _i = _ref.length - 1) : (_i = 0, []), action = _ref[_i++];
         model_path_str = model_path.join('.');
         if (model_path_str === 'facebook') {
@@ -59373,11 +59390,15 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       }
     };
     previous = function(current_data) {
-      Memory.set(current_data);
+      if (current_data) {
+        Memory.set(current_data);
+      }
       return change(step - 1);
     };
     next = function(current_data) {
-      Memory.set(current_data);
+      if (current_data) {
+        Memory.set(current_data);
+      }
       return change(step + 1);
     };
     goOn = function() {
@@ -59431,30 +59452,20 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var UI;
 
   UI = (function() {
-    var $, Converter, React, component, components, elements, hide, hideAll, idx, klassName, loading, login, loginContainer, removePreviousSteps, render, renderComponent, stepContainer, _;
+    var $, Converter, React, component, components, elements, idx, klassName, loading, login, loginContainer, removeAll, render, renderComponent, stepContainer, _;
     React = require('react');
     _ = require('lodash');
     $ = require('jquery');
     Converter = require('./converter');
-    hideAll = function() {
-      removePreviousSteps();
+    removeAll = function() {
       return _.each(elements(), function(el) {
-        var step;
-        step = el.attr('step') || 1;
-        return hide(step);
-      });
-    };
-    hide = function(step) {
-      return container(step).hide();
-    };
-    removePreviousSteps = function() {
-      return _.each(components(), function(component) {
-        return component.remove();
+        return el.html('');
       });
     };
     render = function(step) {
       var componentF, content, rendered_component;
       loading(true);
+      removeAll();
       content = Compiler.stepContent(step);
       componentF = component(klassName(step), content);
       rendered_component = renderComponent(componentF, stepContainer(step));
@@ -59464,6 +59475,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     login = function() {
       var componentF, content, rendered_component;
       loading(true);
+      removeAll();
       content = Compiler.loginContent();
       componentF = component(klassName('login'), content);
       rendered_component = renderComponent(componentF, loginContainer());

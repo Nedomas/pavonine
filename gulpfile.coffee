@@ -1,7 +1,6 @@
 gulp = require 'gulp'
 gutil = require 'gulp-util'
 watch = require 'gulp-watch'
-slim = require 'gulp-slim'
 browserify = require 'browserify'
 coffeeify = require 'gulp-coffeeify'
 source = require 'vinyl-source-stream'
@@ -9,6 +8,7 @@ concat = require 'gulp-concat'
 uglify = require 'gulp-uglify'
 rename = require 'gulp-rename'
 jade = require 'gulp-jade'
+sass = require 'gulp-sass'
 
 gulp.task 'default', ['coffee']
 
@@ -16,8 +16,7 @@ gulp.task 'watch', ->
   gulp.watch('./src/coffee/**/*.coffee', ['coffee'])
   gulp.watch('./node_modules/**/*.js', ['coffee'])
   gulp.watch('./src/jade/*.jade', ['jade'])
-  # gulp.watch('./src/slim/**/*.slim', ['slim'])
-
+  gulp.watch('./src/scss/*.scss', ['sass'])
 
 gulp.task 'jade', ->
   gulp.src('./src/jade/*.jade')
@@ -25,6 +24,11 @@ gulp.task 'jade', ->
     locals: {}
   }))
   .pipe(gulp.dest('./dist/html/'))
+
+gulp.task 'sass', ->
+  gulp.src('./src/scss/*.scss')
+  .pipe(sass())
+  .pipe(gulp.dest('./dist/css/'))
 
 gulp.task 'coffee', ->
   gulp
@@ -45,9 +49,4 @@ gulp.task 'ugly', ->
     .pipe(rename('cornflake.min.js'))
     .pipe(gulp.dest('./dist/js/'))
 
-gulp.task 'build', ['coffee', 'slim', 'ugly']
-
-gulp.task 'slim', ->
-  gulp.src './src/slim/*.slim'
-  .pipe slim pretty: true
-  .pipe gulp.dest './dist/html/'
+gulp.task 'build', ['coffee', 'jade', 'ugly']

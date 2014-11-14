@@ -21,17 +21,26 @@ Handlebarser = (->
         parent + "['" + name + "']"
 
     Handlebars.registerHelper 'each', (context, options) ->
+      [sort_column, sort_by] = options.hash.sortBy.split(' ')
+      sort_column ||= 'created_at'
+      sort_by ||= 'ASC'
+
       addArrayLookup(context.split('.'))
       iteration_result = options.fn(mock())
       iteration_result = Replacer.replace iteration_result,
         /{this\.state\.(.+?)}/, (attribute, initial) ->
           "{record.#{attribute}}"
 
-      console.log iteration_result
+      iteration_subject = Replacer.toState(context.split('.'))
+      sorted_subject = "_.sortBy(#{iteration_subject}, '#{sort_column}')"
+      sorted_subject += ".reverse()" if sort_by == 'DESC'
 
-      "{_.map(#{Replacer.toState(context.split('.'))}, function(record, i) {" +
-      " return #{iteration_result}" +
+      "{_.map(#{sorted_subject}, function(record, i) {" +
+      " return <div>#{iteration_result}</div>" +
       '})}'
+
+    Handlebars.registerHelper 'if', (context, options) ->
+      debugger
 
   mock = ->
     result = {}

@@ -21,20 +21,17 @@ Router = (->
       UI.render(step)
       setCurrent(step)
     catch e
-      # console.log Data.missingVariables()
-      # console.log Memory.get('current_user')
-
       if e.message == 'get_missing'
         getMissing()
       else
         throw e
 
   previous = (current_data) ->
-    Memory.set(current_data)
+    Memory.set(current_data) if current_data
     change(step - 1)
 
   next = (current_data) ->
-    Memory.set(current_data)
+    Memory.set(current_data) if current_data
     change(step + 1)
 
   goOn = ->

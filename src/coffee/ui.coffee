@@ -4,38 +4,26 @@ UI = (->
   $ = require 'jquery'
   Converter = require './converter'
 
-  hideAll = ->
-    removePreviousSteps()
+  removeAll = ->
     _.each elements(), (el) ->
-      step = el.attr('step') or 1
-      hide(step)
-
-  hide = (step) ->
-    container(step).hide()
-
-  removePreviousSteps = ->
-    _.each components(), (component) ->
-      component.remove()
+      el.html('')
 
   render = (step) ->
     loading(true)
-    # hideAll()
+    removeAll()
     content = Compiler.stepContent(step)
     componentF = component(klassName(step), content)
     rendered_component = renderComponent(componentF, stepContainer(step))
     $(rendered_component.getDOMNode()).show()
-    # debugger
     loading(false)
 
   login = ->
     loading(true)
+    removeAll()
     content = Compiler.loginContent()
     componentF = component(klassName('login'), content)
     rendered_component = renderComponent(componentF, loginContainer())
     $(rendered_component.getDOMNode()).show()
-    # hideAll()
-    # component = insertComponent(step)
-    # $(component.getDOMNode()).show()
     loading(false)
 
   loading = (show) ->

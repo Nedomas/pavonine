@@ -18,6 +18,9 @@ ReactMixin = module.exports = (->
     _.deepSet(new_attributes, attribute, e.target.value)
     @setState(new_attributes)
   action: (path, e) ->
+    return Router.next() if path == 'next'
+    return Router.previous() if path == 'previous'
+
     [model_path..., action] = path.split('.')
     model_path_str = model_path.join('.')
     return Facebook.login() if model_path_str == 'facebook'
@@ -26,10 +29,4 @@ ReactMixin = module.exports = (->
     attributes.model = _.last(model_path_str.split('.'))
     Persistance.act(action, e, attributes).then (new_model) ->
       Router.next(new_model.attributes)
-  # previous: (e) ->
-  #   e.preventDefault()
-  #   Router.previous(@state)
-  # next: (e) ->
-  #   e.preventDefault()
-  #   Router.next(@state)
 )()

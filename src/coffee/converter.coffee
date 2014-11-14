@@ -57,11 +57,13 @@ Converter = (->
 #   l = (code) ->
 #     "#{code}\n"
 
+  INNER_BODY_REGEX = /<body>([\s\S]*?.*[\s\S*?])<\/body>/
+
   toXHTML = (input) ->
     without_spaces = input.replace('\n', '').replace(/\s{2,}/g, '')
     doc = new DOMParser().parseFromString(without_spaces, 'text/html')
     result = new XMLSerializer().serializeToString(doc)
-    /<body>(.*)<\/body>/im.exec(result)
+    INNER_BODY_REGEX.exec(result)
     RegExp.$1
 
   return {
