@@ -9,6 +9,8 @@ uglify = require 'gulp-uglify'
 rename = require 'gulp-rename'
 jade = require 'gulp-jade'
 sass = require 'gulp-sass'
+mocha = require 'gulp-mocha'
+chai  = require 'chai'
 
 gulp.task 'default', ['build']
 
@@ -17,6 +19,7 @@ gulp.task 'watch', ->
   gulp.watch('./node_modules/**/*.js', ['coffee'])
   gulp.watch('./src/jade/*.jade', ['jade'])
   gulp.watch('./src/scss/*.scss', ['sass'])
+  gulp.watch('./test/**/*.coffee', ['test'])
 
 gulp.task 'jade', ->
   gulp.src('./src/jade/*.jade')
@@ -48,5 +51,13 @@ gulp.task 'ugly', ->
     .pipe(uglify())
     .pipe(rename('cornflake.min.js'))
     .pipe(gulp.dest('./dist/js/'))
+
+
+gulp.task 'test', ->
+  global.expect = chai.expect
+  gulp.src('./test/**/*.coffee', read: false)
+  .pipe(mocha(
+    reporter: 'spec'
+  ))
 
 gulp.task 'build', ['coffee', 'jade', 'ugly', 'watch']

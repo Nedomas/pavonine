@@ -61,11 +61,17 @@ Handlebarser = (->
         if _.isObject(options)
           data = options
 
+        if context?.string
+          context = context.string
+
+        if options?.string
+          options = options.string
+
         context = data.ids[0] unless _.isString(context)
         options = data.ids[1] unless _.isString(options)
 
         if _.isString(options)
-          "_.#{method}(#{context}, '#{options}')"
+          result = new Handlebars.SafeString "_.#{method}(#{context}, '#{options}')"
         else
           result = "_.#{method}(#{context})"
 
@@ -78,9 +84,9 @@ Handlebarser = (->
             wrapped_subject = wrapper(Replacer.toState(subject))
             new_wrapped_subject = "_.#{method}(#{wrapped_subject})"
             fn = fn.replace('this.state', new_wrapped_subject)
-            result = "<div>{#{fn}}</div>"
+            result = new Handlebars.SafeString "<div>{#{fn}}</div>"
 
-          result
+        result
 
     Handlebars.registerHelper 'each', (context, options) ->
       subject = getSubject(context)

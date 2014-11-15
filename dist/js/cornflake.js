@@ -58947,6 +58947,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           if (_.isObject(options)) {
             data = options;
           }
+          if (context != null ? context.string : void 0) {
+            context = context.string;
+          }
+          if (options != null ? options.string : void 0) {
+            options = options.string;
+          }
           if (!_.isString(context)) {
             context = data.ids[0];
           }
@@ -58954,7 +58960,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
             options = data.ids[1];
           }
           if (_.isString(options)) {
-            return "_." + method + "(" + context + ", '" + options + "')";
+            result = new Handlebars.SafeString("_." + method + "(" + context + ", '" + options + "')");
           } else {
             result = "_." + method + "(" + context + ")";
             if (_.isFunction(data.fn)) {
@@ -58965,10 +58971,10 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
               wrapped_subject = wrapper(Replacer.toState(subject));
               new_wrapped_subject = "_." + method + "(" + wrapped_subject + ")";
               fn = fn.replace('this.state', new_wrapped_subject);
-              result = "<div>{" + fn + "}</div>";
+              result = new Handlebars.SafeString("<div>{" + fn + "}</div>");
             }
-            return result;
           }
+          return result;
         });
       });
       Handlebars.registerHelper('each', function(context, options) {
