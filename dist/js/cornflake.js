@@ -58719,7 +58719,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     toJSX = function(klass_name, html) {
       var mocked, react_code, template, wrapped;
       Handlebarser.clean();
-      template = Handlebars.compile(html);
+      template = Handlebars.compile(html, {
+        trackIds: true
+      });
       template();
       if (Data.missing()) {
         throw new Error('get_missing');
@@ -58903,7 +58905,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     getSubject = function(string) {
       var match, options, result, _ref;
       if (match = string.match(/\((.*?)\)/)) {
-        _ref = match[1].split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+        _ref = match[1].replace('{', '').replace('}', '').split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
       } else {
         result = string;
       }
@@ -58915,7 +58917,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       regex = new RegExp("(.*?)" + (getSubject(string).join('.')) + "(.*)");
       matched = string.match(regex);
       if (matched) {
-        _ref = [matched[1], matched[2]], before = _ref[0], after = _ref[1];
+        _ref = [matched[1].replace('{', '').replace('}', '').replace('this.state.', ''), matched[2].replace('{', '').replace('}', '').replace('this.state.')], before = _ref[0], after = _ref[1];
       }
       return function(input) {
         return before + input + after;
@@ -58940,17 +58942,26 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       BLACKLISTED = ['create'];
       LODASH_ACCESSED_KEYS = _.without.apply(_, [_.keys(_)].concat(__slice.call(BLACKLISTED)));
       _.each(LODASH_ACCESSED_KEYS, function(method) {
-        return Handlebars.registerHelper(method, function(context, options) {
+        return Handlebars.registerHelper(method, function(context, options, data) {
           var fn, inverse, new_wrapped_subject, result, subject, wrapped_subject, wrapper;
+          if (_.isObject(options)) {
+            data = options;
+          }
+          if (!_.isString(context)) {
+            context = data.ids[0];
+          }
+          if (!_.isString(options)) {
+            options = data.ids[1];
+          }
           if (_.isString(options)) {
             return "_." + method + "(" + context + ", '" + options + "')";
           } else {
             result = "_." + method + "(" + context + ")";
-            if (_.isFunction(options.fn)) {
+            if (_.isFunction(data.fn)) {
               subject = getSubject(context);
               wrapper = getWrapper(context);
-              fn = options.fn(mock());
-              inverse = options.inverse(mock());
+              fn = data.fn(mock());
+              inverse = data.inverse(mock());
               wrapped_subject = wrapper(Replacer.toState(subject));
               new_wrapped_subject = "_." + method + "(" + wrapped_subject + ")";
               fn = fn.replace('this.state', new_wrapped_subject);
@@ -58985,6 +58996,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       });
       return Handlebars.registerHelper('with', function(context, options) {
         var context_path, fn, result;
+        if (!_.isString(context)) {
+          context = options.ids[0];
+        }
         fn = options.fn(mock());
         context_path = context.split('.');
         result = Replacer.replace(fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {

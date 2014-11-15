@@ -22,10 +22,11 @@ head
           {{#step 1}}
           div.text-center
             h2 What r your scores man?
-            {{#first 'current_user.roles'}}
-            p {{squat}}
+            {{#first (sortBy current_user.roles 'squat')}}
+            p Max squat is: {{squat}}
             {{/first}}
-          {{#with 'current_user.role'}}
+
+          {{#with current_user.role}}
           div.form-group
             input(value='{{squat}}' placeholder='Squat' class='form-control')
           div.form-group
@@ -47,10 +48,7 @@ head
           {{#step 2}}
           .text-center
             h2 Last gym sessions
-          {{#first (sortBy 'current_user.roles' 'squat')}}
-          p {{squat}}
-          {{/first}}
-          {{#each (sortBy 'current_user.roles' 'squat')}}
+          {{#each (sortBy current_user.roles 'deadlift')}}
           {{#if created_at}}
           div.panel.panel-default
             div.panel-heading

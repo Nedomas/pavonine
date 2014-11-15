@@ -10,7 +10,7 @@ Handlebarser = (->
 
   getSubject = (string) ->
     if match = string.match(/\((.*?)\)/)
-      [result, options...] = match[1].split(', ')
+      [result, options...] = match[1].replace('{', '').replace('}', '').split(', ')
     else
       result = string
 
@@ -22,7 +22,9 @@ Handlebarser = (->
     matched = string.match(regex)
 
     if matched
-      [before, after] = [matched[1], matched[2]]
+      [before, after] = [matched[1].replace('{', '').replace('}', '')
+        .replace('this.state.', ''),
+        matched[2].replace('{', '').replace('}', '').replace('this.state.')]
 
     (input) ->
       before + input + after
@@ -41,19 +43,38 @@ Handlebarser = (->
 
     BLACKLISTED = ['create']
     LODASH_ACCESSED_KEYS = _.without(_.keys(_), BLACKLISTED...)
+
+#   PMAX problem
+#     _.each LODASH_ACCESSED_KEYS, (method) ->
+#       Handlebars.registerHelper "p#{method}", (context, options) ->
+#         subject = getSubject(context)
+#         wrapper = getWrapper(context)
+#         wrapped_subject = wrapper(Replacer.toState(subject))
+#
+#         if _.isString(options)
+#           "{_.#{method}(#{wrapped_subject}, '#{options}')}"
+#         else
+#           "{_.#{method}(#{wrapped_subject})}"
+
     _.each LODASH_ACCESSED_KEYS, (method) ->
-      Handlebars.registerHelper method, (context, options) ->
+      Handlebars.registerHelper method, (context, options, data) ->
+        if _.isObject(options)
+          data = options
+
+        context = data.ids[0] unless _.isString(context)
+        options = data.ids[1] unless _.isString(options)
+
         if _.isString(options)
           "_.#{method}(#{context}, '#{options}')"
         else
           result = "_.#{method}(#{context})"
 
-          if _.isFunction(options.fn)
+          if _.isFunction(data.fn)
             subject = getSubject(context)
             wrapper = getWrapper(context)
 
-            fn = options.fn(mock())
-            inverse = options.inverse(mock())
+            fn = data.fn(mock())
+            inverse = data.inverse(mock())
             wrapped_subject = wrapper(Replacer.toState(subject))
             new_wrapped_subject = "_.#{method}(#{wrapped_subject})"
             fn = fn.replace('this.state', new_wrapped_subject)
@@ -90,6 +111,7 @@ Handlebarser = (->
       "<div>{#{state_subject} ? #{fn} : #{inverse}}</div>"
 
     Handlebars.registerHelper 'with', (context, options) ->
+      context = options.ids[0] unless _.isString(context)
       fn = options.fn(mock())
       context_path = context.split('.')
 

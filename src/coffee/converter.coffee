@@ -22,7 +22,7 @@ Converter = (->
 
   toJSX = (klass_name, html) ->
     Handlebarser.clean()
-    template = Handlebars.compile(html)
+    template = Handlebars.compile(html, trackIds: true)
     template() # gather data
 
     throw new Error('get_missing') if Data.missing()
