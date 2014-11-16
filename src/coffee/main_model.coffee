@@ -3,7 +3,7 @@ class MainModel
   UI = require './ui'
   Memory = require './memory'
   Router = require './router'
-  Handlebarser = require './handlebarser'
+  HandlebarsMock = require './handlebars/mock'
   traverse = require 'traverse'
 
   @constructor: ->
@@ -33,7 +33,7 @@ class MainModel
     result
 
   @setEmptyFromMock = (result) ->
-    _.each traverse(Handlebarser.emptyMock()).paths(), (path) ->
+    _.each traverse(HandlebarsMock.getEmpty()).paths(), (path) ->
       if path.length
         path_str = path.join('.')
         _.deepSet(result, path_str, '')

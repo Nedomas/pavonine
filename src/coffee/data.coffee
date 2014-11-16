@@ -1,6 +1,6 @@
 Data = (->
   _ = require 'lodash'
-  Handlebarser = require './handlebarser'
+  HandlebarsLookups = require './handlebars/lookups'
   Memory = require './memory'
 
   missingVariables = ->
@@ -8,7 +8,7 @@ Data = (->
     if used('current_user') and !loggedIn()
       result.push('current_user')
 
-    _.each Handlebarser.getArrayLookups(), (lookup) ->
+    _.each HandlebarsLookups.getCollection(), (lookup) ->
       array_name = lookup[0]
       result.push(array_name) unless Memory.has(array_name)
 
@@ -18,7 +18,7 @@ Data = (->
     !_.isEmpty(missingVariables())
 
   used = (key) ->
-    _.any Handlebarser.getLookups(), (lookup) ->
+    _.any HandlebarsLookups.getIndividual(), (lookup) ->
       lookup[0] == key
 
   loggedIn = ->

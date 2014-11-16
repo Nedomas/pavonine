@@ -3,7 +3,8 @@ Converter = (->
   HTMLtoJSX = require '../vendor/htmltojsx.min'
   Replacer = require './replacer'
   Handlebars = require 'handlebars'
-  Handlebarser = require './handlebarser'
+  HandlebarsLookups = require './handlebars/lookups'
+  HandlebarsMock = require './handlebars/mock'
   Data = require './data'
 
   htmlToReactComponent = (klass_name, element) ->
@@ -21,13 +22,13 @@ Converter = (->
     eval(klass_name)
 
   toJSX = (klass_name, html) ->
-    Handlebarser.clean()
+    HandlebarsLookups.clean()
     template = Handlebars.compile(html, trackIds: true)
     template() # gather data
 
     throw new Error('get_missing') if Data.missing()
 
-    mocked = template(Handlebarser.mock())
+    mocked = template(HandlebarsMock.get())
     wrapped = wrapInJSX(klass_name, mocked)
     react_code = Replacer.toReactCode(wrapped)
     console.log(react_code)

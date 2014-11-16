@@ -58693,12 +58693,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Converter;
 
   Converter = (function() {
-    var Data, HTMLtoJSX, Handlebars, Handlebarser, INNER_BODY_REGEX, Replacer, htmlToReactComponent, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
+    var Data, HTMLtoJSX, Handlebars, HandlebarsLookups, HandlebarsMock, INNER_BODY_REGEX, Replacer, htmlToReactComponent, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
     react_tools = require('react-tools');
     HTMLtoJSX = require('../vendor/htmltojsx.min');
     Replacer = require('./replacer');
     Handlebars = require('handlebars');
-    Handlebarser = require('./handlebarser');
+    HandlebarsLookups = require('./handlebars/lookups');
+    HandlebarsMock = require('./handlebars/mock');
     Data = require('./data');
     htmlToReactComponent = function(klass_name, element) {
       var jsx, xhtml;
@@ -58718,7 +58719,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     toJSX = function(klass_name, html) {
       var mocked, react_code, template, wrapped;
-      Handlebarser.clean();
+      HandlebarsLookups.clean();
       template = Handlebars.compile(html, {
         trackIds: true
       });
@@ -58726,7 +58727,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       if (Data.missing()) {
         throw new Error('get_missing');
       }
-      mocked = template(Handlebarser.mock());
+      mocked = template(HandlebarsMock.get());
       wrapped = wrapInJSX(klass_name, mocked);
       react_code = Replacer.toReactCode(wrapped);
       console.log(react_code);
@@ -58760,14 +58761,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":219,"./data":207,"./handlebarser":210,"./react_mixin":215,"./replacer":216,"handlebars":26,"lodash":29,"react":204,"react-tools":30}],207:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":222,"./data":207,"./handlebars/lookups":211,"./handlebars/mock":213,"./react_mixin":218,"./replacer":219,"handlebars":26,"lodash":29,"react":204,"react-tools":30}],207:[function(require,module,exports){
 (function() {
   var Data;
 
   Data = (function() {
-    var Handlebarser, Memory, loggedIn, missing, missingVariables, used, _;
+    var HandlebarsLookups, Memory, loggedIn, missing, missingVariables, used, _;
     _ = require('lodash');
-    Handlebarser = require('./handlebarser');
+    HandlebarsLookups = require('./handlebars/lookups');
     Memory = require('./memory');
     missingVariables = function() {
       var result;
@@ -58775,7 +58776,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       if (used('current_user') && !loggedIn()) {
         result.push('current_user');
       }
-      _.each(Handlebarser.getArrayLookups(), function(lookup) {
+      _.each(HandlebarsLookups.getCollection(), function(lookup) {
         var array_name;
         array_name = lookup[0];
         if (!Memory.has(array_name)) {
@@ -58788,7 +58789,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return !_.isEmpty(missingVariables());
     };
     used = function(key) {
-      return _.any(Handlebarser.getLookups(), function(lookup) {
+      return _.any(HandlebarsLookups.getIndividual(), function(lookup) {
         return lookup[0] === key;
       });
     };
@@ -58805,7 +58806,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebarser":210,"./memory":212,"lodash":29}],208:[function(require,module,exports){
+},{"./handlebars/lookups":211,"./memory":215,"lodash":29}],208:[function(require,module,exports){
 (function() {
   var Facebook;
 
@@ -58856,19 +58857,19 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":212,"./persistance":214,"./router":217,"jquery":27,"lodash":29,"lodash-deep":28}],209:[function(require,module,exports){
+},{"./memory":215,"./persistance":217,"./router":220,"jquery":27,"lodash":29,"lodash-deep":28}],209:[function(require,module,exports){
 (function() {
   var Cornflake;
 
   window.Cornflake = Cornflake = module.exports = (function() {
-    var Facebook, Handlebarser, Persistance, Router, configure, init;
+    var Facebook, HandlebarsManager, Persistance, Router, configure, init;
     Persistance = require('./persistance');
-    Handlebarser = require('./handlebarser');
+    HandlebarsManager = require('./handlebars/manager');
     Router = require('./router');
     Facebook = require('./facebook');
     init = function() {
       console.log('Here and now');
-      Handlebarser.patch();
+      HandlebarsManager.init();
       configure();
       Router.change(1);
       return Facebook.init();
@@ -58888,60 +58889,31 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":208,"./handlebarser":210,"./persistance":214,"./router":217}],210:[function(require,module,exports){
+},{"./facebook":208,"./handlebars/manager":212,"./persistance":217,"./router":220}],210:[function(require,module,exports){
 (function() {
-  var Handlebarser,
+  var HandlebarsHelpers,
     __slice = [].slice;
 
-  Handlebarser = (function() {
-    var Handlebars, Replacer, actions, addArrayLookup, addLookup, array_lookups, clean, emptyMock, getArrayLookups, getLookups, getSubject, getWrapper, isAction, lookups, mock, patch, rawSubject, _;
-    Handlebars = require('handlebars');
+  HandlebarsHelpers = (function() {
+    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, constant, essential, getSubject, getWrapper, lodash, mock, rawSubject, register, _;
     _ = require('lodash');
-    _.mixin(require('lodash-deep'));
-    Replacer = require('./replacer');
-    lookups = [];
-    array_lookups = [];
-    actions = ['create', 'update', 'destroy', 'previous', 'next', 'login'];
-    getSubject = function(string) {
-      var match, options, result, _ref;
-      if (match = string.match(/\((.*?)\)/)) {
-        _ref = match[1].replace('{', '').replace('}', '').split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
-      } else {
-        result = string;
-      }
-      result = result.replace('this.state.', '');
-      return result.split('.');
+    Handlebars = require('handlebars');
+    Replacer = require('../replacer');
+    HandlebarsLookups = require('./lookups');
+    CONSTANTS = {
+      actions: ['create', 'update', 'destroy', 'previous', 'next', 'login']
     };
-    getWrapper = function(string) {
-      var after, before, matched, regex, _ref;
-      regex = new RegExp("(.*?)" + (getSubject(string).join('.')) + "(.*)");
-      matched = string.match(regex);
-      if (matched) {
-        _ref = [matched[1].replace('{', '').replace('}', '').replace('this.state.', ''), matched[2].replace('{', '').replace('}', '').replace('this.state.')], before = _ref[0], after = _ref[1];
-      }
-      return function(input) {
-        return before + input + after;
-      };
+    constant = function(name) {
+      return CONSTANTS[name];
     };
-    patch = function() {
-      var BLACKLISTED, LODASH_ACCESSED_KEYS;
-      Handlebars.JavaScriptCompiler.prototype.nameLookup = function(parent, name, type) {
-        _.each(this.environment.opcodes, function(opcode) {
-          var lookup;
-          if (opcode.opcode === 'lookupOnContext') {
-            lookup = opcode.args[0];
-            return lookups.push(lookup);
-          }
-        });
-        if (Handlebars.JavaScriptCompiler.isValidJavaScriptVariableName(name)) {
-          return "" + parent + "." + name;
-        } else {
-          return parent + "['" + name + "']";
-        }
-      };
-      BLACKLISTED = ['create'];
-      LODASH_ACCESSED_KEYS = _.without.apply(_, [_.keys(_)].concat(__slice.call(BLACKLISTED)));
-      _.each(LODASH_ACCESSED_KEYS, function(method) {
+    register = function() {
+      lodash();
+      return essential();
+    };
+    lodash = function() {
+      var helpers;
+      helpers = _.without.apply(_, [_.keys(_)].concat(__slice.call(constant('actions'))));
+      return _.each(helpers, function(method) {
         return Handlebars.registerHelper(method, function(context, options, data) {
           var fn, inverse, new_wrapped_subject, result, subject, wrapped_subject, wrapper;
           if (_.isObject(options)) {
@@ -58977,6 +58949,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           return result;
         });
       });
+    };
+    essential = function() {
       Handlebars.registerHelper('each', function(context, options) {
         var collection, fn, inverse, iteration_result, subject, wrapper;
         subject = getSubject(context);
@@ -58994,7 +58968,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       Handlebars.registerHelper('if', function(context, options) {
         var fn, inverse, raw, state_subject;
         raw = rawSubject(context).split('.');
-        addLookup(raw);
+        HandlebarsLookups.add(raw);
         state_subject = Replacer.toState(raw);
         fn = options.fn(mock());
         inverse = options.inverse(mock());
@@ -59010,13 +58984,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         result = Replacer.replace(fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
           var updated_path;
           updated_path = context_path.concat(attribute.split('.'));
-          addLookup(updated_path);
+          HandlebarsLookups.add(updated_path);
           return "{" + (Replacer.toState(updated_path)) + "}";
         });
         result = Replacer.replace(result, /this\.action\,\ \'(.+?)\'/g, function(attribute, initial) {
           var updated_path;
           updated_path = context_path.concat(attribute.split('.'));
-          addLookup(updated_path);
+          HandlebarsLookups.add(updated_path);
           return "" + (Replacer.toAction(updated_path));
         });
         return "<div>" + result + "</div>";
@@ -59025,10 +58999,129 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     rawSubject = function(subject_string) {
       return subject_string.replace('{', '').replace('}', '').replace('this.state.', '');
     };
+    getSubject = function(string) {
+      var match, options, result, _ref;
+      if (match = string.match(/\((.*?)\)/)) {
+        _ref = match[1].replace('{', '').replace('}', '').split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+      } else {
+        result = string;
+      }
+      result = result.replace('this.state.', '');
+      return result.split('.');
+    };
+    getWrapper = function(string) {
+      var after, before, matched, regex, _ref;
+      regex = new RegExp("(.*?)" + (getSubject(string).join('.')) + "(.*)");
+      matched = string.match(regex);
+      if (matched) {
+        _ref = [matched[1].replace('{', '').replace('}', '').replace('this.state.', ''), matched[2].replace('{', '').replace('}', '').replace('this.state.')], before = _ref[0], after = _ref[1];
+      }
+      return function(input) {
+        return before + input + after;
+      };
+    };
     mock = function() {
+      return HandlebarsMock.get();
+    };
+    return {
+      register: register
+    };
+  })();
+
+  module.exports = HandlebarsHelpers;
+
+}).call(this);
+
+},{"../replacer":219,"./lookups":211,"handlebars":26,"lodash":29}],211:[function(require,module,exports){
+(function() {
+  var HandlebarsLookups;
+
+  HandlebarsLookups = (function() {
+    var add, addCollection, clean, collection, getCollection, getIndividual, individual;
+    individual = [];
+    collection = [];
+    add = function(name) {
+      return individual.push(name);
+    };
+    addCollection = function(name) {
+      create(name);
+      return collection.push(name);
+    };
+    clean = function() {
+      individual = [];
+      return collection = [];
+    };
+    getIndividual = function() {
+      return individual;
+    };
+    getCollection = function() {
+      return collection;
+    };
+    return {
+      add: add,
+      addCollection: addCollection,
+      clean: clean,
+      getIndividual: getIndividual,
+      getCollection: getCollection
+    };
+  })();
+
+  module.exports = HandlebarsLookups;
+
+}).call(this);
+
+},{}],212:[function(require,module,exports){
+(function() {
+  var HandlebarsManager;
+
+  HandlebarsManager = (function() {
+    var Handlebars, HandlebarsHelpers, HandlebarsLookups, init, patchCompiler, _;
+    _ = require('lodash');
+    Handlebars = require('handlebars');
+    HandlebarsLookups = require('./lookups');
+    HandlebarsHelpers = require('./helpers');
+    patchCompiler = function() {
+      return Handlebars.JavaScriptCompiler.prototype.nameLookup = function(parent, name, type) {
+        _.each(this.environment.opcodes, function(opcode) {
+          var lookup;
+          if (opcode.opcode === 'lookupOnContext') {
+            lookup = opcode.args[0];
+            return HandlebarsLookups.add(lookup);
+          }
+        });
+        if (Handlebars.JavaScriptCompiler.isValidJavaScriptVariableName(name)) {
+          return "" + parent + "." + name;
+        } else {
+          return parent + "['" + name + "']";
+        }
+      };
+    };
+    init = function() {
+      patchCompiler();
+      return HandlebarsHelpers.register();
+    };
+    return {
+      init: init
+    };
+  })();
+
+  module.exports = HandlebarsManager;
+
+}).call(this);
+
+},{"./helpers":210,"./lookups":211,"handlebars":26,"lodash":29}],213:[function(require,module,exports){
+(function() {
+  window.HandlebarsMock = (function() {
+    var CONSTANTS, HandlebarsHelpers, HandlebarsLookups, Replacer, constant, get, getEmpty, isAction, _;
+    _ = require('lodash');
+    _.mixin(require('lodash-deep'));
+    Replacer = require('../replacer');
+    HandlebarsLookups = require('./lookups');
+    HandlebarsHelpers = require('./helpers');
+    get = function() {
       var result;
       result = {};
-      _.each(lookups, function(lookup) {
+      _.each(HandlebarsLookups.getIndividual(), function(lookup) {
         if (isAction(lookup)) {
           return _.deepSet(result, lookup, "{" + (Replacer.toAction(lookup)) + "}");
         } else {
@@ -59037,57 +59130,41 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       });
       return result;
     };
-    emptyMock = function() {
+    getEmpty = function() {
       var result;
       result = {};
-      _.each(lookups, function(lookup) {
+      _.each(HandlebarsLookups.getIndividual(), function(lookup) {
         if (!isAction(lookup)) {
           return _.deepSet(result, lookup, '');
         }
       });
       return result;
     };
+    CONSTANTS = {
+      actions: ['create', 'update', 'destroy', 'previous', 'next', 'login']
+    };
+    constant = function(name) {
+      return CONSTANTS[name];
+    };
     isAction = function(lookup) {
-      return _.include(actions, _.last(lookup));
-    };
-    addLookup = function(lookup) {
-      return lookups.push(lookup);
-    };
-    addArrayLookup = function(lookup) {
-      array_lookups.push(lookup);
-      return addLookup(lookup);
-    };
-    clean = function() {
-      lookups = [];
-      return array_lookups = [];
-    };
-    getArrayLookups = function() {
-      return array_lookups;
-    };
-    getLookups = function() {
-      return lookups;
+      return _.include(constant('actions'), _.last(lookup));
     };
     return {
-      patch: patch,
-      mock: mock,
-      emptyMock: emptyMock,
-      clean: clean,
-      addLookup: addLookup,
-      getArrayLookups: getArrayLookups,
-      getLookups: getLookups
+      get: get,
+      getEmpty: getEmpty
     };
   })();
 
-  module.exports = Handlebarser;
+  module.exports = HandlebarsMock;
 
 }).call(this);
 
-},{"./replacer":216,"handlebars":26,"lodash":29,"lodash-deep":28}],211:[function(require,module,exports){
+},{"../replacer":219,"./helpers":210,"./lookups":211,"lodash":29,"lodash-deep":28}],214:[function(require,module,exports){
 (function() {
   var MainModel;
 
   MainModel = (function() {
-    var Handlebarser, Memory, Router, UI, traverse, _;
+    var HandlebarsMock, Memory, Router, UI, traverse, _;
 
     function MainModel() {}
 
@@ -59099,7 +59176,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
     Router = require('./router');
 
-    Handlebarser = require('./handlebarser');
+    HandlebarsMock = require('./handlebars/mock');
 
     traverse = require('traverse');
 
@@ -59135,7 +59212,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
 
     MainModel.setEmptyFromMock = function(result) {
-      _.each(traverse(Handlebarser.emptyMock()).paths(), function(path) {
+      _.each(traverse(HandlebarsMock.getEmpty()).paths(), function(path) {
         var path_str;
         if (path.length) {
           path_str = path.join('.');
@@ -59181,7 +59258,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebarser":210,"./memory":212,"./router":217,"./ui":218,"lodash":29,"traverse":205}],212:[function(require,module,exports){
+},{"./handlebars/mock":213,"./memory":215,"./router":220,"./ui":221,"lodash":29,"traverse":205}],215:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -59236,7 +59313,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":29}],213:[function(require,module,exports){
+},{"lodash":29}],216:[function(require,module,exports){
 (function() {
   var Model;
 
@@ -59271,7 +59348,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./main_model":211,"./memory":212,"lodash":29}],214:[function(require,module,exports){
+},{"./main_model":214,"./memory":215,"lodash":29}],217:[function(require,module,exports){
 (function() {
   var Persistance;
 
@@ -59320,7 +59397,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":212,"./model":213,"./router":217,"databound":1,"lodash":29}],215:[function(require,module,exports){
+},{"./memory":215,"./model":216,"./router":220,"databound":1,"lodash":29}],218:[function(require,module,exports){
 (function() {
   var ReactMixin,
     __slice = [].slice;
@@ -59374,7 +59451,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":208,"./model":213,"./persistance":214,"./replacer":216,"./router":217,"lodash":29,"lodash-deep":28}],216:[function(require,module,exports){
+},{"./facebook":208,"./model":216,"./persistance":217,"./replacer":219,"./router":220,"lodash":29,"lodash-deep":28}],219:[function(require,module,exports){
 (function() {
   var Replacer;
 
@@ -59443,7 +59520,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"handlebars":26,"lodash":29}],217:[function(require,module,exports){
+},{"handlebars":26,"lodash":29}],220:[function(require,module,exports){
 (function() {
   var Router;
 
@@ -59537,7 +59614,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data":207,"./memory":212,"./persistance":214,"./ui":218,"lodash":29}],218:[function(require,module,exports){
+},{"./data":207,"./memory":215,"./persistance":217,"./ui":221,"lodash":29}],221:[function(require,module,exports){
 (function() {
   var UI;
 
@@ -59622,7 +59699,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./converter":206,"jquery":27,"lodash":29,"react":204}],219:[function(require,module,exports){
+},{"./converter":206,"jquery":27,"lodash":29,"react":204}],222:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.
