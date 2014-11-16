@@ -1,4 +1,4 @@
-window.HandlebarsMock = (->
+HandlebarsMock = (->
   _ = require 'lodash'
   _.mixin require('lodash-deep')
   Replacer = require '../replacer'

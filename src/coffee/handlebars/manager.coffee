@@ -18,7 +18,7 @@ HandlebarsManager = (->
 
   init = ->
     patchCompiler()
-    HandlebarsHelpers.register()
+    HandlebarsHelpers.init()
 
   return {
     init: init

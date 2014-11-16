@@ -22,7 +22,7 @@ head
           {{#step 1}}
           div.text-center
             h2 What r your scores man?
-            {{#first (sortBy current_user.roles 'squat')}}
+            {{#first (sortBy current_user.roles 'abc' 'squat')}}
             p Max squat is: {{squat}}
             {{/first}}
 

@@ -58895,7 +58895,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     __slice = [].slice;
 
   HandlebarsHelpers = (function() {
-    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, constant, essential, getSubject, getWrapper, lodash, mock, rawSubject, register, _;
+    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, constant, essential, getSubject, getWrapper, init, lodash, mock, raw, rawSubject, register, wrapped, _;
     _ = require('lodash');
     Handlebars = require('handlebars');
     Replacer = require('../replacer');
@@ -58906,67 +58906,72 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     constant = function(name) {
       return CONSTANTS[name];
     };
-    register = function() {
+    init = function() {
       lodash();
       return essential();
+    };
+    register = function(method, final_fn) {
+      return Handlebars.registerHelper(method, function() {
+        var arg_ids, args, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_ctx, _i, _ref;
+        initial_ctx = arguments[0], initial_args = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), initial_opts = arguments[_i++];
+        _ref = initial_opts.ids, ctx_id = _ref[0], arg_ids = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+        wrapped_ctx = wrapped(initial_ctx, ctx_id);
+        raw_ctx = raw(initial_ctx, ctx_id);
+        args = [];
+        _.each(initial_args, function(arg, i) {
+          return args[i] = raw(initial_args[i] || arg_ids[i]);
+        });
+        opts = {};
+        if (initial_opts.fn) {
+          opts.fn = initial_opts.fn(mock());
+        }
+        result = final_fn(raw_ctx, wrapped_ctx, args, opts);
+        return new Handlebars.SafeString("<div>{" + result + "}</div>");
+      });
+    };
+    wrapped = function(initial, from_ids) {
+      var braces_match, div_match, result;
+      result = initial || from_ids;
+      result = result.toString();
+      if (div_match = result.match(/^<div>{(.*?)}<\/div>$/)) {
+        result = div_match[1];
+      } else if (braces_match = result.match(/^{(.*?)}$/)) {
+        result = braces_match[1];
+      }
+      return result;
+    };
+    raw = function(initial, from_ids) {
+      var result;
+      result = initial ? "'" + initial + "'" : from_ids;
+      return result.toString();
     };
     lodash = function() {
       var helpers;
       helpers = _.without.apply(_, [_.keys(_)].concat(__slice.call(constant('actions'))));
       return _.each(helpers, function(method) {
-        return Handlebars.registerHelper(method, function(context, options, data) {
-          var fn, inverse, new_wrapped_subject, result, subject, wrapped_subject, wrapper;
-          if (_.isObject(options)) {
-            data = options;
-          }
-          if (context != null ? context.string : void 0) {
-            context = context.string;
-          }
-          if (options != null ? options.string : void 0) {
-            options = options.string;
-          }
-          if (!_.isString(context)) {
-            context = data.ids[0];
-          }
-          if (!_.isString(options)) {
-            options = data.ids[1];
-          }
-          if (_.isString(options)) {
-            result = new Handlebars.SafeString("_." + method + "(" + context + ", '" + options + "')");
+        return register(method, function(raw_ctx, wrapped_ctx, args, opts) {
+          var fn_args;
+          if (opts.fn) {
+            return "{" + opts.fn + "}";
           } else {
-            result = "_." + method + "(" + context + ")";
-            if (_.isFunction(data.fn)) {
-              subject = getSubject(context);
-              wrapper = getWrapper(context);
-              fn = data.fn(mock());
-              inverse = data.inverse(mock());
-              wrapped_subject = wrapper(Replacer.toState(subject));
-              new_wrapped_subject = "_." + method + "(" + wrapped_subject + ")";
-              fn = fn.replace('this.state', new_wrapped_subject);
-              result = new Handlebars.SafeString("<div>{" + fn + "}</div>");
-            }
+            fn_args = [wrapped_ctx].concat(__slice.call(args));
+            return "_." + method + "(" + (fn_args.join(', ')) + ")";
           }
-          return result;
         });
       });
     };
     essential = function() {
-      Handlebars.registerHelper('each', function(context, options) {
-        var collection, fn, inverse, iteration_result, subject, wrapper;
-        subject = getSubject(context);
-        wrapper = getWrapper(context);
-        addArrayLookup(subject);
-        iteration_result = options.fn(mock());
-        iteration_result = Replacer.replace(iteration_result, /{this\.state\.(.+?)}/, function(attribute, initial) {
+      register('each', function(raw_ctx, wrapped_ctx, args, opts) {
+        var each_iteration, records_exist;
+        HandlebarsLookups.addCollection(raw_ctx);
+        each_iteration = Replacer.replace(opts.fn, /{this\.state\.(.+?)}/, function(attribute, initial) {
           return "{record." + attribute + "}";
         });
-        collection = wrapper(Replacer.toState(subject));
-        fn = ("_.map(" + collection + ", function(record, i) {") + (" return " + iteration_result) + '})';
-        inverse = options.inverse(mock());
-        return "<div>{" + collection + ".length ? " + fn + " : " + inverse + "}</div>";
+        records_exist = ("_.map(" + wrapped_ctx + ", function(record, i) {") + (" return " + each_iteration) + '})';
+        return "" + wrapped_ctx + ".length ? " + records_exist + " : " + opts.inverse;
       });
       Handlebars.registerHelper('if', function(context, options) {
-        var fn, inverse, raw, state_subject;
+        var fn, inverse, state_subject;
         raw = rawSubject(context).split('.');
         HandlebarsLookups.add(raw);
         state_subject = Replacer.toState(raw);
@@ -59021,10 +59026,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       };
     };
     mock = function() {
+      var HandlebarsMock;
+      HandlebarsMock = require('./mock');
       return HandlebarsMock.get();
     };
     return {
-      register: register
+      init: init
     };
   })();
 
@@ -59032,7 +59039,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":219,"./lookups":211,"handlebars":26,"lodash":29}],211:[function(require,module,exports){
+},{"../replacer":219,"./lookups":211,"./mock":213,"handlebars":26,"lodash":29}],211:[function(require,module,exports){
 (function() {
   var HandlebarsLookups;
 
@@ -59098,7 +59105,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     init = function() {
       patchCompiler();
-      return HandlebarsHelpers.register();
+      return HandlebarsHelpers.init();
     };
     return {
       init: init
@@ -59111,7 +59118,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 },{"./helpers":210,"./lookups":211,"handlebars":26,"lodash":29}],213:[function(require,module,exports){
 (function() {
-  window.HandlebarsMock = (function() {
+  var HandlebarsMock;
+
+  HandlebarsMock = (function() {
     var CONSTANTS, HandlebarsHelpers, HandlebarsLookups, Replacer, constant, get, getEmpty, isAction, _;
     _ = require('lodash');
     _.mixin(require('lodash-deep'));
