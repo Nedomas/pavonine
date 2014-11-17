@@ -26,6 +26,10 @@ head
             p Max squat is: {{squat}}
             {{/last}}
 
+            {{#max current_user.gym_sessions 'deadlift'}}
+            p Max deadlift: {{deadlift}}
+            {{/max}}
+
           {{#with current_user.gym_session}}
           div.form-group
             input(value='{{squat}}' placeholder='Squat' class='form-control')
@@ -41,9 +45,9 @@ head
             input(value='{{date}}' placeholder='Date' class='form-control')
           div.row
             .col-md-4
-              button.btn-block.btn.btn-lg.btn-success(onClick='{{{create}}}') Add
+              button.btn-block.btn.btn-lg.btn-success(onClick='{{create}}') Add
             .col-md-8
-              button.btn-block.btn.btn-lg.btn-primary(onClick='{{{next}}}') Last gym sessions
+              button.btn-block.btn.btn-lg.btn-primary(onClick='{{next}}') Last gym sessions
           {{/with}}
           {{/step}}
 
@@ -74,5 +78,5 @@ head
           {{else}}
           p There are no records
           {{/each}}
-          button.btn.btn-lg.btn-primary.btn-block(onClick='{{{previous}}}') Add gym session
+          button.btn.btn-lg.btn-primary.btn-block(onClick='{{previous}}') Add gym session
           {{/step}}

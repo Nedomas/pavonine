@@ -61775,7 +61775,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     register = function(method, final_fn) {
       return Handlebars.registerHelper(method, function() {
-        var HandlebarsMock, arg_ids, args, code, ctx_id, data, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref;
+        var HandlebarsMock, arg_ids, args, code, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref;
         initial_ctx = arguments[0], initial_args = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), initial_opts = arguments[_i++];
         _ref = initial_opts.ids, ctx_id = _ref[0], arg_ids = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
         wrapped_state_ctx = wrapped_state(initial_ctx, ctx_id);
@@ -61787,9 +61787,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         if (!_.isEmpty(_.keys(initial_opts.hash))) {
           args.push(initial_opts.hash);
         }
-        data = Handlebars.createFrame(initial_opts.data);
-        data.contextPath = Handlebars.Utils.appendContextPath(data.contextPath, 'foo');
-        initial_opts.data = data;
         opts = {};
         HandlebarsMock = require('./mock');
         if (initial_opts.fn) {
@@ -61848,7 +61845,11 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         return register(method, function(raw_ctx, wrapped_ctx, args, opts) {
           var fn_args;
           if (opts.fn) {
-            return opts.fn.replace('this.state', "_." + method + "(" + wrapped_ctx + ")");
+            if (_.isEmpty(args)) {
+              return opts.fn.replace('this.state', "_." + method + "(" + wrapped_ctx + ")");
+            } else {
+              return opts.fn.replace('this.state', "_." + method + "(" + wrapped_ctx + ", " + (args.join(', ')) + ")");
+            }
           } else {
             fn_args = [wrapped_ctx].concat(__slice.call(args));
             return "_." + method + "(" + (fn_args.join(', ')) + ")";

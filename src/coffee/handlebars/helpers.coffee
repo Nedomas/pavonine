@@ -28,9 +28,9 @@ HandlebarsHelpers = (->
 
       args.push(initial_opts.hash) unless _.isEmpty(_.keys(initial_opts.hash))
 
-      data = Handlebars.createFrame(initial_opts.data)
-      data.contextPath = Handlebars.Utils.appendContextPath(data.contextPath, 'foo')
-      initial_opts.data = data
+      # data = Handlebars.createFrame(initial_opts.data)
+      # data.contextPath = Handlebars.Utils.appendContextPath(data.contextPath, 'foo')
+      # initial_opts.data = data
 
       opts = {}
       # TODO: Cant require outside method
@@ -90,7 +90,11 @@ HandlebarsHelpers = (->
     _.each helpers, (method) ->
       register method, (raw_ctx, wrapped_ctx, args, opts) ->
         if opts.fn
-          opts.fn.replace('this.state', "_.#{method}(#{wrapped_ctx})")
+          if _.isEmpty(args)
+            opts.fn.replace('this.state', "_.#{method}(#{wrapped_ctx})")
+          else
+            opts.fn.replace('this.state',
+              "_.#{method}(#{wrapped_ctx}, #{args.join(', ')})")
         else
           fn_args = [wrapped_ctx, args...]
           "_.#{method}(#{fn_args.join(', ')})"
