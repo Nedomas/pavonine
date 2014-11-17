@@ -61879,7 +61879,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         }
       });
       register('if', function(raw_ctx, wrapped_ctx, args, opts) {
-        return "" + wrapped_ctx + " ? " + opts.fn + " : " + (opts.inverse || null);
+        return "" + wrapped_ctx + " ? " + (opts.fn || null) + " : " + (opts.inverse || null);
       });
       return register('with', function(raw_ctx, wrapped_ctx, args, opts) {
         var result;

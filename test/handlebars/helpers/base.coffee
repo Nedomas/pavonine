@@ -49,3 +49,31 @@ describe 'Base helpers', ->
         "})) : (<p>No messages</p>)}\n" +
         "</div>"
       )
+
+  describe '#if', ->
+    it 'should work with true condition only', ->
+      html = "{{#if current_user.logged_in}}<p>Hello</p>{{/if}}"
+      expect(compile(html)).to.equal(
+        "\n" +
+        "<div>\n" +
+        "{this.state.current_user.logged_in ? <p>Hello</p> : null}\n" +
+        "</div>"
+      )
+
+    it 'should work with else', ->
+      html = "{{#if current_user.logged_in}}<p>Hello</p>{{else}}<p>Log in</p>{{/if}}"
+      expect(compile(html)).to.equal(
+        "\n" +
+        "<div>\n" +
+        "{this.state.current_user.logged_in ? <p>Hello</p> : <p>Log in</p>}\n" +
+        "</div>"
+      )
+
+    it 'should work with empty true condition', ->
+      html = "{{#if current_user.logged_in}}{{else}}<p>Log in</p>{{/if}}"
+      expect(compile(html)).to.equal(
+        "\n" +
+        "<div>\n" +
+        "{this.state.current_user.logged_in ? null : <p>Log in</p>}\n" +
+        "</div>"
+      )
