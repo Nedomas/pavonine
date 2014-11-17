@@ -136,7 +136,8 @@ HandlebarsHelpers = (->
           HandlebarsLookups.add(path)
           "{#{Replacer.addState(path)}}"
 
-      result = Replacer.replace result, /this\.action\,\ \'(.+?)\'/g,
+      ACTION_PARTIAL_REGEX = /_\.partial\(this\.action\,\ &#x27;(.+?)&#x27;\)/g
+      result = Replacer.replace result, ACTION_PARTIAL_REGEX,
         (attribute, initial) ->
           path = [raw_ctx, attribute].join('.')
           "#{Replacer.addAction(path)}"

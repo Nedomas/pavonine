@@ -61882,14 +61882,15 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         return "" + wrapped_ctx + " ? " + (opts.fn || null) + " : " + (opts.inverse || null);
       });
       return register('with', function(raw_ctx, wrapped_ctx, args, opts) {
-        var result;
+        var ACTION_PARTIAL_REGEX, result;
         result = Replacer.replace(opts.fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
           var path;
           path = [raw_ctx, attribute].join('.');
           HandlebarsLookups.add(path);
           return "{" + (Replacer.addState(path)) + "}";
         });
-        result = Replacer.replace(result, /this\.action\,\ \'(.+?)\'/g, function(attribute, initial) {
+        ACTION_PARTIAL_REGEX = /_\.partial\(this\.action\,\ &#x27;(.+?)&#x27;\)/g;
+        result = Replacer.replace(result, ACTION_PARTIAL_REGEX, function(attribute, initial) {
           var path;
           path = [raw_ctx, attribute].join('.');
           return "" + (Replacer.addAction(path));

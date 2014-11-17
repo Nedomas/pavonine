@@ -77,3 +77,16 @@ describe 'Base helpers', ->
         "{this.state.current_user.logged_in ? null : <p>Log in</p>}\n" +
         "</div>"
       )
+
+  describe '#with', ->
+    it 'should scope attributes', ->
+      html = "{{#with message}}<p>{{content}}</p>{{/with}}"
+      expect(compile(html)).to.equal(
+        "<p>{this.state.message.content}</p>"
+      )
+
+    it 'should scope actions', ->
+      html = "{{#with message}}<button onclick='{{create}}'>Save</button>{{/with}}"
+      expect(compile(html)).to.equal(
+        "<button onclick='{_.partial(this.action, 'message.create')}'>Save</button>"
+      )
