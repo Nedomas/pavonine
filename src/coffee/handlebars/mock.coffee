@@ -10,9 +10,9 @@ HandlebarsMock = (->
 
     _.each HandlebarsLookups.getIndividual(), (lookup) ->
       if isAction(lookup)
-        _.deepSet(result, lookup, "{#{Replacer.toAction(lookup)}}")
+        _.deepSet(result, lookup, "{#{Replacer.addAction(lookup)}}")
       else
-        _.deepSet(result, lookup, "{#{Replacer.toState(lookup)}}")
+        _.deepSet(result, lookup, "{#{Replacer.addState(lookup)}}")
 
     result
 

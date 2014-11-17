@@ -58723,7 +58723,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       template = Handlebars.compile(html, {
         trackIds: true
       });
-      template();
+      console.log(template());
       if (Data.missing()) {
         throw new Error('get_missing');
       }
@@ -58763,7 +58763,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 },{"../vendor/htmltojsx.min":222,"./data":207,"./handlebars/lookups":211,"./handlebars/mock":213,"./react_mixin":218,"./replacer":219,"handlebars":26,"lodash":29,"react":204,"react-tools":30}],207:[function(require,module,exports){
 (function() {
-  var Data;
+  var Data,
+    __slice = [].slice;
 
   Data = (function() {
     var HandlebarsLookups, Memory, loggedIn, missing, missingVariables, used, _;
@@ -58777,10 +58778,10 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         result.push('current_user');
       }
       _.each(HandlebarsLookups.getCollection(), function(lookup) {
-        var array_name;
-        array_name = lookup[0];
-        if (!Memory.has(array_name)) {
-          return result.push(array_name);
+        var owner, path, _ref;
+        _ref = lookup.split('.'), owner = _ref[0], path = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+        if (!Memory.has(owner)) {
+          return result.push(owner);
         }
       });
       return result;
@@ -58790,7 +58791,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     used = function(key) {
       return _.any(HandlebarsLookups.getIndividual(), function(lookup) {
-        return lookup[0] === key;
+        return lookup === key;
       });
     };
     loggedIn = function() {
@@ -58895,7 +58896,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     __slice = [].slice;
 
   HandlebarsHelpers = (function() {
-    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, constant, essential, getSubject, getWrapper, init, lodash, mock, raw, rawSubject, register, wrapped, _;
+    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, constant, essential, init, lodash, mock, raw, register, wrapped, wrapped_state, _;
     _ = require('lodash');
     Handlebars = require('handlebars');
     Replacer = require('../replacer');
@@ -58912,22 +58913,37 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     register = function(method, final_fn) {
       return Handlebars.registerHelper(method, function() {
-        var arg_ids, args, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_ctx, _i, _ref;
+        var arg_ids, args, code, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref;
         initial_ctx = arguments[0], initial_args = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), initial_opts = arguments[_i++];
         _ref = initial_opts.ids, ctx_id = _ref[0], arg_ids = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
-        wrapped_ctx = wrapped(initial_ctx, ctx_id);
+        wrapped_state_ctx = wrapped_state(initial_ctx, ctx_id);
         raw_ctx = raw(initial_ctx, ctx_id);
         args = [];
         _.each(initial_args, function(arg, i) {
-          return args[i] = raw(initial_args[i] || arg_ids[i]);
+          return args[i] = raw(initial_args[i], arg_ids[i]);
         });
         opts = {};
         if (initial_opts.fn) {
           opts.fn = initial_opts.fn(mock());
         }
-        result = final_fn(raw_ctx, wrapped_ctx, args, opts);
-        return new Handlebars.SafeString("<div>{" + result + "}</div>");
+        if (initial_opts.inverse) {
+          opts.inverse = initial_opts.inverse(mock());
+        }
+        result = final_fn(raw_ctx, wrapped_state_ctx, args, opts);
+        if (result.match(/^<(.*)>$/)) {
+          code = result;
+        } else {
+          code = "\n<div>\n" + ("{" + result + "}\n") + "</div>";
+        }
+        return new Handlebars.SafeString(code);
       });
+    };
+    wrapped_state = function(initial, from_ids) {
+      var name, result;
+      name = raw(initial, from_ids);
+      result = wrapped(initial, from_ids);
+      result = result.replace("this.state." + name, name);
+      return result.replace(name, Replacer.addState(name));
     };
     wrapped = function(initial, from_ids) {
       var braces_match, div_match, result;
@@ -58941,9 +58957,20 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return result;
     };
     raw = function(initial, from_ids) {
-      var result;
-      result = initial ? "'" + initial + "'" : from_ids;
-      return result.toString();
+      var match, options, result, _ref;
+      result = wrapped(initial, from_ids);
+      if (match = result.match(/\((.*?)\)/)) {
+        _ref = match[1].split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+      } else if (initial) {
+        if (initial.match(/^{(.*)}$/)) {
+          result = from_ids;
+        } else {
+          result = "'" + result + "'";
+        }
+      } else {
+        result = from_ids;
+      }
+      return result.replace('this.state.', '');
     };
     lodash = function() {
       var helpers;
@@ -58952,7 +58979,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         return register(method, function(raw_ctx, wrapped_ctx, args, opts) {
           var fn_args;
           if (opts.fn) {
-            return "{" + opts.fn + "}";
+            return opts.fn.replace('this.state', "_." + method + "(" + wrapped_ctx + ")");
           } else {
             fn_args = [wrapped_ctx].concat(__slice.call(args));
             return "_." + method + "(" + (fn_args.join(', ')) + ")";
@@ -58962,68 +58989,30 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     essential = function() {
       register('each', function(raw_ctx, wrapped_ctx, args, opts) {
+        debugger;
         var each_iteration, records_exist;
         HandlebarsLookups.addCollection(raw_ctx);
-        each_iteration = Replacer.replace(opts.fn, /{this\.state\.(.+?)}/, function(attribute, initial) {
-          return "{record." + attribute + "}";
+        each_iteration = Replacer.replace(opts.fn, /this\.state\.(.+?)/, function(attribute, initial) {
+          return "record." + attribute;
         });
-        records_exist = ("_.map(" + wrapped_ctx + ", function(record, i) {") + (" return " + each_iteration) + '})';
+        records_exist = ("_.map(" + wrapped_ctx + ", function(record, i) {") + (" return " + each_iteration) + ')';
         return "" + wrapped_ctx + ".length ? " + records_exist + " : " + opts.inverse;
       });
-      Handlebars.registerHelper('if', function(context, options) {
-        var fn, inverse, state_subject;
-        raw = rawSubject(context).split('.');
-        HandlebarsLookups.add(raw);
-        state_subject = Replacer.toState(raw);
-        fn = options.fn(mock());
-        inverse = options.inverse(mock());
-        return "<div>{" + state_subject + " ? " + fn + " : " + inverse + "}</div>";
-      });
-      return Handlebars.registerHelper('with', function(context, options) {
-        var context_path, fn, result;
-        if (!_.isString(context)) {
-          context = options.ids[0];
-        }
-        fn = options.fn(mock());
-        context_path = context.split('.');
-        result = Replacer.replace(fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
-          var updated_path;
-          updated_path = context_path.concat(attribute.split('.'));
-          HandlebarsLookups.add(updated_path);
-          return "{" + (Replacer.toState(updated_path)) + "}";
+      return register('with', function(raw_ctx, wrapped_ctx, args, opts) {
+        var result;
+        result = Replacer.replace(opts.fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
+          var path;
+          path = [raw_ctx, attribute].join('.');
+          HandlebarsLookups.add(raw_ctx);
+          return "{" + (Replacer.addState(path)) + "}";
         });
-        result = Replacer.replace(result, /this\.action\,\ \'(.+?)\'/g, function(attribute, initial) {
-          var updated_path;
-          updated_path = context_path.concat(attribute.split('.'));
-          HandlebarsLookups.add(updated_path);
-          return "" + (Replacer.toAction(updated_path));
+        result = Replacer.replace(result, /{this\.action\,\ \'(.+?)\'}/g, function(attribute, initial) {
+          var path;
+          path = [raw_ctx, attribute].join('.');
+          return "{" + (Replacer.addAction(path)) + "}";
         });
-        return "<div>" + result + "</div>";
+        return result;
       });
-    };
-    rawSubject = function(subject_string) {
-      return subject_string.replace('{', '').replace('}', '').replace('this.state.', '');
-    };
-    getSubject = function(string) {
-      var match, options, result, _ref;
-      if (match = string.match(/\((.*?)\)/)) {
-        _ref = match[1].replace('{', '').replace('}', '').split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
-      } else {
-        result = string;
-      }
-      result = result.replace('this.state.', '');
-      return result.split('.');
-    };
-    getWrapper = function(string) {
-      var after, before, matched, regex, _ref;
-      regex = new RegExp("(.*?)" + (getSubject(string).join('.')) + "(.*)");
-      matched = string.match(regex);
-      if (matched) {
-        _ref = [matched[1].replace('{', '').replace('}', '').replace('this.state.', ''), matched[2].replace('{', '').replace('}', '').replace('this.state.')], before = _ref[0], after = _ref[1];
-      }
-      return function(input) {
-        return before + input + after;
-      };
     };
     mock = function() {
       var HandlebarsMock;
@@ -59044,14 +59033,18 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var HandlebarsLookups;
 
   HandlebarsLookups = (function() {
-    var add, addCollection, clean, collection, getCollection, getIndividual, individual;
+    var add, addCollection, clean, collection, getCollection, getIndividual, individual, _;
+    _ = require('lodash');
     individual = [];
     collection = [];
     add = function(name) {
+      if (_.isArray(name)) {
+        debugger;
+      }
       return individual.push(name);
     };
     addCollection = function(name) {
-      create(name);
+      add(name);
       return collection.push(name);
     };
     clean = function() {
@@ -59077,7 +59070,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{}],212:[function(require,module,exports){
+},{"lodash":29}],212:[function(require,module,exports){
 (function() {
   var HandlebarsManager;
 
@@ -59093,7 +59086,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           var lookup;
           if (opcode.opcode === 'lookupOnContext') {
             lookup = opcode.args[0];
-            return HandlebarsLookups.add(lookup);
+            return HandlebarsLookups.add(lookup.join('.'));
           }
         });
         if (Handlebars.JavaScriptCompiler.isValidJavaScriptVariableName(name)) {
@@ -59132,9 +59125,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       result = {};
       _.each(HandlebarsLookups.getIndividual(), function(lookup) {
         if (isAction(lookup)) {
-          return _.deepSet(result, lookup, "{" + (Replacer.toAction(lookup)) + "}");
+          return _.deepSet(result, lookup, "{" + (Replacer.addAction(lookup)) + "}");
         } else {
-          return _.deepSet(result, lookup, "{" + (Replacer.toState(lookup)) + "}");
+          return _.deepSet(result, lookup, "{" + (Replacer.addState(lookup)) + "}");
         }
       });
       return result;
@@ -59465,7 +59458,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Replacer;
 
   Replacer = module.exports = (function() {
-    var Handlebars, capitalizeActionCase, removeExtraQuotes, replace, replaceToBindings, toAction, toAttribute, toReactCode, toState, _;
+    var Handlebars, addAction, addState, capitalizeActionCase, removeExtraQuotes, replace, replaceToBindings, toAttribute, toReactCode, toState, _;
     Handlebars = require('handlebars');
     _ = require('lodash');
     toReactCode = function(jsx_code) {
@@ -59512,8 +59505,11 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     toState = function(initial) {
       return "this.state." + (initial.join('.'));
     };
-    toAction = function(initial) {
-      return "_.partial(this.action, '" + (initial.join('.')) + "')";
+    addState = function(initial) {
+      return "this.state." + initial;
+    };
+    addAction = function(initial) {
+      return "_.partial(this.action, '" + initial + "')";
     };
     toAttribute = function(initial) {
       return initial.replace('this.state.', '');
@@ -59522,7 +59518,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       toReactCode: toReactCode,
       replace: replace,
       toState: toState,
-      toAction: toAction,
+      addState: addState,
+      addAction: addAction,
       toAttribute: toAttribute
     };
   })();

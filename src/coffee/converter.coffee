@@ -24,8 +24,10 @@ Converter = (->
   toJSX = (klass_name, html) ->
     HandlebarsLookups.clean()
     template = Handlebars.compile(html, trackIds: true)
-    template() # gather data
+    # template() # gather data
 
+    console.log(template())
+    # debugger
     throw new Error('get_missing') if Data.missing()
 
     mocked = template(HandlebarsMock.get())

@@ -22,10 +22,6 @@ head
           {{#step 1}}
           div.text-center
             h2 What r your scores man?
-            {{#first (sortBy current_user.roles 'abc' 'squat')}}
-            p Max squat is: {{squat}}
-            {{/first}}
-
           {{#with current_user.role}}
           div.form-group
             input(value='{{squat}}' placeholder='Squat' class='form-control')
@@ -40,16 +36,15 @@ head
           div.row
             .col-md-4
               button.btn-block.btn.btn-lg.btn-success(onClick='{{{create}}}') Add
-            {{/with}}
             .col-md-8
               button.btn-block.btn.btn-lg.btn-primary(onClick='{{{next}}}') Last gym sessions
+          {{/with}}
           {{/step}}
 
           {{#step 2}}
           .text-center
             h2 Last gym sessions
           {{#each (sortBy current_user.roles 'deadlift')}}
-          {{#if created_at}}
           div.panel.panel-default
             div.panel-heading
               | Sukurtas: {{created_at}}
@@ -69,9 +64,6 @@ head
               tr
                 td Power clean
                 td {{powerclean}}
-          {{else}}
-          p Nope
-          {{/if}}
           {{else}}
           p There are no records
           {{/each}}

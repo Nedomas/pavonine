@@ -1,12 +1,14 @@
 HandlebarsLookups = (->
+  _ = require 'lodash'
   individual = []
   collection = []
 
   add = (name) ->
+    debugger if _.isArray(name)
     individual.push(name)
 
   addCollection = (name) ->
-    create(name)
+    add(name)
     collection.push(name)
 
   clean = ->

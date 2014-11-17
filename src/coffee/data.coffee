@@ -9,8 +9,8 @@ Data = (->
       result.push('current_user')
 
     _.each HandlebarsLookups.getCollection(), (lookup) ->
-      array_name = lookup[0]
-      result.push(array_name) unless Memory.has(array_name)
+      [owner, path...] = lookup.split('.')
+      result.push(owner) unless Memory.has(owner)
 
     result
 
@@ -19,7 +19,7 @@ Data = (->
 
   used = (key) ->
     _.any HandlebarsLookups.getIndividual(), (lookup) ->
-      lookup[0] == key
+      lookup == key
 
   loggedIn = ->
     Memory.has('current_user')
