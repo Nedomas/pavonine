@@ -44,7 +44,7 @@ Converter = (->
 
     jsx_code = "/** @jsx React.DOM */\n" + converter.convert(html)
     render_index = jsx_code.match('render').index
-    jsx_code = jsx_code.splice(render_index, 0,
+    jsx_code = Replacer.splice(jsx_code, render_index, 0,
       'mixins: [ReactMixin],\n  ')
 
     # result =

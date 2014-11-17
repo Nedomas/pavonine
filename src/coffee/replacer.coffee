@@ -37,7 +37,7 @@ Replacer = module.exports = (->
         full_match = matched[0]
         attribute = matched[1]
         length = full_match.length
-        result = result.splice(matched.index, length, to(attribute, full_match))
+        result = splice(result, matched.index, length, to(attribute, full_match))
       else
         break
 
@@ -55,6 +55,9 @@ Replacer = module.exports = (->
   toAttribute = (initial) ->
     initial.replace('this.state.', '')
 
+  splice = (string, idx, rem, s) ->
+    (string.slice(0, idx) + s + string.slice(idx + Math.abs(rem)))
+
   return {
     toReactCode: toReactCode
     replace: replace
@@ -62,5 +65,6 @@ Replacer = module.exports = (->
     addState: addState
     addAction: addAction
     toAttribute: toAttribute
+    splice: splice
   }
 )()

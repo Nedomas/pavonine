@@ -12,7 +12,7 @@ HandlebarsHelpers = (->
 
   init = ->
     lodash()
-    essential()
+    base()
     moment()
 
   register = (method, final_fn) ->
@@ -108,7 +108,7 @@ HandlebarsHelpers = (->
 
       "moment(#{wrapped_ctx}).#{methods.join('.')}"
 
-  essential = ->
+  base = ->
     register 'each', (raw_ctx, wrapped_ctx, args, opts) ->
       HandlebarsLookups.addCollection(raw_ctx)
 
@@ -117,7 +117,7 @@ HandlebarsHelpers = (->
           "record.#{attribute}"
 
       records_exist = "_.map(#{wrapped_ctx}, function(record, i) {\n" +
-      " return #{each_iteration}\n" +
+      "return #{each_iteration}\n" +
       '})'
 
       if opts.inverse

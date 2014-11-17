@@ -61602,7 +61602,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       });
       jsx_code = "/** @jsx React.DOM */\n" + converter.convert(html);
       render_index = jsx_code.match('render').index;
-      return jsx_code = jsx_code.splice(render_index, 0, 'mixins: [ReactMixin],\n  ');
+      return jsx_code = Replacer.splice(jsx_code, render_index, 0, 'mixins: [ReactMixin],\n  ');
     };
     INNER_BODY_REGEX = /<body>([\s\S]*?.*[\s\S*?])<\/body>/;
     toXHTML = function(input) {
@@ -61737,10 +61737,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return Facebook.init();
     };
     configure = function() {
-      Persistance.setApi('http://10.30.0.1:3000');
-      return String.prototype.splice = function(idx, rem, s) {
-        return this.slice(0, idx) + s + this.slice(idx + Math.abs(rem));
-      };
+      return Persistance.setApi('http://10.30.0.1:3000');
     };
     return {
       init: init
@@ -61757,7 +61754,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     __slice = [].slice;
 
   HandlebarsHelpers = (function() {
-    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, constant, essential, init, lodash, moment, raw, register, wrapped, wrapped_state, _;
+    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, base, constant, init, lodash, moment, raw, register, wrapped, wrapped_state, _;
     _ = require('lodash');
     Handlebars = require('handlebars');
     Replacer = require('../replacer');
@@ -61770,7 +61767,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     init = function() {
       lodash();
-      essential();
+      base();
       return moment();
     };
     register = function(method, final_fn) {
@@ -61867,14 +61864,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         return "moment(" + wrapped_ctx + ")." + (methods.join('.'));
       });
     };
-    essential = function() {
+    base = function() {
       register('each', function(raw_ctx, wrapped_ctx, args, opts) {
         var each_iteration, records_exist;
         HandlebarsLookups.addCollection(raw_ctx);
         each_iteration = Replacer.replace(opts.fn, /this\.state\.(.+?)/, function(attribute, initial) {
           return "record." + attribute;
         });
-        records_exist = ("_.map(" + wrapped_ctx + ", function(record, i) {\n") + (" return " + each_iteration + "\n") + '})';
+        records_exist = ("_.map(" + wrapped_ctx + ", function(record, i) {\n") + ("return " + each_iteration + "\n") + '})';
         if (opts.inverse) {
           return "" + wrapped_ctx + ".length ? (" + records_exist + ") : (" + opts.inverse + ")";
         } else {
@@ -62317,7 +62314,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Replacer;
 
   Replacer = module.exports = (function() {
-    var Handlebars, addAction, addState, capitalizeActionCase, removeExtraQuotes, replace, replaceToBindings, toAttribute, toReactCode, toState, _;
+    var Handlebars, addAction, addState, capitalizeActionCase, removeExtraQuotes, replace, replaceToBindings, splice, toAttribute, toReactCode, toState, _;
     Handlebars = require('handlebars');
     _ = require('lodash');
     toReactCode = function(jsx_code) {
@@ -62354,7 +62351,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           full_match = matched[0];
           attribute = matched[1];
           length = full_match.length;
-          result = result.splice(matched.index, length, to(attribute, full_match));
+          result = splice(result, matched.index, length, to(attribute, full_match));
         } else {
           break;
         }
@@ -62373,13 +62370,17 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     toAttribute = function(initial) {
       return initial.replace('this.state.', '');
     };
+    splice = function(string, idx, rem, s) {
+      return string.slice(0, idx) + s + string.slice(idx + Math.abs(rem));
+    };
     return {
       toReactCode: toReactCode,
       replace: replace,
       toState: toState,
       addState: addState,
       addAction: addAction,
-      toAttribute: toAttribute
+      toAttribute: toAttribute,
+      splice: splice
     };
   })();
 

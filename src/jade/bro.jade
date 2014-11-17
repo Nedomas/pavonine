@@ -22,7 +22,7 @@ head
           {{#step 1}}
           div.text-center
             h2 What r your scores man?
-            {{#last (sortBy current_user.gym_sessions 'squat')}}
+            {{#last (sortBy (uniq current_user.gym_sessions 'current_user_id') 'squat')}}
             p Max squat is: {{squat}}
             {{/last}}
 
@@ -58,7 +58,7 @@ head
           div.panel.panel-default
             div.panel-heading
               p Date:
-                span {{moment created_at format='YYYY-MM-DD'}}
+                span {{moment created_at format='YYYY-MM-DD HH:MM'}}
             table.table
               tr
                 td Squat
