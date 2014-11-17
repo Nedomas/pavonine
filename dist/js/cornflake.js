@@ -59098,8 +59098,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     patchCompiler = function() {
       return Handlebars.JavaScriptCompiler.prototype.nameLookup = function(parent, name, type) {
         _.each(this.environment.opcodes, function(opcode) {
+          var lookup;
           if (opcode.opcode === 'lookupOnContext') {
-            return HandlebarsLookups.addOnContext(name);
+            lookup = opcode.args[0].join('.');
+            if (lookup === 'facebook.login') {
+              return HandlebarsLookups.addOnContext(lookup);
+            } else {
+              return HandlebarsLookups.addOnContext(name);
+            }
           }
         });
         if (Handlebars.JavaScriptCompiler.isValidJavaScriptVariableName(name)) {
@@ -59406,24 +59412,18 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         _.deepSet(new_state, Replacer.toAttribute(path), e.target.value);
         return this.setState(new_state);
       },
-      relationshipOnChange: function(attribute, e) {
-        var new_attributes;
-        new_attributes = _.clone(this.state);
-        _.deepSet(new_attributes, attribute, e.target.value);
-        return this.setState(new_attributes);
-      },
       action: function(path, e) {
         var action, attributes, model_path, model_path_str, _i, _ref;
-        if (path === 'next') {
-          return Router.next();
-        }
-        if (path === 'previous') {
-          return Router.previous();
-        }
         _ref = path.split('.'), model_path = 2 <= _ref.length ? __slice.call(_ref, 0, _i = _ref.length - 1) : (_i = 0, []), action = _ref[_i++];
         model_path_str = model_path.join('.');
         if (model_path_str === 'facebook') {
           return Facebook.login();
+        }
+        if (action === 'next') {
+          return Router.next();
+        }
+        if (action === 'previous') {
+          return Router.previous();
         }
         attributes = _.deepGet(this.state, model_path_str);
         attributes.model = _.last(model_path_str.split('.'));

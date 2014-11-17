@@ -22,7 +22,11 @@ head
           {{#step 1}}
           div.text-center
             h2 What r your scores man?
-          {{#with current_user.role}}
+            {{#last (sortBy current_user.gym_sessions 'squat')}}
+            p Max squat is: {{squat}}
+            {{/last}}
+
+          {{#with current_user.gym_session}}
           div.form-group
             input(value='{{squat}}' placeholder='Squat' class='form-control')
           div.form-group
@@ -44,7 +48,7 @@ head
           {{#step 2}}
           .text-center
             h2 Last gym sessions
-          {{#each (sortBy current_user.roles 'created_at')}}
+          {{#each (sortBy current_user.gym_sessions 'created_at')}}
           div.panel.panel-default
             div.panel-heading
               | Sukurtas: {{created_at}}
