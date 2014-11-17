@@ -61582,7 +61582,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       if (Data.missing()) {
         throw new Error('get_missing');
       }
-      mocked = template(HandlebarsMock.get());
+      mocked = template(HandlebarsMock.get()).toString();
       wrapped = wrapInJSX(klass_name, mocked);
       react_code = Replacer.toReactCode(wrapped);
       console.log(react_code);
@@ -61998,8 +61998,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 },{"./helpers":209,"./lookups":210,"handlebars":24,"lodash":27}],212:[function(require,module,exports){
 (function() {
-  var HandlebarsMock,
-    __slice = [].slice;
+  var HandlebarsMock;
 
   HandlebarsMock = (function() {
     var CONSTANTS, HandlebarsHelpers, HandlebarsLookups, Replacer, constant, get, getEmpty, isAction, _;
@@ -62023,7 +62022,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     getEmpty = function() {
       var lookups, result;
       result = {};
-      lookups = _.without.apply(_, [HandlebarsLookups.getIndividual()].concat(__slice.call(HandlebarsLookups.getOnContext())));
+      lookups = HandlebarsLookups.getIndividual();
       _.each(lookups, function(lookup) {
         if (!isAction(lookup)) {
           return _.deepSet(result, lookup, '');

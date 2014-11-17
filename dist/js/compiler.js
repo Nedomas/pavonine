@@ -45,7 +45,7 @@
     installMain = function() {
       var script;
       script = document.createElement('script');
-      script.src = 'js/cornflake.js';
+      script.src = "" + PAVONINE_SERVER + "/assets/cornflake.js";
       return document.body.appendChild(script);
     };
     removeFromBody = function() {

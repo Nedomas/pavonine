@@ -31,7 +31,7 @@ Converter = (->
     # debugger
     throw new Error('get_missing') if Data.missing()
 
-    mocked = template(HandlebarsMock.get())
+    mocked = template(HandlebarsMock.get()).toString()
     wrapped = wrapInJSX(klass_name, mocked)
     react_code = Replacer.toReactCode(wrapped)
     console.log(react_code)

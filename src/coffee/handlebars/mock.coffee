@@ -19,8 +19,10 @@ HandlebarsMock = (->
   getEmpty = ->
     result = {}
 
-    lookups = _.without(HandlebarsLookups.getIndividual(),
-      HandlebarsLookups.getOnContext()...)
+    # Future fix: dont trash the namespace
+    # lookups = _.without(HandlebarsLookups.getIndividual(),
+    #   HandlebarsLookups.getOnContext()...)
+    lookups = HandlebarsLookups.getIndividual()
 
     _.each lookups, (lookup) ->
       unless isAction(lookup)

@@ -38,7 +38,7 @@ window.Compiler = Compiler = module.exports = (->
 
   installMain = ->
     script = document.createElement('script')
-    script.src = 'js/cornflake.js'
+    script.src = "#{PAVONINE_SERVER}/assets/cornflake.js"
     document.body.appendChild(script)
 
   removeFromBody = ->
