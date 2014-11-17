@@ -32,7 +32,7 @@ HandlebarsMock = (->
     CONSTANTS[name]
 
   isAction = (lookup) ->
-    _.include(constant('actions'), _.last(lookup))
+    _.include(constant('actions'), _.last(lookup.split('.')))
 
   return {
     get: get

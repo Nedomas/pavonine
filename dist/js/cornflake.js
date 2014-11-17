@@ -58949,7 +58949,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       var braces_match, div_match, result;
       result = initial || from_ids;
       result = result.toString();
-      if (div_match = result.match(/^<div>{(.*?)}<\/div>$/)) {
+      if (div_match = result.match(/<div>\n{(.*?)}\n<\/div>/)) {
         result = div_match[1];
       } else if (braces_match = result.match(/^{(.*?)}$/)) {
         result = braces_match[1];
@@ -58989,14 +58989,17 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     essential = function() {
       register('each', function(raw_ctx, wrapped_ctx, args, opts) {
-        debugger;
         var each_iteration, records_exist;
         HandlebarsLookups.addCollection(raw_ctx);
         each_iteration = Replacer.replace(opts.fn, /this\.state\.(.+?)/, function(attribute, initial) {
           return "record." + attribute;
         });
-        records_exist = ("_.map(" + wrapped_ctx + ", function(record, i) {") + (" return " + each_iteration) + ')';
-        return "" + wrapped_ctx + ".length ? " + records_exist + " : " + opts.inverse;
+        records_exist = ("_.map(" + wrapped_ctx + ", function(record, i) {\n") + (" return " + each_iteration + "\n") + '})';
+        if (opts.inverse) {
+          return "" + wrapped_ctx + ".length ? (" + records_exist + ") : (" + opts.inverse + ")";
+        } else {
+          return records_exist;
+        }
       });
       return register('with', function(raw_ctx, wrapped_ctx, args, opts) {
         var result;
@@ -59006,10 +59009,10 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           HandlebarsLookups.add(raw_ctx);
           return "{" + (Replacer.addState(path)) + "}";
         });
-        result = Replacer.replace(result, /{this\.action\,\ \'(.+?)\'}/g, function(attribute, initial) {
+        result = Replacer.replace(result, /this\.action\,\ \'(.+?)\'/g, function(attribute, initial) {
           var path;
           path = [raw_ctx, attribute].join('.');
-          return "{" + (Replacer.addAction(path)) + "}";
+          return "" + (Replacer.addAction(path));
         });
         return result;
       });
@@ -59149,7 +59152,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return CONSTANTS[name];
     };
     isAction = function(lookup) {
-      return _.include(constant('actions'), _.last(lookup));
+      return _.include(constant('actions'), _.last(lookup.split('.')));
     };
     return {
       get: get,

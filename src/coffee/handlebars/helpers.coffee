@@ -53,7 +53,7 @@ HandlebarsHelpers = (->
     result = initial || from_ids
     result = result.toString()
 
-    if div_match = result.match(/^<div>{(.*?)}<\/div>$/)
+    if div_match = result.match(/<div>\n{(.*?)}\n<\/div>/)
       result = div_match[1]
     else if braces_match = result.match(/^{(.*?)}$/)
       result = braces_match[1]
@@ -88,18 +88,20 @@ HandlebarsHelpers = (->
 
   essential = ->
     register 'each', (raw_ctx, wrapped_ctx, args, opts) ->
-      debugger
       HandlebarsLookups.addCollection(raw_ctx)
 
       each_iteration = Replacer.replace opts.fn,
         /this\.state\.(.+?)/, (attribute, initial) ->
           "record.#{attribute}"
 
-      records_exist = "_.map(#{wrapped_ctx}, function(record, i) {" +
-      " return #{each_iteration}" +
-      ')'
+      records_exist = "_.map(#{wrapped_ctx}, function(record, i) {\n" +
+      " return #{each_iteration}\n" +
+      '})'
 
-      "#{wrapped_ctx}.length ? #{records_exist} : #{opts.inverse}"
+      if opts.inverse
+        "#{wrapped_ctx}.length ? (#{records_exist}) : (#{opts.inverse})"
+      else
+        records_exist
 
 #     Handlebars.registerHelper 'if', (context, options) ->
 #       raw = rawSubject(context).split('.')
@@ -119,10 +121,10 @@ HandlebarsHelpers = (->
           HandlebarsLookups.add(raw_ctx)
           "{#{Replacer.addState(path)}}"
 
-      result = Replacer.replace result, /{this\.action\,\ \'(.+?)\'}/g,
+      result = Replacer.replace result, /this\.action\,\ \'(.+?)\'/g,
         (attribute, initial) ->
           path = [raw_ctx, attribute].join('.')
-          "{#{Replacer.addAction(path)}}"
+          "#{Replacer.addAction(path)}"
 
       result
 
