@@ -58913,7 +58913,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     register = function(method, final_fn) {
       return Handlebars.registerHelper(method, function() {
-        var HandlebarsMock, arg_ids, args, code, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref;
+        var HandlebarsMock, arg_ids, args, code, ctx_id, data, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref;
         initial_ctx = arguments[0], initial_args = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), initial_opts = arguments[_i++];
         _ref = initial_opts.ids, ctx_id = _ref[0], arg_ids = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
         wrapped_state_ctx = wrapped_state(initial_ctx, ctx_id);
@@ -58922,6 +58922,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         _.each(initial_args, function(arg, i) {
           return args[i] = raw(initial_args[i], arg_ids[i]);
         });
+        data = Handlebars.createFrame(initial_opts.data);
+        data.contextPath = Handlebars.Utils.appendContextPath(data.contextPath, 'foo');
+        initial_opts.data = data;
         opts = {};
         HandlebarsMock = require('./mock');
         if (initial_opts.fn) {
@@ -58962,7 +58965,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       result = wrapped(initial, from_ids);
       if (match = result.match(/\((.*?)\)/)) {
         _ref = match[1].split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
-      } else if (initial) {
+      } else if (_.isString(initial)) {
         if (initial.match(/^{(.*)}$/)) {
           result = from_ids;
         } else {
@@ -59010,7 +59013,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         result = Replacer.replace(opts.fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
           var path;
           path = [raw_ctx, attribute].join('.');
-          HandlebarsLookups.add(raw_ctx);
+          HandlebarsLookups.add(path);
           return "{" + (Replacer.addState(path)) + "}";
         });
         result = Replacer.replace(result, /this\.action\,\ \'(.+?)\'/g, function(attribute, initial) {
@@ -59035,10 +59038,11 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var HandlebarsLookups;
 
   HandlebarsLookups = (function() {
-    var add, addCollection, clean, collection, getCollection, getIndividual, individual, _;
+    var add, addCollection, addOnContext, clean, collection, getCollection, getIndividual, getOnContext, individual, on_context, _;
     _ = require('lodash');
     individual = [];
     collection = [];
+    on_context = [];
     add = function(name) {
       if (_.isArray(name)) {
         debugger;
@@ -59059,12 +59063,21 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     getCollection = function() {
       return collection;
     };
+    addOnContext = function(name) {
+      add(name);
+      return on_context.push(name);
+    };
+    getOnContext = function() {
+      return on_context;
+    };
     return {
       add: add,
       addCollection: addCollection,
       clean: clean,
       getIndividual: getIndividual,
-      getCollection: getCollection
+      getCollection: getCollection,
+      addOnContext: addOnContext,
+      getOnContext: getOnContext
     };
   })();
 
@@ -59085,10 +59098,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     patchCompiler = function() {
       return Handlebars.JavaScriptCompiler.prototype.nameLookup = function(parent, name, type) {
         _.each(this.environment.opcodes, function(opcode) {
-          var lookup;
           if (opcode.opcode === 'lookupOnContext') {
-            lookup = opcode.args[0];
-            return HandlebarsLookups.add(lookup.join('.'));
+            return HandlebarsLookups.addOnContext(name);
           }
         });
         if (Handlebars.JavaScriptCompiler.isValidJavaScriptVariableName(name)) {
@@ -59113,7 +59124,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 },{"./helpers":210,"./lookups":211,"handlebars":26,"lodash":29}],213:[function(require,module,exports){
 (function() {
-  var HandlebarsMock;
+  var HandlebarsMock,
+    __slice = [].slice;
 
   HandlebarsMock = (function() {
     var CONSTANTS, HandlebarsHelpers, HandlebarsLookups, Replacer, constant, get, getEmpty, isAction, _;
@@ -59135,9 +59147,10 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return result;
     };
     getEmpty = function() {
-      var result;
+      var lookups, result;
       result = {};
-      _.each(HandlebarsLookups.getIndividual(), function(lookup) {
+      lookups = _.without.apply(_, [HandlebarsLookups.getIndividual()].concat(__slice.call(HandlebarsLookups.getOnContext())));
+      _.each(lookups, function(lookup) {
         if (!isAction(lookup)) {
           return _.deepSet(result, lookup, '');
         }
@@ -59168,28 +59181,24 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var MainModel;
 
   MainModel = (function() {
-    var HandlebarsMock, Memory, Router, UI, traverse, _;
+    var HandlebarsMock, Memory, traverse, _;
 
     function MainModel() {}
 
     _ = require('lodash');
 
-    UI = require('./ui');
-
-    Memory = require('./memory');
-
-    Router = require('./router');
-
-    HandlebarsMock = require('./handlebars/mock');
+    _.mixin(require('lodash-deep'));
 
     traverse = require('traverse');
 
-    MainModel.constructor = function() {};
+    Memory = require('./memory');
+
+    HandlebarsMock = require('./handlebars/mock');
 
     MainModel.attributes = function() {
       var result;
       result = {};
-      this.setEmptyFromMock(result);
+      this.attributesFromEmptyMock(result);
       _.each(traverse(result).paths(), function(path) {
         var existing, path_str, value;
         path_str = path.join('.');
@@ -59215,7 +59224,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return result;
     };
 
-    MainModel.setEmptyFromMock = function(result) {
+    MainModel.attributesFromEmptyMock = function(result) {
       _.each(traverse(HandlebarsMock.getEmpty()).paths(), function(path) {
         var path_str;
         if (path.length) {
@@ -59226,34 +59235,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return result;
     };
 
-    MainModel.metadata = function() {
-      return {
-        model: this.mname(),
-        step: this.step(),
-        relationships: this.relationships()
-      };
-    };
-
-    MainModel.modelAttr = function() {
-      var el;
-      el = UI.element(this.step());
-      return el.attr('model');
-    };
-
-    MainModel.mname = function() {
-      return this.modelAttr().match(ALPHANUMERIC_WORD)[1];
-    };
-
-    MainModel.relationships = function() {
-      var relationships_string, _ref;
-      relationships_string = (_ref = this.modelAttr().match(MODEL_WITH_RELATIONSHIPS)) != null ? _ref[1] : void 0;
-      return (relationships_string != null ? relationships_string.split(', ') : void 0) || [];
-    };
-
-    MainModel.step = function() {
-      return Router.current();
-    };
-
     return MainModel;
 
   })();
@@ -59262,7 +59243,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebars/mock":213,"./memory":215,"./router":220,"./ui":221,"lodash":29,"traverse":205}],215:[function(require,module,exports){
+},{"./handlebars/mock":213,"./memory":215,"lodash":29,"lodash-deep":28,"traverse":205}],215:[function(require,module,exports){
 (function() {
   var Memory;
 

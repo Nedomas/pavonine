@@ -8,8 +8,7 @@ HandlebarsManager = (->
     Handlebars.JavaScriptCompiler::nameLookup = (parent, name, type) ->
       _.each @environment.opcodes, (opcode) ->
         if opcode.opcode == 'lookupOnContext'
-          lookup = opcode.args[0]
-          HandlebarsLookups.add(lookup.join('.'))
+          HandlebarsLookups.addOnContext(name)
 
       if Handlebars.JavaScriptCompiler.isValidJavaScriptVariableName(name)
         "#{parent}.#{name}"

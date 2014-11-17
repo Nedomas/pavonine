@@ -2,6 +2,7 @@ HandlebarsLookups = (->
   _ = require 'lodash'
   individual = []
   collection = []
+  on_context = []
 
   add = (name) ->
     debugger if _.isArray(name)
@@ -21,12 +22,21 @@ HandlebarsLookups = (->
   getCollection = ->
     collection
 
+  addOnContext = (name) ->
+    add(name)
+    on_context.push(name)
+
+  getOnContext = ->
+    on_context
+
   return {
     add: add
     addCollection: addCollection
     clean: clean
     getIndividual: getIndividual
     getCollection: getCollection
+    addOnContext: addOnContext
+    getOnContext: getOnContext
   }
 )()
 

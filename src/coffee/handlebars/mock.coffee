@@ -19,7 +19,10 @@ HandlebarsMock = (->
   getEmpty = ->
     result = {}
 
-    _.each HandlebarsLookups.getIndividual(), (lookup) ->
+    lookups = _.without(HandlebarsLookups.getIndividual(),
+      HandlebarsLookups.getOnContext()...)
+
+    _.each lookups, (lookup) ->
       unless isAction(lookup)
         _.deepSet(result, lookup, '')
 

@@ -25,6 +25,10 @@ HandlebarsHelpers = (->
       _.each initial_args, (arg, i) ->
         args[i] = raw(initial_args[i], arg_ids[i])
 
+      data = Handlebars.createFrame(initial_opts.data)
+      data.contextPath = Handlebars.Utils.appendContextPath(data.contextPath, 'foo')
+      initial_opts.data = data
+
       opts = {}
       # TODO: Cant require outside method
       HandlebarsMock = require './mock'
@@ -67,7 +71,7 @@ HandlebarsHelpers = (->
 
     if match = result.match(/\((.*?)\)/)
       [result, options...] = match[1].split(', ')
-    else if initial
+    else if _.isString(initial)
       if initial.match(/^{(.*)}$/)
         result = from_ids
       else
@@ -113,7 +117,7 @@ HandlebarsHelpers = (->
         (attribute, initial) ->
 
           path = [raw_ctx, attribute].join('.')
-          HandlebarsLookups.add(raw_ctx)
+          HandlebarsLookups.add(path)
           "{#{Replacer.addState(path)}}"
 
       result = Replacer.replace result, /this\.action\,\ \'(.+?)\'/g,
