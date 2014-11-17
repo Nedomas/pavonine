@@ -4,6 +4,7 @@
   "author": "Domas <domas.bitvinskas@me.com>",
   "main": "dist/cornflake.js",
   "dependencies": {
+    "databound": "^0.1.0",
     "handlebars": "^2.0.0",
     "jquery": "^2.1.1",
     "lodash": "^2.4.1",
