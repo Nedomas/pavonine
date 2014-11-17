@@ -44,7 +44,7 @@ head
           {{#step 2}}
           .text-center
             h2 Last gym sessions
-          {{#each (sortBy current_user.roles 'deadlift')}}
+          {{#each (sortBy current_user.roles 'created_at')}}
           div.panel.panel-default
             div.panel-heading
               | Sukurtas: {{created_at}}

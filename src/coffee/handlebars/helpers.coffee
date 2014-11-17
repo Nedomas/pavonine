@@ -26,8 +26,10 @@ HandlebarsHelpers = (->
         args[i] = raw(initial_args[i], arg_ids[i])
 
       opts = {}
-      opts.fn = initial_opts.fn(mock()) if initial_opts.fn
-      opts.inverse = initial_opts.inverse(mock()) if initial_opts.inverse
+      # TODO: Cant require outside method
+      HandlebarsMock = require './mock'
+      opts.fn = initial_opts.fn(HandlebarsMock.get()) if initial_opts.fn
+      opts.inverse = initial_opts.inverse(HandlebarsMock.get()) if initial_opts.inverse
 
       result = final_fn(raw_ctx, wrapped_state_ctx, args, opts)
 
@@ -103,15 +105,8 @@ HandlebarsHelpers = (->
       else
         records_exist
 
-#     Handlebars.registerHelper 'if', (context, options) ->
-#       raw = rawSubject(context).split('.')
-#       HandlebarsLookups.add(raw)
-#       state_subject = Replacer.toState(raw)
-#       fn = options.fn(mock())
-#       inverse = options.inverse(mock())
-#
-#       "<div>{#{state_subject} ? #{fn} : #{inverse}}</div>"
-#
+    register 'if', (raw_ctx, wrapped_ctx, args, opts) ->
+      "#{wrapped_ctx} ? #{opts.fn} : #{opts.inverse || null}"
 
     register 'with', (raw_ctx, wrapped_ctx, args, opts) ->
       result = Replacer.replace opts.fn, /{this\.state\.(.+?)}/g,
@@ -127,34 +122,6 @@ HandlebarsHelpers = (->
           "#{Replacer.addAction(path)}"
 
       result
-
-#   rawSubject = (subject_string) ->
-#     subject_string.replace('{', '').replace('}', '').replace('this.state.', '')
-#
-#   getSubject = (string) ->
-#     if match = string.match(/\((.*?)\)/)
-#       [result, options...] = match[1].replace('{', '').replace('}', '').split(', ')
-#     else
-#       result = string
-#
-#     result = result.replace('this.state.', '')
-#     result.split('.')
-#
-#   getWrapper = (string) ->
-#     regex = new RegExp "(.*?)#{getSubject(string).join('.')}(.*)"
-#     matched = string.match(regex)
-#
-#     if matched
-#       [before, after] = [matched[1].replace('{', '').replace('}', '')
-#         .replace('this.state.', ''),
-#         matched[2].replace('{', '').replace('}', '').replace('this.state.')]
-#
-#     (input) ->
-#       before + input + after
-#
-  mock = ->
-    HandlebarsMock = require './mock'
-    HandlebarsMock.get()
 
   return {
     init: init

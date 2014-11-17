@@ -58896,7 +58896,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     __slice = [].slice;
 
   HandlebarsHelpers = (function() {
-    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, constant, essential, init, lodash, mock, raw, register, wrapped, wrapped_state, _;
+    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, constant, essential, init, lodash, raw, register, wrapped, wrapped_state, _;
     _ = require('lodash');
     Handlebars = require('handlebars');
     Replacer = require('../replacer');
@@ -58913,7 +58913,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     register = function(method, final_fn) {
       return Handlebars.registerHelper(method, function() {
-        var arg_ids, args, code, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref;
+        var HandlebarsMock, arg_ids, args, code, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref;
         initial_ctx = arguments[0], initial_args = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), initial_opts = arguments[_i++];
         _ref = initial_opts.ids, ctx_id = _ref[0], arg_ids = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
         wrapped_state_ctx = wrapped_state(initial_ctx, ctx_id);
@@ -58923,11 +58923,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           return args[i] = raw(initial_args[i], arg_ids[i]);
         });
         opts = {};
+        HandlebarsMock = require('./mock');
         if (initial_opts.fn) {
-          opts.fn = initial_opts.fn(mock());
+          opts.fn = initial_opts.fn(HandlebarsMock.get());
         }
         if (initial_opts.inverse) {
-          opts.inverse = initial_opts.inverse(mock());
+          opts.inverse = initial_opts.inverse(HandlebarsMock.get());
         }
         result = final_fn(raw_ctx, wrapped_state_ctx, args, opts);
         if (result.match(/^<(.*)>$/)) {
@@ -59001,6 +59002,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           return records_exist;
         }
       });
+      register('if', function(raw_ctx, wrapped_ctx, args, opts) {
+        return "" + wrapped_ctx + " ? " + opts.fn + " : " + (opts.inverse || null);
+      });
       return register('with', function(raw_ctx, wrapped_ctx, args, opts) {
         var result;
         result = Replacer.replace(opts.fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
@@ -59016,11 +59020,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         });
         return result;
       });
-    };
-    mock = function() {
-      var HandlebarsMock;
-      HandlebarsMock = require('./mock');
-      return HandlebarsMock.get();
     };
     return {
       init: init
