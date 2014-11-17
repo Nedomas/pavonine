@@ -37,6 +37,8 @@ head
             input(value='{{press}}' placeholder='Press' class='form-control')
           div.form-group
             input(value='{{powerclean}}' placeholder='Power clean' class='form-control')
+          div.form-group
+            input(value='{{date}}' placeholder='Date' class='form-control')
           div.row
             .col-md-4
               button.btn-block.btn.btn-lg.btn-success(onClick='{{{create}}}') Add
@@ -51,7 +53,8 @@ head
           {{#each (sortBy current_user.gym_sessions 'created_at')}}
           div.panel.panel-default
             div.panel-heading
-              | Sukurtas: {{created_at}}
+              p Date:
+                span {{moment created_at format='YYYY-MM-DD'}}
             table.table
               tr
                 td Squat

@@ -13,6 +13,7 @@ HandlebarsHelpers = (->
   init = ->
     lodash()
     essential()
+    moment()
 
   register = (method, final_fn) ->
     Handlebars.registerHelper method, ->
@@ -24,6 +25,8 @@ HandlebarsHelpers = (->
       args = []
       _.each initial_args, (arg, i) ->
         args[i] = raw(initial_args[i], arg_ids[i])
+
+      args.push(initial_opts.hash) unless _.isEmpty(_.keys(initial_opts.hash))
 
       data = Handlebars.createFrame(initial_opts.data)
       data.contextPath = Handlebars.Utils.appendContextPath(data.contextPath, 'foo')
@@ -91,6 +94,15 @@ HandlebarsHelpers = (->
         else
           fn_args = [wrapped_ctx, args...]
           "_.#{method}(#{fn_args.join(', ')})"
+
+  moment = ->
+    register 'moment', (raw_ctx, wrapped_ctx, args, opts) ->
+      methods = []
+
+      _.each args[0], (param, method) ->
+        methods.push("#{method}('#{param}')")
+
+      "moment(#{wrapped_ctx}).#{methods.join('.')}"
 
   essential = ->
     register 'each', (raw_ctx, wrapped_ctx, args, opts) ->

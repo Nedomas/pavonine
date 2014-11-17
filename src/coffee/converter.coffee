@@ -17,6 +17,7 @@ Converter = (->
     ReactMixin = require './react_mixin'
     React = require 'react'
     _ = require 'lodash'
+    moment = require 'moment'
     eval(component_code)
     console.log(component_code)
     eval(klass_name)
