@@ -55,7 +55,7 @@ gulp.task 'ugly', ->
 
 gulp.task 'test', ->
   global.expect = chai.expect
-  gulp.src('./test/**/*.coffee', read: false)
+  gulp.src('./spec/**/*.coffee', read: false)
   .pipe(mocha(
     reporter: 'spec'
   ))

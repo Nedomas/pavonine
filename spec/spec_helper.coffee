@@ -9,4 +9,9 @@ beforeEach ->
   global.document = @document
   global.window = @document.parentWindow
 
+  @compile = (html) ->
+    Handlebars = require 'handlebars'
+    result = Handlebars.compile(html, trackIds: true)()
+    result?.string || result
+
 afterEach ->
