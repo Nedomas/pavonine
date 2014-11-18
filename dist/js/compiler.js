@@ -11,13 +11,11 @@
     login = {};
     loading = {};
     init = function() {
-      console.log('Compiling');
       scanSteps();
       findLogin();
       findLoading();
       removeFromBody();
       installMain();
-      console.log('Compiled');
       return show();
     };
     stepContent = function(i) {

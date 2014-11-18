@@ -1,6 +1,4 @@
 window.Compiler = Compiler = module.exports = (->
-  # STEP_REGEX = /\{\#step\ (\d+)}(.+?)\{\#end\}/g
-  # STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?)(.+?)([\s\S]*?)\{\#end\}/g
   STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?.+?[\s\S]*?){{\/step}}/g
   LOGIN_REGEX = /{{\#login}}([\s\S]*?.+?[\s\S]*?){{\/login}}/g
   LOADING_REGEX = /{{\#loading}}([\s\S]*?.+?[\s\S]*?){{\/loading}}/g
@@ -9,13 +7,11 @@ window.Compiler = Compiler = module.exports = (->
   loading = {}
 
   init = ->
-    console.log('Compiling')
     scanSteps()
     findLogin()
     findLoading()
     removeFromBody()
     installMain()
-    console.log('Compiled')
     show()
 
   stepContent = (i) ->

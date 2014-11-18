@@ -1,71 +1,66 @@
-UI = (->
+class UI
   React = require 'react'
   _ = require 'lodash'
   $ = require 'jquery'
   Converter = require './converter'
+  Data = require './data'
 
-  removeAll = ->
-    _.each elements(), (el) ->
+  constructor: (step) ->
+    @step = step
+
+  compile: ->
+    @react_component = @component()
+
+  klassName: ->
+    "cornflake_#{@step}"
+
+  component: ->
+    Converter.htmlToReactComponent(@klassName(), @content())()
+
+  content: ->
+    if @step == 'login'
+      Compiler.loginContent()
+    else
+      Compiler.stepContent(@step)
+
+  render: ->
+    @loading(true)
+    @removeAll()
+    $(@renderComponent().getDOMNode()).show()
+    @loading(false)
+
+  renderComponent: ->
+    React.renderComponent(@react_component, @container())
+
+  removeAll: ->
+    _.each @elements(), (el) ->
       el.html('')
 
-    $(loginContainer()).html('')
+    $(@loginContainer()).html('')
 
-  render = (step) ->
-    loading(true)
-    removeAll()
-    content = Compiler.stepContent(step)
-    componentF = component(klassName(step), content)
-    rendered_component = renderComponent(componentF, stepContainer(step))
-    $(rendered_component.getDOMNode()).show()
-    loading(false)
+  loading: (show) ->
+    @loadingElement().toggle(show)
 
-  login = ->
-    loading(true)
-    removeAll()
-    content = Compiler.loginContent()
-    componentF = component(klassName('login'), content)
-    rendered_component = renderComponent(componentF, loginContainer())
-    $(rendered_component.getDOMNode()).show()
-    loading(false)
+  container: ->
+    if @step == 'login'
+      @loginContainer()
+    else
+      @idx()[@step][0]
 
-  loading = (show) ->
-    $('*[loading]').toggle(show)
-
-  component = (klass_name, content) ->
-    Converter.htmlToReactComponent(klass_name, content)()
-
-  renderComponent = (component, container) ->
-    React.renderComponent(component, container)
-
-  klassName = (suffix) ->
-    "cornflake_#{suffix}"
-
-  stepContainer = (i) ->
-    idx()[i][0]
-
-  loginContainer = ->
+  loginContainer: ->
     $('*[login]')[0]
 
-  loadingElement = ->
+  loadingElement: ->
     $('*[loading]')
 
-  idx = ->
-    _.inject(elements(), (result, element) ->
+  idx: ->
+    _.inject(@elements(), (result, element) ->
       step = $(element).attr('step') or 1
       result[step] = $(element)
       result
     , {})
 
-  elements = ->
+  elements: ->
     _.map $('*[step]'), (el) -> $(el)
-
-  components = ->
-    _.map $("[class^='cornflake']"), (el) -> $(el)
-
-  return {
-    render: render
-    login: login
-  }
-)()
 
 module.exports = UI

@@ -61547,14 +61547,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Converter;
 
   Converter = (function() {
-    var Data, HTMLtoJSX, Handlebars, HandlebarsLookups, HandlebarsMock, INNER_BODY_REGEX, Replacer, htmlToReactComponent, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
+    var HTMLtoJSX, Handlebars, HandlebarsLookups, HandlebarsMock, INNER_BODY_REGEX, Replacer, htmlToReactComponent, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
     react_tools = require('react-tools');
     HTMLtoJSX = require('../vendor/htmltojsx.min');
     Replacer = require('./replacer');
     Handlebars = require('handlebars');
     HandlebarsLookups = require('./handlebars/lookups');
     HandlebarsMock = require('./handlebars/mock');
-    Data = require('./data');
     htmlToReactComponent = function(klass_name, element) {
       var jsx, xhtml;
       xhtml = toXHTML(element);
@@ -61569,23 +61568,19 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       _ = require('lodash');
       moment = require('moment');
       eval(component_code);
-      console.log(component_code);
       return eval(klass_name);
     };
     toJSX = function(klass_name, html) {
-      var mocked, react_code, template, wrapped;
+      var mocked, react_code, t, template, wrapped;
       HandlebarsLookups.clean();
       template = Handlebars.compile(html, {
         trackIds: true
       });
-      console.log(template());
-      if (Data.missing()) {
-        throw new Error('get_missing');
-      }
+      t = template();
+      console.log(t);
       mocked = template(HandlebarsMock.get()).toString();
       wrapped = wrapInJSX(klass_name, mocked);
       react_code = Replacer.toReactCode(wrapped);
-      console.log(react_code);
       return react_code;
     };
     wrapInJSX = function(klass_name, html) {
@@ -61616,16 +61611,18 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":221,"./data":206,"./handlebars/lookups":210,"./handlebars/mock":212,"./react_mixin":217,"./replacer":218,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":221,"./handlebars/lookups":210,"./handlebars/mock":212,"./react_mixin":217,"./replacer":218,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
 (function() {
   var Data,
     __slice = [].slice;
 
   Data = (function() {
-    var HandlebarsLookups, Memory, loggedIn, missing, missingVariables, used, _;
+    var $, Databound, HandlebarsLookups, Memory, failedPromise, get, getMissing, loggedIn, missing, missingVariables, singularize, used, _;
     _ = require('lodash');
     HandlebarsLookups = require('./handlebars/lookups');
+    Databound = require('databound');
     Memory = require('./memory');
+    $ = require('jquery');
     missingVariables = function() {
       var result;
       result = [];
@@ -61639,7 +61636,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           return result.push(owner);
         }
       });
-      return result;
+      return _.uniq(result);
     };
     missing = function() {
       return !_.isEmpty(missingVariables());
@@ -61652,9 +61649,44 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     loggedIn = function() {
       return Memory.has('current_user');
     };
+    getMissing = function() {
+      return $.when.apply($, _.map(missingVariables(), function(variable) {
+        return get(variable);
+      }));
+    };
+    get = function(name) {
+      var Persistance, attributes, for_request;
+      Persistance = require('./persistance');
+      if (name === 'current_user') {
+        if (attributes = Memory.getForever('current_user')) {
+          for_request = _.pick(attributes, 'id', 'access_token', 'model');
+          return Persistance.communicate('update', for_request).then(function(current_user) {
+            Memory.setForever(current_user.attributes);
+            return Databound.prototype.promise(true);
+          });
+        } else {
+          return failedPromise('login');
+        }
+      } else {
+        attributes = {
+          model: singularize(name)
+        };
+        return Persistance.communicate('where', attributes);
+      }
+    };
+    singularize = function(string) {
+      return string.replace(/s$/, '');
+    };
+    failedPromise = function(result) {
+      var deferred;
+      deferred = $.Deferred();
+      deferred.reject(result);
+      return deferred.promise();
+    };
     return {
       missing: missing,
-      missingVariables: missingVariables
+      missingVariables: missingVariables,
+      getMissing: getMissing
     };
   })();
 
@@ -61662,7 +61694,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebars/lookups":210,"./memory":214,"lodash":27}],207:[function(require,module,exports){
+},{"./handlebars/lookups":210,"./memory":214,"./persistance":216,"databound":1,"jquery":25,"lodash":27}],207:[function(require,module,exports){
 (function() {
   var Facebook;
 
@@ -61724,7 +61756,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     Router = require('./router');
     Facebook = require('./facebook');
     init = function() {
-      console.log('Here and now');
       HandlebarsManager.init();
       configure();
       Router.change(1);
@@ -61748,7 +61779,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     __slice = [].slice;
 
   HandlebarsHelpers = (function() {
-    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, base, constant, init, lodash, moment, raw, register, wrapped, wrapped_state, _;
+    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, base, constant, init, lodash, moment, raw, register, wrap, wrapped, wrapped_state, _;
     _ = require('lodash');
     Handlebars = require('handlebars');
     Replacer = require('../replacer');
@@ -61873,7 +61904,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         }
       });
       register('if', function(raw_ctx, wrapped_ctx, args, opts) {
-        return "" + wrapped_ctx + " ? " + (opts.fn || null) + " : " + (opts.inverse || null);
+        return "" + wrapped_ctx + " ? " + (wrap(opts.fn || null)) + " : " + (wrap(opts.inverse || null));
       });
       return register('with', function(raw_ctx, wrapped_ctx, args, opts) {
         var ACTION_PARTIAL_REGEX, result;
@@ -61891,6 +61922,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         });
         return result;
       });
+    };
+    wrap = function(content) {
+      if (!content) {
+        return;
+      }
+      return "<div>" + content + "</div>";
     };
     return {
       init: init
@@ -62387,12 +62424,11 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Router;
 
   Router = (function() {
-    var Data, Memory, Persistance, UI, change, current, getMissing, goOn, login, next, previous, setCurrent, singularize, step, _;
+    var Data, Memory, UI, change, current, goOn, next, previous, setCurrent, step, _;
     Memory = require('./memory');
     UI = require('./ui');
     Data = require('./data');
     _ = require('lodash');
-    Persistance = require('./persistance');
     step = 1;
     setCurrent = function(_step) {
       return step = _step;
@@ -62401,22 +62437,23 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return step;
     };
     change = function(_step, dont_clean) {
-      var e;
+      var ui;
       if (!dont_clean) {
         Memory.clean();
       }
       step = _step;
-      try {
-        UI.render(step);
+      ui = new UI(step);
+      ui.compile();
+      return Data.getMissing().then(function() {
+        ui.render();
         return setCurrent(step);
-      } catch (_error) {
-        e = _error;
-        if (e.message === 'get_missing') {
-          return getMissing();
+      }).fail(function(resp) {
+        if (resp === 'login') {
+          return change('login', step);
         } else {
-          throw e;
+          throw new Error("Server responded with error " + resp);
         }
-      }
+      });
     };
     previous = function(current_data) {
       if (current_data) {
@@ -62433,42 +62470,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     goOn = function() {
       return change(step, true);
     };
-    getMissing = function() {
-      var attributes, for_request, variable;
-      Persistance = require('./persistance');
-      variable = _.first(Data.missingVariables());
-      if (variable === 'current_user') {
-        if (attributes = Memory.getForever('current_user')) {
-          for_request = _.pick(attributes, 'id', 'access_token', 'model');
-          return Persistance.communicate('update', for_request).then(function(current_user) {
-            Memory.setForever(current_user.attributes);
-            return goOn();
-          });
-        } else {
-          return login();
-        }
-      } else {
-        attributes = {
-          model: singularize(variable)
-        };
-        return Persistance.communicate('where', attributes).then(function(records) {
-          return goOn();
-        });
-      }
-    };
-    singularize = function(string) {
-      return string.replace(/s$/, '');
-    };
-    login = function() {
-      return UI.login();
-    };
     return {
       current: current,
       change: change,
-      login: login,
-      goOn: goOn,
       previous: previous,
-      next: next
+      next: next,
+      goOn: goOn
     };
   })();
 
@@ -62476,92 +62483,109 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data":206,"./memory":214,"./persistance":216,"./ui":220,"lodash":27}],220:[function(require,module,exports){
+},{"./data":206,"./memory":214,"./ui":220,"lodash":27}],220:[function(require,module,exports){
 (function() {
   var UI;
 
   UI = (function() {
-    var $, Converter, React, component, components, elements, idx, klassName, loading, loadingElement, login, loginContainer, removeAll, render, renderComponent, stepContainer, _;
+    var $, Converter, Data, React, _;
+
     React = require('react');
+
     _ = require('lodash');
+
     $ = require('jquery');
+
     Converter = require('./converter');
-    removeAll = function() {
-      _.each(elements(), function(el) {
+
+    Data = require('./data');
+
+    function UI(step) {
+      this.step = step;
+    }
+
+    UI.prototype.compile = function() {
+      return this.react_component = this.component();
+    };
+
+    UI.prototype.klassName = function() {
+      return "cornflake_" + this.step;
+    };
+
+    UI.prototype.component = function() {
+      return Converter.htmlToReactComponent(this.klassName(), this.content())();
+    };
+
+    UI.prototype.content = function() {
+      if (this.step === 'login') {
+        return Compiler.loginContent();
+      } else {
+        return Compiler.stepContent(this.step);
+      }
+    };
+
+    UI.prototype.render = function() {
+      this.loading(true);
+      this.removeAll();
+      $(this.renderComponent().getDOMNode()).show();
+      return this.loading(false);
+    };
+
+    UI.prototype.renderComponent = function() {
+      return React.renderComponent(this.react_component, this.container());
+    };
+
+    UI.prototype.removeAll = function() {
+      _.each(this.elements(), function(el) {
         return el.html('');
       });
-      return $(loginContainer()).html('');
+      return $(this.loginContainer()).html('');
     };
-    render = function(step) {
-      var componentF, content, rendered_component;
-      loading(true);
-      removeAll();
-      content = Compiler.stepContent(step);
-      componentF = component(klassName(step), content);
-      rendered_component = renderComponent(componentF, stepContainer(step));
-      $(rendered_component.getDOMNode()).show();
-      return loading(false);
+
+    UI.prototype.loading = function(show) {
+      return this.loadingElement().toggle(show);
     };
-    login = function() {
-      var componentF, content, rendered_component;
-      loading(true);
-      removeAll();
-      content = Compiler.loginContent();
-      componentF = component(klassName('login'), content);
-      rendered_component = renderComponent(componentF, loginContainer());
-      $(rendered_component.getDOMNode()).show();
-      return loading(false);
+
+    UI.prototype.container = function() {
+      if (this.step === 'login') {
+        return this.loginContainer();
+      } else {
+        return this.idx()[this.step][0];
+      }
     };
-    loading = function(show) {
-      return $('*[loading]').toggle(show);
-    };
-    component = function(klass_name, content) {
-      return Converter.htmlToReactComponent(klass_name, content)();
-    };
-    renderComponent = function(component, container) {
-      return React.renderComponent(component, container);
-    };
-    klassName = function(suffix) {
-      return "cornflake_" + suffix;
-    };
-    stepContainer = function(i) {
-      return idx()[i][0];
-    };
-    loginContainer = function() {
+
+    UI.prototype.loginContainer = function() {
       return $('*[login]')[0];
     };
-    loadingElement = function() {
+
+    UI.prototype.loadingElement = function() {
       return $('*[loading]');
     };
-    idx = function() {
-      return _.inject(elements(), function(result, element) {
+
+    UI.prototype.idx = function() {
+      return _.inject(this.elements(), function(result, element) {
         var step;
         step = $(element).attr('step') || 1;
         result[step] = $(element);
         return result;
       }, {});
     };
-    elements = function() {
+
+    UI.prototype.elements = function() {
       return _.map($('*[step]'), function(el) {
         return $(el);
       });
     };
-    components = function() {
-      return _.map($("[class^='cornflake']"), function(el) {
-        return $(el);
-      });
-    };
-    return {
-      render: render,
-      login: login
-    };
+
+    return UI;
+
   })();
 
   module.exports = UI;
 
 }).call(this);
 
-},{"./converter":205,"jquery":25,"lodash":27,"react":203}],221:[function(require,module,exports){
+},{"./converter":205,"./data":206,"jquery":25,"lodash":27,"react":203}],221:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.

@@ -126,7 +126,7 @@ HandlebarsHelpers = (->
         records_exist
 
     register 'if', (raw_ctx, wrapped_ctx, args, opts) ->
-      "#{wrapped_ctx} ? #{opts.fn || null} : #{opts.inverse || null}"
+      "#{wrapped_ctx} ? #{wrap(opts.fn || null)} : #{wrap(opts.inverse || null)}"
 
     register 'with', (raw_ctx, wrapped_ctx, args, opts) ->
       result = Replacer.replace opts.fn, /{this\.state\.(.+?)}/g,
@@ -143,6 +143,13 @@ HandlebarsHelpers = (->
           "#{Replacer.addAction(path)}"
 
       result
+
+  wrap = (content) ->
+    return unless content
+
+    "<div>" +
+    content +
+    "</div>"
 
   return {
     init: init

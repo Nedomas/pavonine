@@ -5,7 +5,6 @@ Converter = (->
   Handlebars = require 'handlebars'
   HandlebarsLookups = require './handlebars/lookups'
   HandlebarsMock = require './handlebars/mock'
-  Data = require './data'
 
   htmlToReactComponent = (klass_name, element) ->
     xhtml = toXHTML(element)
@@ -19,22 +18,17 @@ Converter = (->
     _ = require 'lodash'
     moment = require 'moment'
     eval(component_code)
-    console.log(component_code)
     eval(klass_name)
 
   toJSX = (klass_name, html) ->
     HandlebarsLookups.clean()
     template = Handlebars.compile(html, trackIds: true)
-    # template() # gather data
-
-    console.log(template())
-    # debugger
-    throw new Error('get_missing') if Data.missing()
+    t = template() # gather data
+    console.log(t)
 
     mocked = template(HandlebarsMock.get()).toString()
     wrapped = wrapInJSX(klass_name, mocked)
     react_code = Replacer.toReactCode(wrapped)
-    console.log(react_code)
     react_code
 
   wrapInJSX = (klass_name, html) ->

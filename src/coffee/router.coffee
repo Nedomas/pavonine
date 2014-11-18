@@ -3,7 +3,6 @@ Router = (->
   UI = require './ui'
   Data = require './data'
   _ = require 'lodash'
-  Persistance = require './persistance'
 
   step = 1
 
@@ -17,14 +16,18 @@ Router = (->
     Memory.clean() unless dont_clean
     step = _step
 
-    try
-      UI.render(step)
+    ui = new UI(step)
+    ui.compile()
+
+    Data.getMissing().then(->
+      ui.render()
       setCurrent(step)
-    catch e
-      if e.message == 'get_missing'
-        getMissing()
+    ).fail( (resp) ->
+      if resp == 'login'
+        change('login', step)
       else
-        throw e
+        throw new Error "Server responded with error #{resp}"
+    )
 
   previous = (current_data) ->
     Memory.set(current_data) if current_data
@@ -37,38 +40,12 @@ Router = (->
   goOn = ->
     change(step, true)
 
-  getMissing = ->
-    Persistance = require './persistance'
-    variable = _.first(Data.missingVariables())
-
-    if variable == 'current_user'
-      if attributes = Memory.getForever('current_user')
-        for_request = _.pick(attributes, 'id', 'access_token', 'model')
-        Persistance.communicate('update', for_request).then (current_user) ->
-          Memory.setForever(current_user.attributes)
-          goOn()
-      else
-        login()
-    else
-      attributes =
-        model: singularize(variable)
-
-      Persistance.communicate('where', attributes).then (records) ->
-        goOn()
-
-  singularize = (string) ->
-    string.replace(/s$/, '')
-
-  login = ->
-    UI.login()
-
   return {
     current: current
     change: change
-    login: login
-    goOn: goOn
     previous: previous
     next: next
+    goOn: goOn
   }
 )()
 
