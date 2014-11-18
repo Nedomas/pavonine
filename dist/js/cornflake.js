@@ -61731,7 +61731,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return Facebook.init();
     };
     configure = function() {
-      return Persistance.setApi('http://10.30.0.1:3000');
+      return Persistance.setApi(window.PAVONINE_SERVER);
     };
     return {
       init: init
@@ -62191,9 +62191,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     }
 
     Model.prototype.serialize = function() {
-      return _.merge(this.attributes, {
-        app_token: window.PAVONINE_APP
-      });
+      return this.attributes;
     };
 
     Model.main = function() {
@@ -62228,7 +62226,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         throw new Error('No model specified');
       }
       model = new Model(attributes);
-      connection = new Databound('models');
+      connection = new Databound('models', {
+        app_token: window.PAVONINE_APP
+      });
       return connection[action](model.serialize()).then(function(resp) {
         var metadata, new_attributes, new_model;
         new_attributes = _.isObject(resp) ? resp : {};

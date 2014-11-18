@@ -13,7 +13,7 @@ window.Cornflake = Cornflake = module.exports = (->
 
   configure = ->
     # Persistance.setApi('http://cornflake-backend.herokuapp.com')
-    Persistance.setApi('http://10.30.0.1:3000')
+    Persistance.setApi(window.PAVONINE_SERVER)
 
   return {
     init: init
