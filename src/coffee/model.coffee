@@ -8,7 +8,7 @@ class Model
     @plural = "#{@model}s"
 
   serialize: ->
-    @attributes
+    _.merge(@attributes, app_token: window.PAVONINE_APP)
 
   @main = ->
     new Model(MainModel.attributes())

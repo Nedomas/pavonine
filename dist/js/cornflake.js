@@ -62191,7 +62191,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     }
 
     Model.prototype.serialize = function() {
-      return this.attributes;
+      return _.merge(this.attributes, {
+        app_token: window.PAVONINE_APP
+      });
     };
 
     Model.main = function() {
