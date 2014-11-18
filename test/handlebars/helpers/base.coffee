@@ -56,7 +56,7 @@ describe 'Base helpers', ->
       expect(compile(html)).to.equal(
         "\n" +
         "<div>\n" +
-        "{this.state.current_user.logged_in ? <p>Hello</p> : null}\n" +
+        "{this.state.current_user.logged_in ? <div><p>Hello</p></div> : undefined}\n" +
         "</div>"
       )
 
@@ -65,7 +65,7 @@ describe 'Base helpers', ->
       expect(compile(html)).to.equal(
         "\n" +
         "<div>\n" +
-        "{this.state.current_user.logged_in ? <p>Hello</p> : <p>Log in</p>}\n" +
+        "{this.state.current_user.logged_in ? <div><p>Hello</p></div> : <div><p>Log in</p></div>}\n" +
         "</div>"
       )
 
@@ -74,7 +74,7 @@ describe 'Base helpers', ->
       expect(compile(html)).to.equal(
         "\n" +
         "<div>\n" +
-        "{this.state.current_user.logged_in ? null : <p>Log in</p>}\n" +
+        "{this.state.current_user.logged_in ? undefined : <div><p>Log in</p></div>}\n" +
         "</div>"
       )
 

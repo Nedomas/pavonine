@@ -1,9 +1,8 @@
 class UI
-  React = require 'react'
-  _ = require 'lodash'
   $ = require 'jquery'
+  _ = require 'lodash'
+  React = require 'react'
   Converter = require './converter'
-  Data = require './data'
 
   constructor: (step) ->
     @step = step

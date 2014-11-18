@@ -61611,7 +61611,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":221,"./handlebars/lookups":210,"./handlebars/mock":212,"./react_mixin":217,"./replacer":218,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":224,"./handlebars/lookups":212,"./handlebars/mock":214,"./react_mixin":220,"./replacer":221,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
 (function() {
   var Data,
     __slice = [].slice;
@@ -61694,7 +61694,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebars/lookups":210,"./memory":214,"./persistance":216,"databound":1,"jquery":25,"lodash":27}],207:[function(require,module,exports){
+},{"./handlebars/lookups":212,"./memory":217,"./persistance":219,"databound":1,"jquery":25,"lodash":27}],207:[function(require,module,exports){
 (function() {
   var Facebook;
 
@@ -61745,7 +61745,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":214,"./persistance":216,"./router":219,"jquery":25,"lodash":27,"lodash-deep":26}],208:[function(require,module,exports){
+},{"./memory":217,"./persistance":219,"./router":222,"jquery":25,"lodash":27,"lodash-deep":26}],208:[function(require,module,exports){
 (function() {
   var Cornflake;
 
@@ -61773,17 +61773,71 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":207,"./handlebars/manager":211,"./persistance":216,"./router":219}],209:[function(require,module,exports){
+},{"./facebook":207,"./handlebars/manager":213,"./persistance":219,"./router":222}],209:[function(require,module,exports){
+(function() {
+  var BaseHelpers;
+
+  BaseHelpers = (function() {
+    var HandlebarsHelpers, HandlebarsLookups, Replacer, register;
+    HandlebarsHelpers = require('./helpers');
+    HandlebarsLookups = require('./lookups');
+    Replacer = require('../replacer');
+    register = function() {
+      HandlebarsHelpers.register('each', function(raw_ctx, wrapped_ctx, args, opts) {
+        var each_iteration, records_exist;
+        HandlebarsLookups.addCollection(raw_ctx);
+        each_iteration = Replacer.replace(opts.fn, /this\.state\.(.+?)/, function(attribute, initial) {
+          return "record." + attribute;
+        });
+        records_exist = ("_.map(" + wrapped_ctx + ", function(record, i) {\n") + ("return " + each_iteration + "\n") + '})';
+        if (opts.inverse) {
+          return "" + wrapped_ctx + ".length ? (" + records_exist + ") : (" + opts.inverse + ")";
+        } else {
+          return records_exist;
+        }
+      });
+      HandlebarsHelpers.register('if', function(raw_ctx, wrapped_ctx, args, opts) {
+        return "" + wrapped_ctx + " ? " + (wrap(opts.fn || null)) + " : " + (wrap(opts.inverse || null));
+      });
+      return HandlebarsHelpers.register('with', function(raw_ctx, wrapped_ctx, args, opts) {
+        var ACTION_PARTIAL_REGEX, result;
+        result = Replacer.replace(opts.fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
+          var path;
+          path = [raw_ctx, attribute].join('.');
+          HandlebarsLookups.add(path);
+          return "{" + (Replacer.addState(path)) + "}";
+        });
+        ACTION_PARTIAL_REGEX = /_\.partial\(this\.action\,\ &#x27;(.+?)&#x27;\)/g;
+        result = Replacer.replace(result, ACTION_PARTIAL_REGEX, function(attribute, initial) {
+          var path;
+          path = [raw_ctx, attribute].join('.');
+          return "" + (Replacer.addAction(path));
+        });
+        return result;
+      });
+    };
+    return {
+      register: register
+    };
+  })();
+
+  module.exports = BaseHelpers;
+
+}).call(this);
+
+},{"../replacer":221,"./helpers":210,"./lookups":212}],210:[function(require,module,exports){
 (function() {
   var HandlebarsHelpers,
     __slice = [].slice;
 
   HandlebarsHelpers = (function() {
-    var CONSTANTS, Handlebars, HandlebarsLookups, Replacer, base, constant, init, lodash, moment, raw, register, wrap, wrapped, wrapped_state, _;
+    var BaseHelpers, CONSTANTS, Handlebars, LodashHelpers, MomentHelpers, Replacer, constant, init, raw, register, wrap, wrapped, wrapped_state, _;
     _ = require('lodash');
     Handlebars = require('handlebars');
     Replacer = require('../replacer');
-    HandlebarsLookups = require('./lookups');
+    LodashHelpers = require('./lodash_helpers');
+    BaseHelpers = require('./base_helpers');
+    MomentHelpers = require('./moment_helpers');
     CONSTANTS = {
       actions: ['create', 'update', 'destroy', 'previous', 'next', 'login']
     };
@@ -61791,9 +61845,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return CONSTANTS[name];
     };
     init = function() {
-      lodash();
-      base();
-      return moment();
+      LodashHelpers.register();
+      BaseHelpers.register();
+      return MomentHelper.register();
     };
     register = function(method, final_fn) {
       return Handlebars.registerHelper(method, function() {
@@ -61860,11 +61914,37 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       }
       return result.replace('this.state.', '');
     };
-    lodash = function() {
-      var helpers;
-      helpers = _.without.apply(_, [_.keys(_)].concat(__slice.call(constant('actions'))));
+    wrap = function(content) {
+      if (!content) {
+        return;
+      }
+      return "<div>" + content + "</div>";
+    };
+    return {
+      init: init,
+      constant: constant,
+      register: register
+    };
+  })();
+
+  module.exports = HandlebarsHelpers;
+
+}).call(this);
+
+},{"../replacer":221,"./base_helpers":209,"./lodash_helpers":211,"./mock":214,"./moment_helpers":215,"handlebars":24,"lodash":27}],211:[function(require,module,exports){
+(function() {
+  var LodashHelpers,
+    __slice = [].slice;
+
+  LodashHelpers = (function() {
+    var register, _;
+    _ = require('lodash');
+    register = function() {
+      var HandlebarsHelpers, helpers;
+      HandlebarsHelpers = require('./helpers');
+      helpers = _.without.apply(_, [_.keys(_)].concat(__slice.call(HandlebarsHelpers.constant('actions'))));
       return _.each(helpers, function(method) {
-        return register(method, function(raw_ctx, wrapped_ctx, args, opts) {
+        return HandlebarsHelpers.register(method, function(raw_ctx, wrapped_ctx, args, opts) {
           var fn_args;
           if (opts.fn) {
             if (_.isEmpty(args)) {
@@ -61879,66 +61959,16 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         });
       });
     };
-    moment = function() {
-      return register('moment', function(raw_ctx, wrapped_ctx, args, opts) {
-        var methods;
-        methods = [];
-        _.each(args[0], function(param, method) {
-          return methods.push("" + method + "('" + param + "')");
-        });
-        return "moment(" + wrapped_ctx + ")." + (methods.join('.'));
-      });
-    };
-    base = function() {
-      register('each', function(raw_ctx, wrapped_ctx, args, opts) {
-        var each_iteration, records_exist;
-        HandlebarsLookups.addCollection(raw_ctx);
-        each_iteration = Replacer.replace(opts.fn, /this\.state\.(.+?)/, function(attribute, initial) {
-          return "record." + attribute;
-        });
-        records_exist = ("_.map(" + wrapped_ctx + ", function(record, i) {\n") + ("return " + each_iteration + "\n") + '})';
-        if (opts.inverse) {
-          return "" + wrapped_ctx + ".length ? (" + records_exist + ") : (" + opts.inverse + ")";
-        } else {
-          return records_exist;
-        }
-      });
-      register('if', function(raw_ctx, wrapped_ctx, args, opts) {
-        return "" + wrapped_ctx + " ? " + (wrap(opts.fn || null)) + " : " + (wrap(opts.inverse || null));
-      });
-      return register('with', function(raw_ctx, wrapped_ctx, args, opts) {
-        var ACTION_PARTIAL_REGEX, result;
-        result = Replacer.replace(opts.fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
-          var path;
-          path = [raw_ctx, attribute].join('.');
-          HandlebarsLookups.add(path);
-          return "{" + (Replacer.addState(path)) + "}";
-        });
-        ACTION_PARTIAL_REGEX = /_\.partial\(this\.action\,\ &#x27;(.+?)&#x27;\)/g;
-        result = Replacer.replace(result, ACTION_PARTIAL_REGEX, function(attribute, initial) {
-          var path;
-          path = [raw_ctx, attribute].join('.');
-          return "" + (Replacer.addAction(path));
-        });
-        return result;
-      });
-    };
-    wrap = function(content) {
-      if (!content) {
-        return;
-      }
-      return "<div>" + content + "</div>";
-    };
     return {
-      init: init
+      register: register
     };
   })();
 
-  module.exports = HandlebarsHelpers;
+  module.exports = LodashHelpers;
 
 }).call(this);
 
-},{"../replacer":218,"./lookups":210,"./mock":212,"handlebars":24,"lodash":27}],210:[function(require,module,exports){
+},{"./helpers":210,"lodash":27}],212:[function(require,module,exports){
 (function() {
   var HandlebarsLookups;
 
@@ -61990,7 +62020,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":27}],211:[function(require,module,exports){
+},{"lodash":27}],213:[function(require,module,exports){
 (function() {
   var HandlebarsManager;
 
@@ -62033,7 +62063,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":209,"./lookups":210,"handlebars":24,"lodash":27}],212:[function(require,module,exports){
+},{"./helpers":210,"./lookups":212,"handlebars":24,"lodash":27}],214:[function(require,module,exports){
 (function() {
   var HandlebarsMock;
 
@@ -62086,7 +62116,33 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":218,"./helpers":209,"./lookups":210,"lodash":27,"lodash-deep":26}],213:[function(require,module,exports){
+},{"../replacer":221,"./helpers":210,"./lookups":212,"lodash":27,"lodash-deep":26}],215:[function(require,module,exports){
+(function() {
+  var MomentHelpers;
+
+  MomentHelpers = (function() {
+    var HandlebarsHelpers, register;
+    HandlebarsHelpers = require('./helpers');
+    register = function() {
+      return HandlebarsHelpers.register('moment', function(raw_ctx, wrapped_ctx, args, opts) {
+        var methods;
+        methods = [];
+        _.each(args[0], function(param, method) {
+          return methods.push("" + method + "('" + param + "')");
+        });
+        return "moment(" + wrapped_ctx + ")." + (methods.join('.'));
+      });
+    };
+    return {
+      register: register
+    };
+  })();
+
+  module.exports = MomentHelpers;
+
+}).call(this);
+
+},{"./helpers":210}],216:[function(require,module,exports){
 (function() {
   var MainModel;
 
@@ -62153,7 +62209,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebars/mock":212,"./memory":214,"lodash":27,"lodash-deep":26,"traverse":204}],214:[function(require,module,exports){
+},{"./handlebars/mock":214,"./memory":217,"lodash":27,"lodash-deep":26,"traverse":204}],217:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -62208,7 +62264,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":27}],215:[function(require,module,exports){
+},{"lodash":27}],218:[function(require,module,exports){
 (function() {
   var Model;
 
@@ -62243,7 +62299,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./main_model":213,"./memory":214,"lodash":27}],216:[function(require,module,exports){
+},{"./main_model":216,"./memory":217,"lodash":27}],219:[function(require,module,exports){
 (function() {
   var Persistance;
 
@@ -62294,7 +62350,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":214,"./model":215,"./router":219,"databound":1,"lodash":27}],217:[function(require,module,exports){
+},{"./memory":217,"./model":218,"./router":222,"databound":1,"lodash":27}],220:[function(require,module,exports){
 (function() {
   var ReactMixin,
     __slice = [].slice;
@@ -62342,7 +62398,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":207,"./model":215,"./persistance":216,"./replacer":218,"./router":219,"lodash":27,"lodash-deep":26}],218:[function(require,module,exports){
+},{"./facebook":207,"./model":218,"./persistance":219,"./replacer":221,"./router":222,"lodash":27,"lodash-deep":26}],221:[function(require,module,exports){
 (function() {
   var Replacer;
 
@@ -62419,7 +62475,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"handlebars":24,"lodash":27}],219:[function(require,module,exports){
+},{"handlebars":24,"lodash":27}],222:[function(require,module,exports){
 (function() {
   var Router;
 
@@ -62483,22 +62539,20 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data":206,"./memory":214,"./ui":220,"lodash":27}],220:[function(require,module,exports){
+},{"./data":206,"./memory":217,"./ui":223,"lodash":27}],223:[function(require,module,exports){
 (function() {
   var UI;
 
   UI = (function() {
-    var $, Converter, Data, React, _;
-
-    React = require('react');
-
-    _ = require('lodash');
+    var $, Converter, React, _;
 
     $ = require('jquery');
 
-    Converter = require('./converter');
+    _ = require('lodash');
 
-    Data = require('./data');
+    React = require('react');
+
+    Converter = require('./converter');
 
     function UI(step) {
       this.step = step;
@@ -62585,7 +62639,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./converter":205,"./data":206,"jquery":25,"lodash":27,"react":203}],221:[function(require,module,exports){
+},{"./converter":205,"jquery":25,"lodash":27,"react":203}],224:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.

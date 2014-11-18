@@ -2,7 +2,9 @@ HandlebarsHelpers = (->
   _ = require 'lodash'
   Handlebars = require 'handlebars'
   Replacer = require '../replacer'
-  HandlebarsLookups = require './lookups'
+  LodashHelpers = require './lodash_helpers'
+  BaseHelpers = require './base_helpers'
+  MomentHelpers = require './moment_helpers'
 
   CONSTANTS =
     actions: ['create', 'update', 'destroy', 'previous', 'next', 'login']
@@ -11,9 +13,9 @@ HandlebarsHelpers = (->
     CONSTANTS[name]
 
   init = ->
-    lodash()
-    base()
-    moment()
+    LodashHelpers.register()
+    BaseHelpers.register()
+    MomentHelpers.register()
 
   register = (method, final_fn) ->
     Handlebars.registerHelper method, ->
@@ -84,75 +86,10 @@ HandlebarsHelpers = (->
 
     result.replace('this.state.', '')
 
-  lodash = ->
-    helpers = _.without(_.keys(_), constant('actions')...)
-
-    _.each helpers, (method) ->
-      register method, (raw_ctx, wrapped_ctx, args, opts) ->
-        if opts.fn
-          if _.isEmpty(args)
-            opts.fn.replace('this.state', "_.#{method}(#{wrapped_ctx})")
-          else
-            opts.fn.replace('this.state',
-              "_.#{method}(#{wrapped_ctx}, #{args.join(', ')})")
-        else
-          fn_args = [wrapped_ctx, args...]
-          "_.#{method}(#{fn_args.join(', ')})"
-
-  moment = ->
-    register 'moment', (raw_ctx, wrapped_ctx, args, opts) ->
-      methods = []
-
-      _.each args[0], (param, method) ->
-        methods.push("#{method}('#{param}')")
-
-      "moment(#{wrapped_ctx}).#{methods.join('.')}"
-
-  base = ->
-    register 'each', (raw_ctx, wrapped_ctx, args, opts) ->
-      HandlebarsLookups.addCollection(raw_ctx)
-
-      each_iteration = Replacer.replace opts.fn,
-        /this\.state\.(.+?)/, (attribute, initial) ->
-          "record.#{attribute}"
-
-      records_exist = "_.map(#{wrapped_ctx}, function(record, i) {\n" +
-      "return #{each_iteration}\n" +
-      '})'
-
-      if opts.inverse
-        "#{wrapped_ctx}.length ? (#{records_exist}) : (#{opts.inverse})"
-      else
-        records_exist
-
-    register 'if', (raw_ctx, wrapped_ctx, args, opts) ->
-      "#{wrapped_ctx} ? #{wrap(opts.fn || null)} : #{wrap(opts.inverse || null)}"
-
-    register 'with', (raw_ctx, wrapped_ctx, args, opts) ->
-      result = Replacer.replace opts.fn, /{this\.state\.(.+?)}/g,
-        (attribute, initial) ->
-
-          path = [raw_ctx, attribute].join('.')
-          HandlebarsLookups.add(path)
-          "{#{Replacer.addState(path)}}"
-
-      ACTION_PARTIAL_REGEX = /_\.partial\(this\.action\,\ &#x27;(.+?)&#x27;\)/g
-      result = Replacer.replace result, ACTION_PARTIAL_REGEX,
-        (attribute, initial) ->
-          path = [raw_ctx, attribute].join('.')
-          "#{Replacer.addAction(path)}"
-
-      result
-
-  wrap = (content) ->
-    return unless content
-
-    "<div>" +
-    content +
-    "</div>"
-
   return {
     init: init
+    constant: constant
+    register: register
   }
 )()
 
