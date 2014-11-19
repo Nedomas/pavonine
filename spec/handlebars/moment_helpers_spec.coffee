@@ -7,7 +7,7 @@ describe 'Moment.js helpers', ->
   describe 'format', ->
     it 'should return a formatted string', ->
       html = "{{moment message.created_at format='YYYY-MM-DD'}}"
-      expect(@compile(html)).to.equal(
+      expect(compile(html)).to.equal(
         "\n" +
         "<div>\n" +
         "{moment(this.state.message.created_at).format('YYYY-MM-DD')}\n" +
@@ -16,7 +16,7 @@ describe 'Moment.js helpers', ->
 
     it 'should work within blocks', ->
       html = "{{#each messages}}<p>Day: {{moment created_at format='DD'}}</p>{{/each}}"
-      expect(@compile(html)).to.equal(
+      expect(compile(html)).to.equal(
         "\n" +
         "<div>\n" +
         "{_.map(this.state.messages, function(record, i) {\n" +

@@ -56,8 +56,9 @@ gulp.task 'ugly', ->
 gulp.task 'test', ->
   global.expect = chai.expect
   gulp.src('./spec/**/*.coffee', read: false)
+  # gulp.src('./spec/compiler_spec.coffee', read: false)
   .pipe(mocha(
     reporter: 'spec'
-  ))
+  ).on("error", gutil.log))
 
 gulp.task 'build', ['coffee', 'jade', 'ugly', 'watch']

@@ -2,15 +2,16 @@
 (function() {
   var Compiler;
 
-  window.Compiler = Compiler = module.exports = (function() {
-    var LOADING_REGEX, LOGIN_REGEX, STEP_REGEX, findLoading, findLogin, hide, init, installMain, loading, login, loginContent, removeFromBody, scanSteps, show, stepContent, steps;
+  Compiler = module.exports = (function() {
+    var LOADING_REGEX, LOGIN_REGEX, STEP_REGEX, findLoading, findLogin, hide, init, installMain, removeFromBody, scan, scanSteps, show;
     STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?.+?[\s\S]*?){{\/step}}/g;
     LOGIN_REGEX = /{{\#login}}([\s\S]*?.+?[\s\S]*?){{\/login}}/g;
     LOADING_REGEX = /{{\#loading}}([\s\S]*?.+?[\s\S]*?){{\/loading}}/g;
-    steps = null;
-    login = {};
-    loading = {};
     init = function() {
+      return hide();
+    };
+    scan = function() {
+      window.PAVONINE_STEPS = {};
       scanSteps();
       findLogin();
       findLoading();
@@ -18,109 +19,70 @@
       installMain();
       return show();
     };
-    stepContent = function(i) {
-      var step, _i, _len;
-      for (_i = 0, _len = steps.length; _i < _len; _i++) {
-        step = steps[_i];
-        if (parseInt(step.step) === i) {
-          return step.content;
-        }
-      }
-      throw new Error("No step " + i);
-    };
-    loginContent = function() {
-      if (!login.content) {
-        throw new Error('No login step');
-      }
-      return login.content;
-    };
     hide = function() {
-      return document.write('<style class="hideBeforeCompilation" ' + 'type="text/css">body {display:none;}<\/style>');
+      return window.document.write('<style class="hideBeforeCompilation" ' + 'type="text/css">body {display:none;}<\/style>');
     };
     show = function() {
-      return document.body.style.display = 'block';
+      return window.document.body.style.display = 'block';
     };
     installMain = function() {
       var script;
-      script = document.createElement('script');
-      script.src = "" + PAVONINE_SERVER + "/cornflake.js";
-      return document.body.appendChild(script);
+      script = window.document.createElement('script');
+      script.src = "" + window.PAVONINE_SERVER + "/cornflake.js";
+      return window.document.body.appendChild(script);
     };
     removeFromBody = function() {
-      var step, _i, _len;
-      for (_i = 0, _len = steps.length; _i < _len; _i++) {
-        step = steps[_i];
-        document.body.innerHTML = document.body.innerHTML.replace(step.full_match, "<div step='" + step.step + "'></div>");
-      }
-      if (login.full_match) {
-        document.body.innerHTML = document.body.innerHTML.replace(login.full_match, "<div login=''></div>");
-      }
-      if (loading.full_match) {
-        return document.body.innerHTML = document.body.innerHTML.replace(loading.full_match, "<div loading=''></div>");
-      }
+      return console.log(window.PAVONINE_STEPS);
     };
     findLogin = function() {
       var code, content, full_match, matched;
-      code = document.body.innerHTML;
+      code = window.document.body.innerHTML;
       matched = LOGIN_REGEX.exec(code);
       if (matched) {
         full_match = matched[0];
         content = matched[1];
-        login = {
-          full_match: full_match,
-          content: content
-        };
+        return window.PAVONINE_STEPS.login = content;
       }
-      return login;
     };
     findLoading = function() {
       var code, content, full_match, matched;
-      code = document.body.innerHTML;
+      code = window.document.body.innerHTML;
       matched = LOADING_REGEX.exec(code);
       if (matched) {
         full_match = matched[0];
         content = matched[1];
-        loading = {
-          full_match: full_match,
-          content: content
-        };
+        return window.PAVONINE_STEPS.loading = content;
       }
-      return loading;
     };
     scanSteps = function() {
-      var code, content, full_match, matched, regexp, step;
-      code = document.body.innerHTML;
+      var code, content, full_match, matched, regexp, step, steps, _results;
+      code = window.document.body.innerHTML;
       steps = [];
       regexp = STEP_REGEX;
+      _results = [];
       while (true) {
         matched = regexp.exec(code);
         if (matched) {
           full_match = matched[0];
           step = matched[1];
           content = matched[2];
-          steps.push({
-            full_match: full_match,
-            step: step,
-            content: content
-          });
+          _results.push(window.PAVONINE_STEPS[step] = content);
         } else {
           break;
         }
       }
-      return steps;
+      return _results;
     };
     return {
       init: init,
-      hide: hide,
-      stepContent: stepContent,
-      loginContent: loginContent
+      scan: scan
     };
   })();
 
-  Compiler.hide();
+  Compiler.init();
 
   window.onload = function() {
-    return Compiler.init();
+    return Compiler.scan();
   };
 
 }).call(this);

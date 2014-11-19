@@ -17,10 +17,13 @@ class UI
     Converter.htmlToReactComponent(@klassName(), @content())()
 
   content: ->
-    if @step == 'login'
-      Compiler.loginContent()
-    else
-      Compiler.stepContent(@step)
+    _.each window.PAVONINE_STEPS, (content, key) ->
+      if key == @step
+        return content
+      else if parseInt(key) == @step
+        return content
+
+    throw new Error("No step '#{@step}'")
 
   render: ->
     @loading(true)
