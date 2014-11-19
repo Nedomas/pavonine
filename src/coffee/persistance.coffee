@@ -4,7 +4,6 @@ Persistance = module.exports = (->
   Databound.API_URL = window.PAVONINE_SERVER
 
   Model = require './model'
-  Router = require './router'
   Memory = require './memory'
 
   communicate = (action, attributes) ->

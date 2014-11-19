@@ -27,7 +27,10 @@ Data = (->
     Memory.has('current_user')
 
   getMissing = ->
-    $.when(_.map(missingVariables(), (variable) -> get(variable))...)
+    if missingVariables()
+      $.when(_.map(missingVariables(), (variable) -> get(variable))...)
+    else
+      Databound::promise(true)
 
   get = (name) ->
     Persistance = require './persistance'

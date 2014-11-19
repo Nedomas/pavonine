@@ -1,18 +1,11 @@
 Router = (->
-  Memory = require './memory'
   UI = require './ui'
   Data = require './data'
 
   step = 1
-
-  setCurrent = (_step) ->
-    step = _step
-
-  current = ->
-    step
+  return_to = 1
 
   change = (_step, dont_clean) ->
-    Memory.clean() unless dont_clean
     step = _step
 
     ui = new UI(step)
@@ -20,9 +13,9 @@ Router = (->
 
     Data.getMissing().then(->
       ui.render()
-      setCurrent(step)
     ).fail( (resp) ->
       if resp == 'login'
+        return_to = step
         change('login')
       else
         throw new Error "Server responded with error #{resp}"
@@ -35,10 +28,9 @@ Router = (->
     change(step + 1)
 
   goOn = ->
-    change(step, true)
+    change(return_to)
 
   return {
-    current: current
     change: change
     previous: previous
     next: next

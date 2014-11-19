@@ -6,14 +6,22 @@ Facebook = (->
   Memory = require './memory'
   Persistance = require './persistance'
 
-  init = ->
+  ensureInit = ->
+    deferred = $.Deferred()
+    _.once(init)(deferred)
+    deferred.promise()
+
+  init = (deferred) ->
     $.ajaxSetup
       cache: true
     $.getScript '//connect.facebook.net/en_UK/all.js', ->
       FB.init
-        appId: '776916785684160'
+        appId: window.PAVONINE_FB_APP_ID
         xfbml: true
         version: 'v2.1'
+
+      deferred.resolve true
+
 
   loggedIn = (resp) ->
     access_token = _.deepGet(resp, 'authResponse.accessToken')
@@ -27,10 +35,10 @@ Facebook = (->
       Router.goOn()
 
   login = ->
-    FB.login(loggedIn, scope: 'user_about_me')
+    ensureInit().then ->
+      FB.login(loggedIn, scope: 'user_about_me')
 
   return {
-    init: init
     login: login
   }
 )()

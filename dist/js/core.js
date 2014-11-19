@@ -61650,9 +61650,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return Memory.has('current_user');
     };
     getMissing = function() {
-      return $.when.apply($, _.map(missingVariables(), function(variable) {
-        return get(variable);
-      }));
+      if (missingVariables()) {
+        return $.when.apply($, _.map(missingVariables(), function(variable) {
+          return get(variable);
+        }));
+      } else {
+        return Databound.prototype.promise(true);
+      }
     };
     get = function(name) {
       var Persistance, attributes, for_request;
@@ -61699,23 +61703,30 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Facebook;
 
   Facebook = (function() {
-    var $, Memory, Persistance, Router, init, loggedIn, login, _;
+    var $, Memory, Persistance, Router, ensureInit, init, loggedIn, login, _;
     $ = require('jquery');
     _ = require('lodash');
     _.mixin(require('lodash-deep'));
     Router = require('./router');
     Memory = require('./memory');
     Persistance = require('./persistance');
-    init = function() {
+    ensureInit = function() {
+      var deferred;
+      deferred = $.Deferred();
+      _.once(init)(deferred);
+      return deferred.promise();
+    };
+    init = function(deferred) {
       $.ajaxSetup({
         cache: true
       });
       return $.getScript('//connect.facebook.net/en_UK/all.js', function() {
-        return FB.init({
-          appId: '776916785684160',
+        FB.init({
+          appId: window.PAVONINE_FB_APP_ID,
           xfbml: true,
           version: 'v2.1'
         });
+        return deferred.resolve(true);
       });
     };
     loggedIn = function(resp) {
@@ -61731,12 +61742,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       });
     };
     login = function() {
-      return FB.login(loggedIn, {
-        scope: 'user_about_me'
+      return ensureInit().then(function() {
+        return FB.login(loggedIn, {
+          scope: 'user_about_me'
+        });
       });
     };
     return {
-      init: init,
       login: login
     };
   })();
@@ -61756,8 +61768,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     Facebook = require('./facebook');
     init = function() {
       HandlebarsManager.init();
-      Router.change(1);
-      return Facebook.init();
+      return Router.change(1);
     };
     return {
       init: init
@@ -62318,12 +62329,11 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Persistance;
 
   Persistance = module.exports = (function() {
-    var Databound, Memory, Model, Router, act, communicate, _;
+    var Databound, Memory, Model, act, communicate, _;
     _ = require('lodash');
     Databound = require('databound');
     Databound.API_URL = window.PAVONINE_SERVER;
     Model = require('./model');
-    Router = require('./router');
     Memory = require('./memory');
     communicate = function(action, attributes) {
       var connection, model;
@@ -62361,7 +62371,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":217,"./model":218,"./router":222,"databound":1,"lodash":27}],220:[function(require,module,exports){
+},{"./memory":217,"./model":218,"databound":1,"lodash":27}],220:[function(require,module,exports){
 (function() {
   var ReactMixin,
     __slice = [].slice;
@@ -62491,30 +62501,22 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Router;
 
   Router = (function() {
-    var Data, Memory, UI, change, current, goOn, next, previous, setCurrent, step;
+    var Data, Memory, UI, change, goOn, next, previous, return_to, step;
     Memory = require('./memory');
     UI = require('./ui');
     Data = require('./data');
     step = 1;
-    setCurrent = function(_step) {
-      return step = _step;
-    };
-    current = function() {
-      return step;
-    };
+    return_to = 1;
     change = function(_step, dont_clean) {
       var ui;
-      if (!dont_clean) {
-        Memory.clean();
-      }
       step = _step;
       ui = new UI(step);
       ui.compile();
       return Data.getMissing().then(function() {
-        ui.render();
-        return setCurrent(step);
+        return ui.render();
       }).fail(function(resp) {
         if (resp === 'login') {
+          return_to = step;
           return change('login');
         } else {
           throw new Error("Server responded with error " + resp);
@@ -62528,10 +62530,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return change(step + 1);
     };
     goOn = function() {
-      return change(step, true);
+      return change(return_to);
     };
     return {
-      current: current,
       change: change,
       previous: previous,
       next: next,

@@ -6,7 +6,6 @@ Core = (->
   init = ->
     HandlebarsManager.init()
     Router.change(1)
-    Facebook.init()
 
   return {
     init: init
