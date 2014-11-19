@@ -2,7 +2,6 @@ Router = (->
   Memory = require './memory'
   UI = require './ui'
   Data = require './data'
-  _ = require 'lodash'
 
   step = 1
 
@@ -24,17 +23,15 @@ Router = (->
       setCurrent(step)
     ).fail( (resp) ->
       if resp == 'login'
-        change('login', step)
+        change('login')
       else
         throw new Error "Server responded with error #{resp}"
     )
 
   previous = (current_data) ->
-    Memory.set(current_data) if current_data
     change(step - 1)
 
   next = (current_data) ->
-    Memory.set(current_data) if current_data
     change(step + 1)
 
   goOn = ->

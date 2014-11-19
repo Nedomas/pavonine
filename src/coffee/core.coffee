@@ -4,7 +4,7 @@ Core = (->
   Facebook = require './facebook'
 
   init = ->
-    HandlebarsManager::init()
+    HandlebarsManager.init()
     Router.change(1)
     Facebook.init()
 

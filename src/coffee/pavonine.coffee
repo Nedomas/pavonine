@@ -55,6 +55,6 @@ Pavonine = (->
 Pavonine.init()
 
 window.onload = ->
-  Pavnine.scan()
+  Pavonine.scan()
 
 module.exports = Pavonine

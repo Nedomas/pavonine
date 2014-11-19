@@ -66,7 +66,7 @@
   Pavonine.init();
 
   window.onload = function() {
-    return Pavnine.scan();
+    return Pavonine.scan();
   };
 
   module.exports = Pavonine;

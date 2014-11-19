@@ -17,13 +17,7 @@ class UI
     Converter.htmlToReactComponent(@klassName(), @content())()
 
   content: ->
-    _.each window.PAVONINE_STEPS, (content, key) ->
-      if key == @step
-        return content
-      else if parseInt(key) == @step
-        return content
-
-    throw new Error("No step '#{@step}'")
+    window.PAVONINE_STEPS[@step] or throw new Error("No step '#{@step}'")
 
   render: ->
     @loading(true)

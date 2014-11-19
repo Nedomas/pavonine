@@ -39,7 +39,7 @@ gulp.task 'coffee', ->
     .pipe(gulp.dest('./dist/js/'))
 
   gulp
-    .src('./src/coffee/compiler.coffee')
+    .src('./src/coffee/core.coffee')
     .pipe(coffeeify())
     .pipe(gulp.dest('./dist/js/'))
 
@@ -51,6 +51,12 @@ gulp.task 'ugly', ->
     .pipe(rename('pavonine.min.js'))
     .pipe(gulp.dest('./dist/js/'))
 
+  gulp
+    .src('./src/coffee/core.coffee')
+    .pipe(coffeeify())
+    .pipe(uglify())
+    .pipe(rename('core.min.js'))
+    .pipe(gulp.dest('./dist/js/'))
 
 gulp.task 'test', ->
   global.expect = chai.expect
