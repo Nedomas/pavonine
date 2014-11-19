@@ -61756,7 +61756,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     Router = require('./router');
     Facebook = require('./facebook');
     init = function() {
-      HandlebarsManager.init();
+      HandlebarsManager.prototype.init();
       configure();
       Router.change(1);
       return Facebook.init();
@@ -61778,12 +61778,18 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var BaseHelpers;
 
   BaseHelpers = (function() {
-    var HandlebarsHelpers, HandlebarsLookups, Replacer, register;
-    HandlebarsHelpers = require('./helpers');
+    var HandlebarsLookups, Replacer, register, registerEach, registerIf, registerWith, wrap;
     HandlebarsLookups = require('./lookups');
     Replacer = require('../replacer');
     register = function() {
-      HandlebarsHelpers.register('each', function(raw_ctx, wrapped_ctx, args, opts) {
+      registerEach();
+      registerIf();
+      return registerWith();
+    };
+    registerEach = function() {
+      var HandlebarsHelpers;
+      HandlebarsHelpers = require('./helpers');
+      return HandlebarsHelpers.register('each', function(raw_ctx, wrapped_ctx, args, opts) {
         var each_iteration, records_exist;
         HandlebarsLookups.addCollection(raw_ctx);
         each_iteration = Replacer.replace(opts.fn, /this\.state\.(.+?)/, function(attribute, initial) {
@@ -61796,9 +61802,17 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           return records_exist;
         }
       });
-      HandlebarsHelpers.register('if', function(raw_ctx, wrapped_ctx, args, opts) {
+    };
+    registerIf = function() {
+      var HandlebarsHelpers;
+      HandlebarsHelpers = require('./helpers');
+      return HandlebarsHelpers.register('if', function(raw_ctx, wrapped_ctx, args, opts) {
         return "" + wrapped_ctx + " ? " + (wrap(opts.fn || null)) + " : " + (wrap(opts.inverse || null));
       });
+    };
+    registerWith = function() {
+      var HandlebarsHelpers;
+      HandlebarsHelpers = require('./helpers');
       return HandlebarsHelpers.register('with', function(raw_ctx, wrapped_ctx, args, opts) {
         var ACTION_PARTIAL_REGEX, result;
         result = Replacer.replace(opts.fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
@@ -61816,6 +61830,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         return result;
       });
     };
+    wrap = function(content) {
+      if (!content) {
+        return;
+      }
+      return "<div>" + content + "</div>";
+    };
     return {
       register: register
     };
@@ -61831,7 +61851,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     __slice = [].slice;
 
   HandlebarsHelpers = (function() {
-    var BaseHelpers, CONSTANTS, Handlebars, LodashHelpers, MomentHelpers, Replacer, constant, init, raw, register, wrap, wrapped, wrapped_state, _;
+    var BaseHelpers, CONSTANTS, Handlebars, LodashHelpers, MomentHelpers, Replacer, constant, init, raw, register, wrapped, wrapped_state, _;
     _ = require('lodash');
     Handlebars = require('handlebars');
     Replacer = require('../replacer');
@@ -61847,7 +61867,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     init = function() {
       LodashHelpers.register();
       BaseHelpers.register();
-      return MomentHelper.register();
+      return MomentHelpers.register();
     };
     register = function(method, final_fn) {
       return Handlebars.registerHelper(method, function() {
@@ -61913,12 +61933,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         result = from_ids;
       }
       return result.replace('this.state.', '');
-    };
-    wrap = function(content) {
-      if (!content) {
-        return;
-      }
-      return "<div>" + content + "</div>";
     };
     return {
       init: init,
@@ -62025,12 +62039,19 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var HandlebarsManager;
 
   HandlebarsManager = (function() {
-    var Handlebars, HandlebarsHelpers, HandlebarsLookups, init, patchCompiler, _;
+    var Handlebars, HandlebarsHelpers, HandlebarsLookups, _;
+
+    function HandlebarsManager() {}
+
     _ = require('lodash');
+
     Handlebars = require('handlebars');
+
     HandlebarsLookups = require('./lookups');
+
     HandlebarsHelpers = require('./helpers');
-    patchCompiler = function() {
+
+    HandlebarsManager.patchCompiler = function() {
       return Handlebars.JavaScriptCompiler.prototype.nameLookup = function(parent, name, type) {
         _.each(this.environment.opcodes, function(opcode) {
           var lookup;
@@ -62050,13 +62071,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         }
       };
     };
-    init = function() {
-      patchCompiler();
+
+    HandlebarsManager.init = function() {
+      this.patchCompiler();
       return HandlebarsHelpers.init();
     };
-    return {
-      init: init
-    };
+
+    return HandlebarsManager;
+
   })();
 
   module.exports = HandlebarsManager;
@@ -62121,9 +62143,11 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var MomentHelpers;
 
   MomentHelpers = (function() {
-    var HandlebarsHelpers, register;
-    HandlebarsHelpers = require('./helpers');
+    var register, _;
+    _ = require('lodash');
     register = function() {
+      var HandlebarsHelpers;
+      HandlebarsHelpers = require('./helpers');
       return HandlebarsHelpers.register('moment', function(raw_ctx, wrapped_ctx, args, opts) {
         var methods;
         methods = [];
@@ -62142,7 +62166,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":210}],216:[function(require,module,exports){
+},{"./helpers":210,"lodash":27}],216:[function(require,module,exports){
 (function() {
   var MainModel;
 
@@ -62571,11 +62595,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
 
     UI.prototype.content = function() {
-      if (this.step === 'login') {
-        return Compiler.loginContent();
-      } else {
-        return Compiler.stepContent(this.step);
-      }
+      _.each(window.PAVONINE_STEPS, function(content, key) {
+        if (key === this.step) {
+          return content;
+        } else if (parseInt(key) === this.step) {
+          return content;
+        }
+      });
+      throw new Error("No step '" + this.step + "'");
     };
 
     UI.prototype.render = function() {

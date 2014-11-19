@@ -3,8 +3,8 @@ global.compile = (html) ->
   result = Handlebars.compile(html, trackIds: true)()
   result?.string || result
 
+jsdom = require('jsdom')
 global.mockDOM = (body, fn) ->
-  jsdom = require('jsdom')
   jsdom.env(
     html: "<html><body>#{body}</body></html>"
     scripts: ['../bower_components/jquery/dist/jquery.min.js']
@@ -14,6 +14,9 @@ global.mockDOM = (body, fn) ->
 
       global.window = window
       window.PAVONINE_SERVER = 'http://pavonine-testing.com'
-      fn()
+
+      Compiler = require '../src/coffee/compiler'
+      fn(Compiler)
+
       window.close()
   )

@@ -1,23 +1,50 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function() {
-  var Compiler;
+  var Compiler,
+    __slice = [].slice;
 
   Compiler = module.exports = (function() {
-    var LOADING_REGEX, LOGIN_REGEX, STEP_REGEX, findLoading, findLogin, hide, init, installMain, removeFromBody, scan, scanSteps, show;
-    STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?.+?[\s\S]*?){{\/step}}/g;
-    LOGIN_REGEX = /{{\#login}}([\s\S]*?.+?[\s\S]*?){{\/login}}/g;
-    LOADING_REGEX = /{{\#loading}}([\s\S]*?.+?[\s\S]*?){{\/loading}}/g;
+    var CUSTOM_HELPERS, hide, init, installMain, regexScan, replace, scan, show;
+    CUSTOM_HELPERS = {
+      step: /{{\#step\ (\d+)}}([\s\S]*?.+?[\s\S]*?){{\/step}}/g,
+      login: /{{\#login}}([\s\S]*?.+?[\s\S]*?){{\/login}}/g,
+      loading: /{{\#loading}}([\s\S]*?.+?[\s\S]*?){{\/loading}}/g
+    };
     init = function() {
       return hide();
     };
     scan = function() {
+      var name, regex;
       window.PAVONINE_STEPS = {};
-      scanSteps();
-      findLogin();
-      findLoading();
-      removeFromBody();
+      for (name in CUSTOM_HELPERS) {
+        regex = CUSTOM_HELPERS[name];
+        regexScan(regex, function(full_match, content, value) {
+          window.PAVONINE_STEPS[value || name] = content;
+          return replace(full_match, "<div " + name + "='" + value + "'></div>");
+        });
+      }
+      console.log(window.PAVONINE_STEPS);
       installMain();
       return show();
+    };
+    regexScan = function(regex, fn) {
+      var code, content, full_match, matched, regexp, value, _i, _results;
+      code = window.document.body.innerHTML;
+      regexp = regex;
+      _results = [];
+      while (true) {
+        matched = regexp.exec(code);
+        if (matched) {
+          full_match = matched[0], value = 3 <= matched.length ? __slice.call(matched, 1, _i = matched.length - 1) : (_i = 1, []), content = matched[_i++];
+          _results.push(fn(full_match, content, value[0] || ''));
+        } else {
+          break;
+        }
+      }
+      return _results;
+    };
+    replace = function(full_match, replacement) {
+      return window.document.body.innerHTML = window.document.body.innerHTML.replace(full_match, replacement);
     };
     hide = function() {
       return window.document.write('<style class="hideBeforeCompilation" ' + 'type="text/css">body {display:none;}<\/style>');
@@ -30,48 +57,6 @@
       script = window.document.createElement('script');
       script.src = "" + window.PAVONINE_SERVER + "/cornflake.js";
       return window.document.body.appendChild(script);
-    };
-    removeFromBody = function() {
-      return console.log(window.PAVONINE_STEPS);
-    };
-    findLogin = function() {
-      var code, content, full_match, matched;
-      code = window.document.body.innerHTML;
-      matched = LOGIN_REGEX.exec(code);
-      if (matched) {
-        full_match = matched[0];
-        content = matched[1];
-        return window.PAVONINE_STEPS.login = content;
-      }
-    };
-    findLoading = function() {
-      var code, content, full_match, matched;
-      code = window.document.body.innerHTML;
-      matched = LOADING_REGEX.exec(code);
-      if (matched) {
-        full_match = matched[0];
-        content = matched[1];
-        return window.PAVONINE_STEPS.loading = content;
-      }
-    };
-    scanSteps = function() {
-      var code, content, full_match, matched, regexp, step, steps, _results;
-      code = window.document.body.innerHTML;
-      steps = [];
-      regexp = STEP_REGEX;
-      _results = [];
-      while (true) {
-        matched = regexp.exec(code);
-        if (matched) {
-          full_match = matched[0];
-          step = matched[1];
-          content = matched[2];
-          _results.push(window.PAVONINE_STEPS[step] = content);
-        } else {
-          break;
-        }
-      }
-      return _results;
     };
     return {
       init: init,

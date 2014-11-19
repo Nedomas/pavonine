@@ -1,7 +1,8 @@
 Compiler = module.exports = (->
-  STEP_REGEX = /{{\#step\ (\d+)}}([\s\S]*?.+?[\s\S]*?){{\/step}}/g
-  LOGIN_REGEX = /{{\#login}}([\s\S]*?.+?[\s\S]*?){{\/login}}/g
-  LOADING_REGEX = /{{\#loading}}([\s\S]*?.+?[\s\S]*?){{\/loading}}/g
+  CUSTOM_HELPERS =
+    step: /{{\#step\ (\d+)}}([\s\S]*?.+?[\s\S]*?){{\/step}}/g
+    login: /{{\#login}}([\s\S]*?.+?[\s\S]*?){{\/login}}/g
+    loading: /{{\#loading}}([\s\S]*?.+?[\s\S]*?){{\/loading}}/g
 
   init = ->
     hide()
@@ -9,12 +10,35 @@ Compiler = module.exports = (->
   scan = ->
     window.PAVONINE_STEPS = {}
 
-    scanSteps()
-    findLogin()
-    findLoading()
-    removeFromBody()
+#     regexScan STEP_REGEX, (full_match, step, content) ->
+#       window.PAVONINE_STEPS[step] = content
+#       replace(full_match, "<div step='#{step}'></div>")
+#
+    for name, regex of CUSTOM_HELPERS
+      regexScan regex, (full_match, content, value) ->
+        window.PAVONINE_STEPS[value || name] = content
+        replace(full_match, "<div #{name}='#{value}'></div>")
+
+    console.log window.PAVONINE_STEPS
     installMain()
     show()
+
+  regexScan = (regex, fn) ->
+    code = window.document.body.innerHTML
+    regexp = regex
+
+    loop
+      matched = regexp.exec(code)
+
+      if matched
+        [full_match, value..., content] = matched
+        fn(full_match, content, value[0] || '')
+      else
+        break
+
+  replace = (full_match, replacement) ->
+    window.document.body.innerHTML = window.document.body.innerHTML
+      .replace(full_match, replacement)
 
   hide = ->
     window.document.write('<style class="hideBeforeCompilation" ' +
@@ -27,57 +51,6 @@ Compiler = module.exports = (->
     script = window.document.createElement('script')
     script.src = "#{window.PAVONINE_SERVER}/cornflake.js"
     window.document.body.appendChild(script)
-
-  removeFromBody = ->
-    console.log window.PAVONINE_STEPS
-#     for step in steps
-#       document.body.innerHTML = document.body.innerHTML
-#         .replace(step.full_match, "<div step='#{step.step}'></div>")
-#
-#     if login.full_match
-#       document.body.innerHTML = document.body.innerHTML
-#         .replace(login.full_match, "<div login=''></div>")
-#
-#     if loading.full_match
-#       document.body.innerHTML = document.body.innerHTML
-#         .replace(loading.full_match, "<div loading=''></div>")
-
-  findLogin = ->
-    code = window.document.body.innerHTML
-    matched = LOGIN_REGEX.exec(code)
-
-    if matched
-      full_match = matched[0]
-      content = matched[1]
-
-      window.PAVONINE_STEPS.login = content
-
-  findLoading = ->
-    code = window.document.body.innerHTML
-    matched = LOADING_REGEX.exec(code)
-
-    if matched
-      full_match = matched[0]
-      content = matched[1]
-
-      window.PAVONINE_STEPS.loading = content
-
-  scanSteps = ->
-    code = window.document.body.innerHTML
-    steps = []
-    regexp = STEP_REGEX
-
-    loop
-      matched = regexp.exec(code)
-
-      if matched
-        full_match = matched[0]
-        step = matched[1]
-        content = matched[2]
-
-        window.PAVONINE_STEPS[step] = content
-      else
-        break
 
   return {
     init: init
