@@ -1,37 +1,37 @@
-describe 'Compiler', ->
+describe 'Pavonine', ->
   describe '#scan', ->
     it 'does not crash', ->
-      mockDOM '', (Compiler) ->
-        Compiler.scan()
+      mockDOM '', (Pavonine) ->
+        Pavonine.scan()
 
     describe 'finding', ->
       it 'finds first step correctly', ->
-        mockDOM '{{#step 1}}Hello{{/step}}', (Compiler) ->
-          Compiler.scan()
+        mockDOM '{{#step 1}}Hello{{/step}}', (Pavonine) ->
+          Pavonine.scan()
 
           expect(window.PAVONINE_STEPS[1]).to.eq('Hello')
 
       it 'finds login step correctly', ->
-        mockDOM '{{#login}}Please login{{/login}}', (Compiler) ->
-          Compiler.scan()
+        mockDOM '{{#login}}Please login{{/login}}', (Pavonine) ->
+          Pavonine.scan()
 
           expect(window.PAVONINE_STEPS.login).to.eq('Please login')
 
       it 'finds loading step correctly', ->
-        mockDOM '{{#loading}}Wait...{{/loading}}', (Compiler) ->
-          Compiler.scan()
+        mockDOM '{{#loading}}Wait...{{/loading}}', (Pavonine) ->
+          Pavonine.scan()
 
           expect(window.PAVONINE_STEPS.loading).to.eq('Wait...')
 
       it 'finds step correctly when nested in html', ->
-        mockDOM '<p>Header</p>{{#step 1}}Hello{{/step}}<span>Footer</span>', (Compiler) ->
-          Compiler.scan()
+        mockDOM '<p>Header</p>{{#step 1}}Hello{{/step}}<span>Footer</span>', (Pavonine) ->
+          Pavonine.scan()
 
           expect(window.PAVONINE_STEPS[1]).to.eq('Hello')
 
       it 'finds multiple steps in a row', ->
-        mockDOM '<p>Header</p>{{#step 1}}Hello{{/step}}{{#step 2}}Testing{{/step}}<span>Footer</span>', (Compiler) ->
-          Compiler.scan()
+        mockDOM '<p>Header</p>{{#step 1}}Hello{{/step}}{{#step 2}}Testing{{/step}}<span>Footer</span>', (Pavonine) ->
+          Pavonine.scan()
 
           expect(window.PAVONINE_STEPS[1]).to.eq('Hello')
           expect(window.PAVONINE_STEPS[2]).to.eq('Testing')
@@ -40,15 +40,15 @@ describe 'Compiler', ->
         html = '<p>Header</p>{{#step 1}}Hello{{/step}}\n' +
         '{{#step 2}}Testing{{/step}}<span>Footer</span>'
 
-        mockDOM html, (Compiler) ->
-          Compiler.scan()
+        mockDOM html, (Pavonine) ->
+          Pavonine.scan()
 
           expect(window.PAVONINE_STEPS[1]).to.eq('Hello')
           expect(window.PAVONINE_STEPS[2]).to.eq('Testing')
 
       it 'finds step with html markup', ->
-        mockDOM '{{#step 1}}<p>Hello</p>{{/step}}', (Compiler) ->
-          Compiler.scan()
+        mockDOM '{{#step 1}}<p>Hello</p>{{/step}}', (Pavonine) ->
+          Pavonine.scan()
 
           expect(window.PAVONINE_STEPS[1]).to.eq('<p>Hello</p>')
 
@@ -57,22 +57,22 @@ describe 'Compiler', ->
         html = '<p>Header</p>{{#step 1}}Hello{{/step}}\n' +
         '{{#step 2}}Testing{{/step}}<span>Footer</span>'
 
-        mockDOM html, (Compiler) ->
-          Compiler.scan()
+        mockDOM html, (Pavonine) ->
+          Pavonine.scan()
 
           expect(window.document.body.innerHTML).to.eq(
             '<p>Header</p><div step="1"></div>\n' +
-            '<div step="2"></div><span>Footer</span><script src="http://pavonine-testing.com/cornflake.js"></script>'
+            '<div step="2"></div><span>Footer</span><script src="http://pavonine-testing.com/core.js"></script>'
           )
 
       it 'puts login and loading', ->
         html = '<p>Header</p>{{#login}}Hello{{/login}}\n' +
         '{{#loading}}Testing{{/loading}}<span>Footer</span>'
 
-        mockDOM html, (Compiler) ->
-          Compiler.scan()
+        mockDOM html, (Pavonine) ->
+          Pavonine.scan()
 
           expect(window.document.body.innerHTML).to.eq(
             '<p>Header</p><div login=""></div>\n' +
-            '<div loading=""></div><span>Footer</span><script src="http://pavonine-testing.com/cornflake.js"></script>'
+            '<div loading=""></div><span>Footer</span><script src="http://pavonine-testing.com/core.js"></script>'
           )

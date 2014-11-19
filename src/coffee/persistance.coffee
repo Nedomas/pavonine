@@ -1,12 +1,11 @@
 Persistance = module.exports = (->
   _ = require 'lodash'
   Databound = require 'databound'
+  Databound.API_URL = window.PAVONINE_SERVER
+
   Model = require './model'
   Router = require './router'
   Memory = require './memory'
-
-  setApi = (api_url) ->
-    Databound.API_URL = api_url
 
   communicate = (action, attributes) ->
     throw new Error 'No model specified' unless attributes.model
@@ -32,7 +31,6 @@ Persistance = module.exports = (->
     communicate(action, attributes)
 
   return {
-    setApi: setApi
     act: act
     communicate: communicate
   }

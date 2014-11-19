@@ -1,4 +1,4 @@
-Compiler = module.exports = (->
+Pavonine = (->
   CUSTOM_HELPERS =
     step: /{{\#step\ (\d+)}}([\s\S]*?.+?[\s\S]*?){{\/step}}/g
     login: /{{\#login}}([\s\S]*?.+?[\s\S]*?){{\/login}}/g
@@ -10,16 +10,11 @@ Compiler = module.exports = (->
   scan = ->
     window.PAVONINE_STEPS = {}
 
-#     regexScan STEP_REGEX, (full_match, step, content) ->
-#       window.PAVONINE_STEPS[step] = content
-#       replace(full_match, "<div step='#{step}'></div>")
-#
     for name, regex of CUSTOM_HELPERS
       regexScan regex, (full_match, content, value) ->
         window.PAVONINE_STEPS[value || name] = content
         replace(full_match, "<div #{name}='#{value}'></div>")
 
-    console.log window.PAVONINE_STEPS
     installMain()
     show()
 
@@ -49,7 +44,7 @@ Compiler = module.exports = (->
 
   installMain = ->
     script = window.document.createElement('script')
-    script.src = "#{window.PAVONINE_SERVER}/cornflake.js"
+    script.src = "#{window.PAVONINE_SERVER}/core.js"
     window.document.body.appendChild(script)
 
   return {
@@ -57,7 +52,9 @@ Compiler = module.exports = (->
     scan: scan
   }
 )()
-Compiler.init()
+Pavonine.init()
 
 window.onload = ->
-  Compiler.scan()
+  Pavnine.scan()
+
+module.exports = Pavonine

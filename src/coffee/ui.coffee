@@ -11,7 +11,7 @@ class UI
     @react_component = @component()
 
   klassName: ->
-    "cornflake_#{@step}"
+    "pavonine_#{@step}"
 
   component: ->
     Converter.htmlToReactComponent(@klassName(), @content())()

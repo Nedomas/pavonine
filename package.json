@@ -1,8 +1,8 @@
 {
-  "name": "cornflake",
+  "name": "pavonine",
   "version": "0.0.1",
   "author": "Domas <domas.bitvinskas@me.com>",
-  "main": "dist/cornflake.js",
+  "main": "dist/pavonine.js",
   "dependencies": {
     "databound": "^0.1.0",
     "handlebars": "^2.0.0",

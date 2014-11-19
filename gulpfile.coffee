@@ -1,7 +1,6 @@
 gulp = require 'gulp'
 gutil = require 'gulp-util'
 watch = require 'gulp-watch'
-browserify = require 'browserify'
 coffeeify = require 'gulp-coffeeify'
 source = require 'vinyl-source-stream'
 concat = require 'gulp-concat'
@@ -35,7 +34,7 @@ gulp.task 'sass', ->
 
 gulp.task 'coffee', ->
   gulp
-    .src('./src/coffee/cornflake.coffee')
+    .src('./src/coffee/pavonine.coffee')
     .pipe(coffeeify())
     .pipe(gulp.dest('./dist/js/'))
 
@@ -46,17 +45,16 @@ gulp.task 'coffee', ->
 
 gulp.task 'ugly', ->
   gulp
-    .src('./src/coffee/cornflake.coffee')
+    .src('./src/coffee/pavonine.coffee')
     .pipe(coffeeify())
     .pipe(uglify())
-    .pipe(rename('cornflake.min.js'))
+    .pipe(rename('pavonine.min.js'))
     .pipe(gulp.dest('./dist/js/'))
 
 
 gulp.task 'test', ->
   global.expect = chai.expect
   gulp.src('./spec/**/*.coffee', read: false)
-  # gulp.src('./spec/compiler_spec.coffee', read: false)
   .pipe(mocha(
     reporter: 'spec'
   ).on("error", gutil.log))
