@@ -22,7 +22,6 @@ Facebook = (->
 
       deferred.resolve true
 
-
   loggedIn = (resp) ->
     access_token = _.deepGet(resp, 'authResponse.accessToken')
 

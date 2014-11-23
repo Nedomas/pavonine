@@ -11,6 +11,7 @@ Memory = (->
   getForever = (model) ->
     json = localStorage[model]
     return unless json
+
     data = JSON.parse(json)
     set(data)
 

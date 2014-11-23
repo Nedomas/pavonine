@@ -62350,9 +62350,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Model;
 
   Model = (function() {
-    var FilledModel, _;
-
-    _ = require('lodash');
+    var FilledModel;
 
     FilledModel = require('./filled_model');
 
@@ -62380,7 +62378,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./filled_model":210,"lodash":27}],220:[function(require,module,exports){
+},{"./filled_model":210}],220:[function(require,module,exports){
 (function() {
   var Persistance;
 

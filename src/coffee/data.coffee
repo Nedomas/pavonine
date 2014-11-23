@@ -27,6 +27,7 @@ Data = (->
 
   getMissing = ->
     return Databound::promise(true) if _.isEmpty(missingVariables())
+
     DataLoader.load(missingVariables())
 
   return {
