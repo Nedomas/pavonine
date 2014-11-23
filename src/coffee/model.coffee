@@ -1,6 +1,5 @@
 class Model
   _ = require 'lodash'
-  Memory = require './memory'
   FilledModel = require './filled_model'
 
   constructor: (@attributes) ->

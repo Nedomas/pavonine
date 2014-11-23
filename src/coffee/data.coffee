@@ -9,7 +9,7 @@ Data = (->
   missingVariables = ->
     result = missingCollections()
 
-    if used('current_user') and !userLoaded()
+    if used('current_user')
       result.push('current_user')
 
     _.uniq(result)
@@ -25,9 +25,6 @@ Data = (->
 
   used = (key) ->
     _.contains(HandlebarsLookups.getIndividual(), key)
-
-  userLoaded = ->
-    Memory.get('current_user')
 
   getMissing = ->
     return Databound::promise(true) if _.isEmpty(missingVariables())

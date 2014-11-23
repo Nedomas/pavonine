@@ -5,7 +5,6 @@ HandlebarsLookups = (->
   on_context = []
 
   add = (name) ->
-    debugger if _.isArray(name)
     individual.push(name)
 
   addCollection = (name) ->

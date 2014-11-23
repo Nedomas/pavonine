@@ -25,8 +25,9 @@ HandlebarsMock = (->
     lookups = HandlebarsLookups.getIndividual()
 
     _.each lookups, (lookup) ->
-      unless isAction(lookup)
-        _.deepSet(result, lookup, '')
+      return if isAction(lookup)
+
+      _.deepSet(result, lookup, '')
 
     result
 

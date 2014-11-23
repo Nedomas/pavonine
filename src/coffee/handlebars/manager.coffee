@@ -11,13 +11,10 @@ HandlebarsManager = (->
   patchCompiler = ->
     Handlebars.JavaScriptCompiler::nameLookup = (parent, name, type) ->
       _.each @environment.opcodes, (opcode) ->
-        if opcode.opcode == 'lookupOnContext'
-          lookup = opcode.args[0].join('.')
+        return unless opcode.opcode == 'lookupOnContext'
 
-          if lookup == 'facebook.login'
-            HandlebarsLookups.addOnContext(lookup)
-          else
-            HandlebarsLookups.addOnContext(name)
+        return if _.include(_.keys(Handlebars.helpers), name)
+        HandlebarsLookups.addOnContext(name)
 
       if Handlebars.JavaScriptCompiler.isValidJavaScriptVariableName(name)
         "#{parent}.#{name}"

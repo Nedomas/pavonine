@@ -12,33 +12,51 @@ class FilledModel
   fillAttributes: ->
     @attributes = {}
     @fillFromEmptyMock()
+    console.log 'after empty', _.pluck(@attributes.current_user.gym_sessions, 'squat')
     @fillFromMemory()
+    console.log 'after memory', _.pluck(@attributes.current_user.gym_sessions, 'squat')
 
   fillFromEmptyMock: ->
     _this = @
 
     _.each traverse(HandlebarsMock.getEmpty()).paths(), (path) ->
       return unless path.length
+
       _.deepSet(_this.attributes, Utils.pathString(path), '')
 
   fillFromMemory: ->
     _this = @
+
     _.each traverse(@attributes).paths(), (path) ->
-      value = Memory.get(Utils.pathString(path))
+      _this.fillPath(path)
 
-      unless _.isEmpty(value)
-        existing = _.deepGet(_this.attributes, Utils.pathString(path))
+  fillPath: (path) ->
+    return if _.isEmpty(@valueFromMemory(path))
 
-        if _.isObject(existing)
-          debugger if Utils.pathString(path) == 'current_user.gym_sessions'
-          _.each value, (val, key) ->
-            _.deepSet(_this.attributes, "#{Utils.pathString(path)}.#{key}", val)
+    if _.isObject(@existingValue(path))
+      @fillRelation(path)
+    else
+      @fillElementary(path)
 
-          _.each existing, (val, key) ->
-            if _.isObject(val) and !_.isArray(val)
-              relation_id_path = "#{Utils.pathString(path)}.#{key}.#{value.model}_id"
-              _.deepSet(_this.attributes, relation_id_path, value.id)
-        else
-          _.deepSet(_this.attributes, Utils.pathString(path), value)
+  fillRelation: (path) ->
+    _this = @
+
+    _.each @valueFromMemory(path), (val, key) ->
+      _.deepSet(_this.attributes, "#{Utils.pathString(path)}.#{key}", val)
+
+    _.each @existingValue(path), (val, key) ->
+      return unless _.isObject(val) and !_.isArray(val)
+
+      relation_id_path = "#{Utils.pathString(path)}.#{key}.#{_this.existingValue(path).model}_id"
+      _.deepSet(_this.attributes, relation_id_path, _this.existingValue(path).id)
+
+  fillElementary: (path) ->
+    _.deepSet(@attributes, Utils.pathString(path), @valueFromMemory(path))
+
+  valueFromMemory: (path) ->
+    Memory.get(Utils.pathString(path))
+
+  existingValue: (path) ->
+    _.deepGet(@attributes, Utils.pathString(path))
 
 module.exports = FilledModel

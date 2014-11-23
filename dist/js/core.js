@@ -61617,7 +61617,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     __slice = [].slice;
 
   Data = (function() {
-    var DataLoader, Databound, HandlebarsLookups, Memory, getMissing, missingCollections, missingVariables, used, userLoaded, _;
+    var DataLoader, Databound, HandlebarsLookups, Memory, getMissing, missingCollections, missingVariables, used, _;
     _ = require('lodash');
     Databound = require('databound');
     HandlebarsLookups = require('./handlebars/lookups');
@@ -61626,7 +61626,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     missingVariables = function() {
       var result;
       result = missingCollections();
-      if (used('current_user') && !userLoaded()) {
+      if (used('current_user')) {
         result.push('current_user');
       }
       return _.uniq(result);
@@ -61645,9 +61645,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
     used = function(key) {
       return _.contains(HandlebarsLookups.getIndividual(), key);
-    };
-    userLoaded = function() {
-      return Memory.get('current_user');
     };
     getMissing = function() {
       if (_.isEmpty(missingVariables())) {
@@ -61827,7 +61824,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     FilledModel.prototype.fillAttributes = function() {
       this.attributes = {};
       this.fillFromEmptyMock();
-      return this.fillFromMemory();
+      console.log('after empty', _.pluck(this.attributes.current_user.gym_sessions, 'squat'));
+      this.fillFromMemory();
+      return console.log('after memory', _.pluck(this.attributes.current_user.gym_sessions, 'squat'));
     };
 
     FilledModel.prototype.fillFromEmptyMock = function() {
@@ -61845,29 +61844,47 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       var _this;
       _this = this;
       return _.each(traverse(this.attributes).paths(), function(path) {
-        var existing, value;
-        value = Memory.get(Utils.pathString(path));
-        if (!_.isEmpty(value)) {
-          existing = _.deepGet(_this.attributes, Utils.pathString(path));
-          if (_.isObject(existing)) {
-            if (Utils.pathString(path) === 'current_user.gym_sessions') {
-              debugger;
-            }
-            _.each(value, function(val, key) {
-              return _.deepSet(_this.attributes, "" + (Utils.pathString(path)) + "." + key, val);
-            });
-            return _.each(existing, function(val, key) {
-              var relation_id_path;
-              if (_.isObject(val) && !_.isArray(val)) {
-                relation_id_path = "" + (Utils.pathString(path)) + "." + key + "." + value.model + "_id";
-                return _.deepSet(_this.attributes, relation_id_path, value.id);
-              }
-            });
-          } else {
-            return _.deepSet(_this.attributes, Utils.pathString(path), value);
-          }
-        }
+        return _this.fillPath(path);
       });
+    };
+
+    FilledModel.prototype.fillPath = function(path) {
+      if (_.isEmpty(this.valueFromMemory(path))) {
+        return;
+      }
+      if (_.isObject(this.existingValue(path))) {
+        return this.fillRelation(path);
+      } else {
+        return this.fillElementary(path);
+      }
+    };
+
+    FilledModel.prototype.fillRelation = function(path) {
+      var _this;
+      _this = this;
+      _.each(this.valueFromMemory(path), function(val, key) {
+        return _.deepSet(_this.attributes, "" + (Utils.pathString(path)) + "." + key, val);
+      });
+      return _.each(this.existingValue(path), function(val, key) {
+        var relation_id_path;
+        if (!(_.isObject(val) && !_.isArray(val))) {
+          return;
+        }
+        relation_id_path = "" + (Utils.pathString(path)) + "." + key + "." + (_this.existingValue(path).model) + "_id";
+        return _.deepSet(_this.attributes, relation_id_path, _this.existingValue(path).id);
+      });
+    };
+
+    FilledModel.prototype.fillElementary = function(path) {
+      return _.deepSet(this.attributes, Utils.pathString(path), this.valueFromMemory(path));
+    };
+
+    FilledModel.prototype.valueFromMemory = function(path) {
+      return Memory.get(Utils.pathString(path));
+    };
+
+    FilledModel.prototype.existingValue = function(path) {
+      return _.deepGet(this.attributes, Utils.pathString(path));
     };
 
     return FilledModel;
@@ -62098,9 +62115,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     collection = [];
     on_context = [];
     add = function(name) {
-      if (_.isArray(name)) {
-        debugger;
-      }
       return individual.push(name);
     };
     addCollection = function(name) {
@@ -62156,15 +62170,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     patchCompiler = function() {
       return Handlebars.JavaScriptCompiler.prototype.nameLookup = function(parent, name, type) {
         _.each(this.environment.opcodes, function(opcode) {
-          var lookup;
-          if (opcode.opcode === 'lookupOnContext') {
-            lookup = opcode.args[0].join('.');
-            if (lookup === 'facebook.login') {
-              return HandlebarsLookups.addOnContext(lookup);
-            } else {
-              return HandlebarsLookups.addOnContext(name);
-            }
+          if (opcode.opcode !== 'lookupOnContext') {
+            return;
           }
+          if (_.include(_.keys(Handlebars.helpers), name)) {
+            return;
+          }
+          return HandlebarsLookups.addOnContext(name);
         });
         if (Handlebars.JavaScriptCompiler.isValidJavaScriptVariableName(name)) {
           return "" + parent + "." + name;
@@ -62211,9 +62223,10 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       result = {};
       lookups = HandlebarsLookups.getIndividual();
       _.each(lookups, function(lookup) {
-        if (!isAction(lookup)) {
-          return _.deepSet(result, lookup, '');
+        if (isAction(lookup)) {
+          return;
         }
+        return _.deepSet(result, lookup, '');
       });
       return result;
     };
@@ -62325,11 +62338,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Model;
 
   Model = (function() {
-    var FilledModel, Memory, _;
+    var FilledModel, _;
 
     _ = require('lodash');
-
-    Memory = require('./memory');
 
     FilledModel = require('./filled_model');
 
@@ -62357,7 +62368,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./filled_model":210,"./memory":218,"lodash":27}],220:[function(require,module,exports){
+},{"./filled_model":210,"lodash":27}],220:[function(require,module,exports){
 (function() {
   var Persistance;
 
