@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Nedomas/pavonine.svg)](https://travis-ci.org/Nedomas/pavonine)
+
 # Pavonine
 Backend as a service
 
