@@ -2,12 +2,9 @@ gulp = require 'gulp'
 gutil = require 'gulp-util'
 watch = require 'gulp-watch'
 coffeeify = require 'gulp-coffeeify'
-source = require 'vinyl-source-stream'
 concat = require 'gulp-concat'
 uglify = require 'gulp-uglify'
 rename = require 'gulp-rename'
-jade = require 'gulp-jade'
-sass = require 'gulp-sass'
 mocha = require 'gulp-mocha'
 chai  = require 'chai'
 sinon = require 'sinon'
@@ -19,7 +16,6 @@ gulp.task 'watch', ->
   gulp.watch('./src/coffee/**/*.coffee', ['coffee'])
   gulp.watch('./node_modules/**/*.js', ['coffee'])
   gulp.watch('./src/jade/*.jade', ['jade'])
-  gulp.watch('./src/scss/*.scss', ['sass'])
   gulp.watch('./test/**/*.coffee', ['test'])
 
 gulp.task 'jade', ->
