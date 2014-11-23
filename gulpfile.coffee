@@ -10,6 +10,8 @@ jade = require 'gulp-jade'
 sass = require 'gulp-sass'
 mocha = require 'gulp-mocha'
 chai  = require 'chai'
+sinon = require 'sinon'
+sinonChai = require 'sinon-chai'
 
 gulp.task 'default', ['build']
 
@@ -59,6 +61,7 @@ gulp.task 'ugly', ->
     .pipe(gulp.dest('./dist/js/'))
 
 gulp.task 'test', ->
+  chai.use(sinonChai)
   global.expect = chai.expect
   gulp.src('./spec/**/*.coffee', read: false)
   .pipe(mocha(

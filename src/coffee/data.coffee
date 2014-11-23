@@ -9,8 +9,7 @@ Data = (->
   missingVariables = ->
     result = missingCollections()
 
-    if used('current_user')
-      result.push('current_user')
+    result.push('current_user') if used('current_user')
 
     _.uniq(result)
 

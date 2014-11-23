@@ -61824,9 +61824,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     FilledModel.prototype.fillAttributes = function() {
       this.attributes = {};
       this.fillFromEmptyMock();
-      console.log('after empty', _.pluck(this.attributes.current_user.gym_sessions, 'squat'));
-      this.fillFromMemory();
-      return console.log('after memory', _.pluck(this.attributes.current_user.gym_sessions, 'squat'));
+      return this.fillFromMemory();
     };
 
     FilledModel.prototype.fillFromEmptyMock = function() {
@@ -61862,17 +61860,33 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     FilledModel.prototype.fillRelation = function(path) {
       var _this;
       _this = this;
-      _.each(this.valueFromMemory(path), function(val, key) {
+      this.overrideFromMemory(path);
+      return this.addRelationIds(path);
+    };
+
+    FilledModel.prototype.overrideFromMemory = function(path) {
+      var _this;
+      _this = this;
+      return _.each(this.valueFromMemory(path), function(val, key) {
         return _.deepSet(_this.attributes, "" + (Utils.pathString(path)) + "." + key, val);
       });
+    };
+
+    FilledModel.prototype.addRelationIds = function(path) {
+      var _this;
+      _this = this;
       return _.each(this.existingValue(path), function(val, key) {
-        var relation_id_path;
         if (!(_.isObject(val) && !_.isArray(val))) {
           return;
         }
-        relation_id_path = "" + (Utils.pathString(path)) + "." + key + "." + (_this.existingValue(path).model) + "_id";
-        return _.deepSet(_this.attributes, relation_id_path, _this.existingValue(path).id);
+        return _this.addRelationId(path, key, val);
       });
+    };
+
+    FilledModel.prototype.addRelationId = function(path, key, val) {
+      var relation_id_path;
+      relation_id_path = "" + (Utils.pathString(path)) + "." + key + "." + (this.existingValue(path).model) + "_id";
+      return _.deepSet(this.attributes, relation_id_path, this.existingValue(path).id);
     };
 
     FilledModel.prototype.fillElementary = function(path) {
@@ -62328,8 +62342,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   })();
 
   module.exports = Memory;
-
-  window.M = Memory;
 
 }).call(this);
 

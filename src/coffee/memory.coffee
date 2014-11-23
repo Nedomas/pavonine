@@ -42,4 +42,4 @@ Memory = (->
 )()
 
 module.exports = Memory
-window.M = Memory
+# window.M = Memory

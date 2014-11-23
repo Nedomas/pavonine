@@ -12,9 +12,7 @@ class FilledModel
   fillAttributes: ->
     @attributes = {}
     @fillFromEmptyMock()
-    console.log 'after empty', _.pluck(@attributes.current_user.gym_sessions, 'squat')
     @fillFromMemory()
-    console.log 'after memory', _.pluck(@attributes.current_user.gym_sessions, 'squat')
 
   fillFromEmptyMock: ->
     _this = @
@@ -41,14 +39,26 @@ class FilledModel
   fillRelation: (path) ->
     _this = @
 
+    @overrideFromMemory(path)
+    @addRelationIds(path)
+
+  overrideFromMemory: (path) ->
+    _this = @
+
     _.each @valueFromMemory(path), (val, key) ->
       _.deepSet(_this.attributes, "#{Utils.pathString(path)}.#{key}", val)
+
+  addRelationIds: (path) ->
+    _this = @
 
     _.each @existingValue(path), (val, key) ->
       return unless _.isObject(val) and !_.isArray(val)
 
-      relation_id_path = "#{Utils.pathString(path)}.#{key}.#{_this.existingValue(path).model}_id"
-      _.deepSet(_this.attributes, relation_id_path, _this.existingValue(path).id)
+      _this.addRelationId(path, key, val)
+
+  addRelationId: (path, key, val) ->
+    relation_id_path = "#{Utils.pathString(path)}.#{key}.#{@existingValue(path).model}_id"
+    _.deepSet(@attributes, relation_id_path, @existingValue(path).id)
 
   fillElementary: (path) ->
     _.deepSet(@attributes, Utils.pathString(path), @valueFromMemory(path))
