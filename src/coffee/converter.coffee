@@ -41,20 +41,6 @@ Converter = (->
     jsx_code = Replacer.splice(jsx_code, render_index, 0,
       'mixins: [ReactMixin],\n  ')
 
-    # result =
-    #   l('/** @jsx React.DOM */') +
-    #   l("var #{klass_name} = React.createClass({") +
-    #   l('  mixins: [CoreMixin],') +
-    #   l('  render: function() {') +
-    #   l('    return (') +
-    #   l("      #{html}") +
-    #   l('    );') +
-    #   l('  }') +
-    #   l('});')
-#
-#   l = (code) ->
-#     "#{code}\n"
-
   INNER_BODY_REGEX = /<body>([\s\S]*?.*[\s\S*?])<\/body>/
 
   toXHTML = (input) ->

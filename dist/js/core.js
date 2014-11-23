@@ -61611,24 +61611,29 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":224,"./handlebars/lookups":212,"./handlebars/mock":214,"./react_mixin":220,"./replacer":221,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":226,"./handlebars/lookups":213,"./handlebars/mock":215,"./react_mixin":221,"./replacer":222,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
 (function() {
   var Data,
     __slice = [].slice;
 
   Data = (function() {
-    var $, Databound, HandlebarsLookups, Memory, failedPromise, get, getMissing, loggedIn, missing, missingVariables, singularize, used, _;
+    var DataLoader, Databound, HandlebarsLookups, Memory, getMissing, missingCollections, missingVariables, used, userLoaded, _;
     _ = require('lodash');
-    HandlebarsLookups = require('./handlebars/lookups');
     Databound = require('databound');
+    HandlebarsLookups = require('./handlebars/lookups');
     Memory = require('./memory');
-    $ = require('jquery');
+    DataLoader = require('./data_loader');
     missingVariables = function() {
       var result;
-      result = [];
-      if (used('current_user') && !loggedIn()) {
+      result = missingCollections();
+      if (used('current_user') && !userLoaded()) {
         result.push('current_user');
       }
+      return _.uniq(result);
+    };
+    missingCollections = function() {
+      var result;
+      result = [];
       _.each(HandlebarsLookups.getCollection(), function(lookup) {
         var owner, path, _ref;
         _ref = lookup.split('.'), owner = _ref[0], path = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
@@ -61636,59 +61641,21 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           return result.push(owner);
         }
       });
-      return _.uniq(result);
-    };
-    missing = function() {
-      return !_.isEmpty(missingVariables());
+      return result;
     };
     used = function(key) {
-      return _.any(HandlebarsLookups.getIndividual(), function(lookup) {
-        return lookup === key;
-      });
+      return _.contains(HandlebarsLookups.getIndividual(), key);
     };
-    loggedIn = function() {
-      return Memory.has('current_user');
+    userLoaded = function() {
+      return Memory.get('current_user');
     };
     getMissing = function() {
-      if (missingVariables()) {
-        return $.when.apply($, _.map(missingVariables(), function(variable) {
-          return get(variable);
-        }));
-      } else {
+      if (_.isEmpty(missingVariables())) {
         return Databound.prototype.promise(true);
       }
-    };
-    get = function(name) {
-      var Persistance, attributes, for_request;
-      Persistance = require('./persistance');
-      if (name === 'current_user') {
-        if (attributes = Memory.getForever('current_user')) {
-          for_request = _.pick(attributes, 'id', 'access_token', 'model');
-          return Persistance.communicate('update', for_request).then(function(current_user) {
-            Memory.setForever(current_user.attributes);
-            return Databound.prototype.promise(true);
-          });
-        } else {
-          return failedPromise('login');
-        }
-      } else {
-        attributes = {
-          model: singularize(name)
-        };
-        return Persistance.communicate('where', attributes);
-      }
-    };
-    singularize = function(string) {
-      return string.replace(/s$/, '');
-    };
-    failedPromise = function(result) {
-      var deferred;
-      deferred = $.Deferred();
-      deferred.reject(result);
-      return deferred.promise();
+      return DataLoader.load(missingVariables());
     };
     return {
-      missing: missing,
       missingVariables: missingVariables,
       getMissing: getMissing
     };
@@ -61698,7 +61665,60 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebars/lookups":212,"./memory":217,"./persistance":219,"databound":1,"jquery":25,"lodash":27}],207:[function(require,module,exports){
+},{"./data_loader":207,"./handlebars/lookups":213,"./memory":218,"databound":1,"lodash":27}],207:[function(require,module,exports){
+(function() {
+  var DataLoader;
+
+  DataLoader = (function() {
+    var $, Databound, Memory, Persistance, Utils, currentUserTokens, load, loadCurrentUser, loadSingle, _;
+    Databound = require('databound');
+    $ = require('jquery');
+    _ = require('lodash');
+    Persistance = require('./persistance');
+    Utils = require('./utils');
+    Memory = require('./memory');
+    load = function(missings) {
+      return $.when.apply($, _.map(missings, function(missing) {
+        return loadSingle(missing);
+      }));
+    };
+    loadSingle = function(name) {
+      var attributes;
+      if (name === 'current_user') {
+        return loadCurrentUser();
+      }
+      attributes = {
+        model: Utils.singularize(name)
+      };
+      return Persistance.communicate('where', attributes);
+    };
+    loadCurrentUser = function() {
+      if (!currentUserTokens()) {
+        return Utils.failedPromise('login');
+      }
+      return Persistance.communicate('update', currentUserTokens()).then(function(current_user) {
+        Memory.setForever(current_user.attributes);
+        return Databound.prototype.promise(true);
+      });
+    };
+    currentUserTokens = function() {
+      var from_storage;
+      from_storage = Memory.getForever('current_user');
+      if (_.isEmpty(from_storage)) {
+        return;
+      }
+      return _.pick(from_storage, 'id', 'access_token', 'model');
+    };
+    return {
+      load: load
+    };
+  })();
+
+  module.exports = DataLoader;
+
+}).call(this);
+
+},{"./memory":218,"./persistance":220,"./utils":225,"databound":1,"jquery":25,"lodash":27}],208:[function(require,module,exports){
 (function() {
   var Facebook;
 
@@ -61757,7 +61777,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":217,"./persistance":219,"./router":222,"jquery":25,"lodash":27,"lodash-deep":26}],208:[function(require,module,exports){
+},{"./memory":218,"./persistance":220,"./router":223,"jquery":25,"lodash":27,"lodash-deep":26}],209:[function(require,module,exports){
 (function() {
   var Core;
 
@@ -61781,7 +61801,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":207,"./handlebars/manager":213,"./router":222}],209:[function(require,module,exports){
+},{"./facebook":208,"./handlebars/manager":214,"./router":223}],210:[function(require,module,exports){
 (function() {
   var BaseHelpers;
 
@@ -61853,7 +61873,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":221,"./helpers":210,"./lookups":212}],210:[function(require,module,exports){
+},{"../replacer":222,"./helpers":211,"./lookups":213}],211:[function(require,module,exports){
 (function() {
   var HandlebarsHelpers,
     __slice = [].slice;
@@ -61953,7 +61973,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":221,"./base_helpers":209,"./lodash_helpers":211,"./mock":214,"./moment_helpers":215,"handlebars":24,"lodash":27}],211:[function(require,module,exports){
+},{"../replacer":222,"./base_helpers":210,"./lodash_helpers":212,"./mock":215,"./moment_helpers":216,"handlebars":24,"lodash":27}],212:[function(require,module,exports){
 (function() {
   var LodashHelpers,
     __slice = [].slice;
@@ -61990,7 +62010,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":210,"lodash":27}],212:[function(require,module,exports){
+},{"./helpers":211,"lodash":27}],213:[function(require,module,exports){
 (function() {
   var HandlebarsLookups;
 
@@ -62042,7 +62062,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":27}],213:[function(require,module,exports){
+},{"lodash":27}],214:[function(require,module,exports){
 (function() {
   var HandlebarsManager;
 
@@ -62086,7 +62106,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":210,"./lookups":212,"handlebars":24,"lodash":27}],214:[function(require,module,exports){
+},{"./helpers":211,"./lookups":213,"handlebars":24,"lodash":27}],215:[function(require,module,exports){
 (function() {
   var HandlebarsMock;
 
@@ -62139,7 +62159,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":221,"./helpers":210,"./lookups":212,"lodash":27,"lodash-deep":26}],215:[function(require,module,exports){
+},{"../replacer":222,"./helpers":211,"./lookups":213,"lodash":27,"lodash-deep":26}],216:[function(require,module,exports){
 (function() {
   var MomentHelpers;
 
@@ -62167,7 +62187,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":210,"lodash":27}],216:[function(require,module,exports){
+},{"./helpers":211,"lodash":27}],217:[function(require,module,exports){
 (function() {
   var MainModel;
 
@@ -62234,13 +62254,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebars/mock":214,"./memory":217,"lodash":27,"lodash-deep":26,"traverse":204}],217:[function(require,module,exports){
+},{"./handlebars/mock":215,"./memory":218,"lodash":27,"lodash-deep":26,"traverse":204}],218:[function(require,module,exports){
 (function() {
   var Memory;
 
-  Memory = module.exports = (function() {
-    var app_data, clean, get, getAll, getForever, has, set, setArray, setForever, _;
-    _ = require('lodash');
+  Memory = (function() {
+    var app_data, clean, get, getAll, getForever, has, set, setArray, setForever;
     app_data = {};
     set = function(data) {
       return app_data[data.model] = data;
@@ -62262,7 +62281,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return app_data[name] = records;
     };
     get = function(model) {
-      return app_data[model] || {};
+      return app_data[model];
     };
     getAll = function() {
       return app_data;
@@ -62285,11 +62304,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
   })();
 
+  module.exports = Memory;
+
   window.M = Memory;
 
 }).call(this);
 
-},{"lodash":27}],218:[function(require,module,exports){
+},{}],219:[function(require,module,exports){
 (function() {
   var Model;
 
@@ -62324,7 +62345,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./main_model":216,"./memory":217,"lodash":27}],219:[function(require,module,exports){
+},{"./main_model":217,"./memory":218,"lodash":27}],220:[function(require,module,exports){
 (function() {
   var Persistance;
 
@@ -62371,7 +62392,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":217,"./model":218,"databound":1,"lodash":27}],220:[function(require,module,exports){
+},{"./memory":218,"./model":219,"databound":1,"lodash":27}],221:[function(require,module,exports){
 (function() {
   var ReactMixin,
     __slice = [].slice;
@@ -62419,7 +62440,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":207,"./model":218,"./persistance":219,"./replacer":221,"./router":222,"lodash":27,"lodash-deep":26}],221:[function(require,module,exports){
+},{"./facebook":208,"./model":219,"./persistance":220,"./replacer":222,"./router":223,"lodash":27,"lodash-deep":26}],222:[function(require,module,exports){
 (function() {
   var Replacer;
 
@@ -62496,13 +62517,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"handlebars":24,"lodash":27}],222:[function(require,module,exports){
+},{"handlebars":24,"lodash":27}],223:[function(require,module,exports){
 (function() {
   var Router;
 
   Router = (function() {
-    var Data, Memory, UI, change, goOn, next, previous, return_to, step;
-    Memory = require('./memory');
+    var Data, UI, change, goOn, next, previous, return_to, step;
     UI = require('./ui');
     Data = require('./data');
     step = 1;
@@ -62544,7 +62564,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data":206,"./memory":217,"./ui":223}],223:[function(require,module,exports){
+},{"./data":206,"./ui":224}],224:[function(require,module,exports){
 (function() {
   var UI;
 
@@ -62642,7 +62662,33 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./converter":205,"jquery":25,"lodash":27,"react":203}],224:[function(require,module,exports){
+},{"./converter":205,"jquery":25,"lodash":27,"react":203}],225:[function(require,module,exports){
+(function() {
+  var Utils;
+
+  Utils = (function() {
+    var $, failedPromise, singularize;
+    $ = require('jquery');
+    failedPromise = function(result) {
+      var deferred;
+      deferred = $.Deferred();
+      deferred.reject(result);
+      return deferred.promise();
+    };
+    singularize = function(string) {
+      return string.replace(/s$/, '');
+    };
+    return {
+      failedPromise: failedPromise,
+      singularize: singularize
+    };
+  })();
+
+  module.exports = Utils;
+
+}).call(this);
+
+},{"jquery":25}],226:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.
@@ -62653,4 +62699,4 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 	 *
 	 */
 "use strict";function e(t,e){if(1===e)return t;if(0>e)throw new Error;for(var n="";e;)1&e&&(n+=t),(e>>=1)&&(t+=t);return n}function n(t,e){return t.slice(-e.length)===e}function i(t,e){return n(t,e)?t.slice(0,-e.length):t}function s(t){return t.replace(/-(.)/g,function(t,e){return e.toUpperCase()})}function o(t){return!/[^\s]/.test(t)}function r(t){return void 0!==t&&null!==t&&("number"==typeof t||parseInt(t,10)==t)}var u={ELEMENT:1,TEXT:3,COMMENT:8},c={"for":"htmlFor","class":"className"},h=function(t){this.config=t||{},void 0===this.config.createClass&&(this.config.createClass=!0),this.config.indent||(this.config.indent="  "),this.config.outputClassName||(this.config.outputClassName="NewComponent")};h.prototype={reset:function(){this.output="",this.level=0},convert:function(t){this.reset();var e,e;return e=document.createElement("div"),e.innerHTML="\n"+this._cleanInput(t)+"\n",this.config.createClass&&(this.output=this.config.outputClassName?"var "+this.config.outputClassName+" = React.createClass({\n":"React.createClass({\n",this.output+=this.config.indent+"render: function() {\n",this.output+=this.config.indent+this.config.indent+"return (\n"),this._onlyOneTopLevel(e)?this._traverse(e):(this.output+=this.config.indent+this.config.indent+this.config.indent,this.level++,this._visit(e)),this.output=this.output.trim()+"\n",this.config.createClass&&(this.output+=this.config.indent+this.config.indent+");\n",this.output+=this.config.indent+"}\n",this.output+="});"),this.output},_cleanInput:function(t){return t=t.trim(),t=t.replace(/<script([\s\S]*?)<\/script>/g,"")},_onlyOneTopLevel:function(t){if(1===t.childNodes.length&&t.childNodes[0].nodeType===u.ELEMENT)return!0;for(var e=!1,n=0,i=t.childNodes.length;i>n;n++){var s=t.childNodes[n];if(s.nodeType===u.ELEMENT){if(e)return!1;e=!0}else if(s.nodeType===u.TEXT&&!o(s.textContent))return!1}return!0},_getIndentedNewline:function(){return"\n"+e(this.config.indent,this.level+2)},_visit:function(t){this._beginVisit(t),this._traverse(t),this._endVisit(t)},_traverse:function(t){this.level++;for(var e=0,n=t.childNodes.length;n>e;e++)this._visit(t.childNodes[e]);this.level--},_beginVisit:function(t){switch(t.nodeType){case u.ELEMENT:this._beginVisitElement(t);break;case u.TEXT:this._visitText(t);break;case u.COMMENT:this._visitComment(t);break;default:console.warn("Unrecognised node type: "+t.nodeType)}},_endVisit:function(t){switch(t.nodeType){case u.ELEMENT:this._endVisitElement(t);break;case u.TEXT:case u.COMMENT:}},_beginVisitElement:function(t){for(var e=t.tagName.toLowerCase(),n=[],i=0,s=t.attributes.length;s>i;i++)n.push(this._getElementAttribute(t,t.attributes[i]));this.output+="<"+e,n.length>0&&(this.output+=" "+n.join(" ")),t.firstChild&&(this.output+=">")},_endVisitElement:function(t){this.output=i(this.output,this.config.indent),this.output+=t.firstChild?"</"+t.tagName.toLowerCase()+">":" />"},_visitText:function(t){var e=t.textContent;e.indexOf("\n")>-1&&(e=t.textContent.replace(/\n\s*/g,this._getIndentedNewline())),this.output+=e},_visitComment:function(t){this.output+="{/*"+t.textContent.replace("*/","* /")+"*/}"},_getElementAttribute:function(t,e){switch(e.name){case"style":return this._getStyleAttribute(e.value);default:var n=c[e.name]||e.name,i=n+"=";return i+=r(e.value)?"{"+e.value+"}":'"'+e.value.replace('"',"&quot;")+'"'}},_getStyleAttribute:function(t){var e=new a(t).toJSXString();return"style={{"+e+"}}"}};var a=function(t){this.parse(t)};a.prototype={parse:function(t){this.styles={},t.split(";").forEach(function(t){t=t.trim();var e=t.indexOf(":"),n=t.substr(0,e),i=t.substr(e+1).trim();""!==n&&(this.styles[n]=i)},this)},toJSXString:function(){var t=[];for(var e in this.styles)this.styles.hasOwnProperty(e)&&t.push(this.toJSXKey(e)+": "+this.toJSXValue(this.styles[e]));return t.join(", ")},toJSXKey:function(t){return s(t)},toJSXValue:function(t){return r(t)?t:n(t,"px")?i(t,"px"):"'"+t.replace(/'/g,'"')+"'"}},t.exports=h}])});
-},{}]},{},[208])
+},{}]},{},[209])

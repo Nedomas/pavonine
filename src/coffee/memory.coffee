@@ -1,5 +1,4 @@
-Memory = module.exports = (->
-  _ = require 'lodash'
+Memory = (->
   app_data = {}
 
   set = (data) ->
@@ -19,7 +18,7 @@ Memory = module.exports = (->
     app_data[name] = records
 
   get = (model) ->
-    app_data[model] || {}
+    app_data[model]
 
   getAll = ->
     app_data
@@ -42,4 +41,5 @@ Memory = module.exports = (->
   }
 )()
 
+module.exports = Memory
 window.M = Memory
