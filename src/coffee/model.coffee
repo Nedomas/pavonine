@@ -1,7 +1,7 @@
 class Model
   _ = require 'lodash'
   Memory = require './memory'
-  MainModel = require './main_model'
+  FilledModel = require './filled_model'
 
   constructor: (@attributes) ->
     @model = @attributes.model
@@ -10,7 +10,8 @@ class Model
   serialize: ->
     @attributes
 
-  @main = ->
-    new Model(MainModel.attributes())
+  @filled = ->
+    filled = new FilledModel
+    new Model(filled.attributes)
 
 module.exports = Model

@@ -8,7 +8,7 @@ ReactMixin = module.exports = (->
   Facebook = require './facebook'
 
   getInitialState: ->
-    Model.main().attributes
+    Model.filled().attributes
   onChange: (path, e) ->
     new_state = _.clone(@state)
     _.deepSet(new_state, Replacer.toAttribute(path), e.target.value)

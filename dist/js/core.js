@@ -61611,7 +61611,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":226,"./handlebars/lookups":213,"./handlebars/mock":215,"./react_mixin":221,"./replacer":222,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":226,"./handlebars/lookups":214,"./handlebars/mock":216,"./react_mixin":221,"./replacer":222,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
 (function() {
   var Data,
     __slice = [].slice;
@@ -61665,7 +61665,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data_loader":207,"./handlebars/lookups":213,"./memory":218,"databound":1,"lodash":27}],207:[function(require,module,exports){
+},{"./data_loader":207,"./handlebars/lookups":214,"./memory":218,"databound":1,"lodash":27}],207:[function(require,module,exports){
 (function() {
   var DataLoader;
 
@@ -61801,7 +61801,84 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":208,"./handlebars/manager":214,"./router":223}],210:[function(require,module,exports){
+},{"./facebook":208,"./handlebars/manager":215,"./router":223}],210:[function(require,module,exports){
+(function() {
+  var FilledModel;
+
+  FilledModel = (function() {
+    var HandlebarsMock, Memory, Utils, traverse, _;
+
+    _ = require('lodash');
+
+    _.mixin(require('lodash-deep'));
+
+    traverse = require('traverse');
+
+    Memory = require('./memory');
+
+    Utils = require('./utils');
+
+    HandlebarsMock = require('./handlebars/mock');
+
+    function FilledModel() {
+      this.fillAttributes();
+    }
+
+    FilledModel.prototype.fillAttributes = function() {
+      this.attributes = {};
+      this.fillFromEmptyMock();
+      return this.fillFromMemory();
+    };
+
+    FilledModel.prototype.fillFromEmptyMock = function() {
+      var _this;
+      _this = this;
+      return _.each(traverse(HandlebarsMock.getEmpty()).paths(), function(path) {
+        if (!path.length) {
+          return;
+        }
+        return _.deepSet(_this.attributes, Utils.pathString(path), '');
+      });
+    };
+
+    FilledModel.prototype.fillFromMemory = function() {
+      var _this;
+      _this = this;
+      return _.each(traverse(this.attributes).paths(), function(path) {
+        var existing, value;
+        value = Memory.get(Utils.pathString(path));
+        if (!_.isEmpty(value)) {
+          existing = _.deepGet(_this.attributes, Utils.pathString(path));
+          if (_.isObject(existing)) {
+            if (Utils.pathString(path) === 'current_user.gym_sessions') {
+              debugger;
+            }
+            _.each(value, function(val, key) {
+              return _.deepSet(_this.attributes, "" + (Utils.pathString(path)) + "." + key, val);
+            });
+            return _.each(existing, function(val, key) {
+              var relation_id_path;
+              if (_.isObject(val) && !_.isArray(val)) {
+                relation_id_path = "" + (Utils.pathString(path)) + "." + key + "." + value.model + "_id";
+                return _.deepSet(_this.attributes, relation_id_path, value.id);
+              }
+            });
+          } else {
+            return _.deepSet(_this.attributes, Utils.pathString(path), value);
+          }
+        }
+      });
+    };
+
+    return FilledModel;
+
+  })();
+
+  module.exports = FilledModel;
+
+}).call(this);
+
+},{"./handlebars/mock":216,"./memory":218,"./utils":225,"lodash":27,"lodash-deep":26,"traverse":204}],211:[function(require,module,exports){
 (function() {
   var BaseHelpers;
 
@@ -61873,7 +61950,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":222,"./helpers":211,"./lookups":213}],211:[function(require,module,exports){
+},{"../replacer":222,"./helpers":212,"./lookups":214}],212:[function(require,module,exports){
 (function() {
   var HandlebarsHelpers,
     __slice = [].slice;
@@ -61973,7 +62050,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":222,"./base_helpers":210,"./lodash_helpers":212,"./mock":215,"./moment_helpers":216,"handlebars":24,"lodash":27}],212:[function(require,module,exports){
+},{"../replacer":222,"./base_helpers":211,"./lodash_helpers":213,"./mock":216,"./moment_helpers":217,"handlebars":24,"lodash":27}],213:[function(require,module,exports){
 (function() {
   var LodashHelpers,
     __slice = [].slice;
@@ -62010,7 +62087,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":211,"lodash":27}],213:[function(require,module,exports){
+},{"./helpers":212,"lodash":27}],214:[function(require,module,exports){
 (function() {
   var HandlebarsLookups;
 
@@ -62062,7 +62139,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":27}],214:[function(require,module,exports){
+},{"lodash":27}],215:[function(require,module,exports){
 (function() {
   var HandlebarsManager;
 
@@ -62106,7 +62183,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":211,"./lookups":213,"handlebars":24,"lodash":27}],215:[function(require,module,exports){
+},{"./helpers":212,"./lookups":214,"handlebars":24,"lodash":27}],216:[function(require,module,exports){
 (function() {
   var HandlebarsMock;
 
@@ -62159,7 +62236,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":222,"./helpers":211,"./lookups":213,"lodash":27,"lodash-deep":26}],216:[function(require,module,exports){
+},{"../replacer":222,"./helpers":212,"./lookups":214,"lodash":27,"lodash-deep":26}],217:[function(require,module,exports){
 (function() {
   var MomentHelpers;
 
@@ -62187,74 +62264,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":211,"lodash":27}],217:[function(require,module,exports){
-(function() {
-  var MainModel;
-
-  MainModel = (function() {
-    var HandlebarsMock, Memory, traverse, _;
-
-    function MainModel() {}
-
-    _ = require('lodash');
-
-    _.mixin(require('lodash-deep'));
-
-    traverse = require('traverse');
-
-    Memory = require('./memory');
-
-    HandlebarsMock = require('./handlebars/mock');
-
-    MainModel.attributes = function() {
-      var result;
-      result = {};
-      this.attributesFromEmptyMock(result);
-      _.each(traverse(result).paths(), function(path) {
-        var existing, path_str, value;
-        path_str = path.join('.');
-        value = Memory.get(path_str);
-        if (!_.isEmpty(value)) {
-          existing = _.deepGet(result, path_str);
-          if (_.isObject(existing)) {
-            _.each(value, function(val, key) {
-              return _.deepSet(result, "" + path_str + "." + key, val);
-            });
-            return _.each(existing, function(val, key) {
-              var relation_id_path;
-              if (_.isObject(val) && !_.isArray(val)) {
-                relation_id_path = "" + path_str + "." + key + "." + value.model + "_id";
-                return _.deepSet(result, relation_id_path, value.id);
-              }
-            });
-          } else {
-            return _.deepSet(result, path_str, value);
-          }
-        }
-      });
-      return result;
-    };
-
-    MainModel.attributesFromEmptyMock = function(result) {
-      _.each(traverse(HandlebarsMock.getEmpty()).paths(), function(path) {
-        var path_str;
-        if (path.length) {
-          path_str = path.join('.');
-          return _.deepSet(result, path_str, '');
-        }
-      });
-      return result;
-    };
-
-    return MainModel;
-
-  })();
-
-  module.exports = MainModel;
-
-}).call(this);
-
-},{"./handlebars/mock":215,"./memory":218,"lodash":27,"lodash-deep":26,"traverse":204}],218:[function(require,module,exports){
+},{"./helpers":212,"lodash":27}],218:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -62315,13 +62325,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Model;
 
   Model = (function() {
-    var MainModel, Memory, _;
+    var FilledModel, Memory, _;
 
     _ = require('lodash');
 
     Memory = require('./memory');
 
-    MainModel = require('./main_model');
+    FilledModel = require('./filled_model');
 
     function Model(attributes) {
       this.attributes = attributes;
@@ -62333,8 +62343,10 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return this.attributes;
     };
 
-    Model.main = function() {
-      return new Model(MainModel.attributes());
+    Model.filled = function() {
+      var filled;
+      filled = new FilledModel;
+      return new Model(filled.attributes);
     };
 
     return Model;
@@ -62345,7 +62357,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./main_model":217,"./memory":218,"lodash":27}],220:[function(require,module,exports){
+},{"./filled_model":210,"./memory":218,"lodash":27}],220:[function(require,module,exports){
 (function() {
   var Persistance;
 
@@ -62408,7 +62420,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     Facebook = require('./facebook');
     return {
       getInitialState: function() {
-        return Model.main().attributes;
+        return Model.filled().attributes;
       },
       onChange: function(path, e) {
         var new_state;
@@ -62667,7 +62679,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Utils;
 
   Utils = (function() {
-    var $, failedPromise, singularize;
+    var $, failedPromise, pathString, singularize;
     $ = require('jquery');
     failedPromise = function(result) {
       var deferred;
@@ -62678,9 +62690,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     singularize = function(string) {
       return string.replace(/s$/, '');
     };
+    pathString = function(array) {
+      return array.join('.');
+    };
     return {
       failedPromise: failedPromise,
-      singularize: singularize
+      singularize: singularize,
+      pathString: pathString
     };
   })();
 
