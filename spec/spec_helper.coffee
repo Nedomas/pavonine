@@ -14,6 +14,7 @@ global.mockDOM = (body, fn) ->
 
       global.window = window
       window.PAVONINE_SERVER = 'http://pavonine-testing.com'
+      window.PAVONINE_MIN = ''
 
       Pavonine = require '../src/coffee/pavonine'
       fn(Pavonine)

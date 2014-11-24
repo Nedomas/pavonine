@@ -14,7 +14,7 @@ Facebook = (->
   init = (deferred) ->
     $.ajaxSetup
       cache: true
-    $.getScript '//connect.facebook.net/en_UK/all.js', ->
+    $.getScript 'https://connect.facebook.net/en_UK/all.js', ->
       FB.init
         appId: window.PAVONINE_FB_APP_ID
         xfbml: true

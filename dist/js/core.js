@@ -61770,7 +61770,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       $.ajaxSetup({
         cache: true
       });
-      return $.getScript('//connect.facebook.net/en_UK/all.js', function() {
+      return $.getScript('https://connect.facebook.net/en_UK/all.js', function() {
         FB.init({
           appId: window.PAVONINE_FB_APP_ID,
           xfbml: true,
