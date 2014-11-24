@@ -61545,7 +61545,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Converter;
 
   Converter = (function() {
-    var HTMLtoJSX, Handlebars, HandlebarsLookups, HandlebarsMock, INNER_BODY_REGEX, Replacer, htmlToReactComponent, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
+    var HTMLtoJSX, Handlebars, HandlebarsLookups, HandlebarsMock, INNER_BODY_REGEX, Replacer, evalWithDependencies, htmlToReactComponent, react_tools, toComponent, toJSX, toXHTML, wrapInJSX;
     react_tools = require('react-tools');
     HTMLtoJSX = require('../vendor/htmltojsx.min');
     Replacer = require('./replacer');
@@ -61559,14 +61559,24 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return toComponent(klass_name, jsx);
     };
     toComponent = function(klass_name, jsx) {
-      var React, ReactMixin, component_code, moment, _;
+      var component_code;
       component_code = react_tools.transform(jsx);
+      return evalWithDependencies(component_code, klass_name);
+    };
+    evalWithDependencies = function(code, additional) {
+      var React, ReactMixin, moment, result, _;
+      if (additional == null) {
+        additional = '';
+      }
       ReactMixin = require('./react_mixin');
       React = require('react');
       _ = require('lodash');
       moment = require('moment');
-      eval(component_code);
-      return eval(klass_name);
+      result = eval(code);
+      if (additional) {
+        result = eval(additional);
+      }
+      return result;
     };
     toJSX = function(klass_name, html) {
       var mocked, react_code, t, template, wrapped;
@@ -61575,6 +61585,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         trackIds: true
       });
       t = template();
+      console.log('t', html);
       HandlebarsMock.scanDefaultValues(t);
       mocked = template(HandlebarsMock.get()).toString();
       wrapped = wrapInJSX(klass_name, mocked);
@@ -61600,7 +61611,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return RegExp.$1;
     };
     return {
-      htmlToReactComponent: htmlToReactComponent
+      htmlToReactComponent: htmlToReactComponent,
+      evalWithDependencies: evalWithDependencies
     };
   })();
 
@@ -61825,7 +61837,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var FilledModel;
 
   FilledModel = (function() {
-    var Defaults, HandlebarsMock, Memory, Utils, traverse, _;
+    var Converter, Defaults, HandlebarsMock, Memory, Utils, traverse, _;
 
     _ = require('lodash');
 
@@ -61838,6 +61850,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     Utils = require('./utils');
 
     Defaults = require('./defaults');
+
+    Converter = require('./converter');
 
     HandlebarsMock = require('./handlebars/mock');
 
@@ -61856,13 +61870,21 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       var _this;
       _this = this;
       return _.each(Defaults.getAll(), function(val, path_str) {
-        var path;
+        var fn, path;
         path = path_str.split('.');
         if (_this.existingValue(path)) {
           return;
         }
+        fn = val.match(/^{(.*)}$/);
+        if (fn) {
+          val = _this.defaultFunction(path_str, fn[1]);
+        }
         return _.deepSet(_this.attributes, path_str, val);
       });
+    };
+
+    FilledModel.prototype.defaultFunction = function(path_str, fn) {
+      return Converter.evalWithDependencies(fn);
     };
 
     FilledModel.prototype.fillFromEmptyMock = function() {
@@ -61947,7 +61969,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./defaults":208,"./handlebars/mock":217,"./memory":219,"./utils":226,"lodash":27,"lodash-deep":26,"traverse":204}],212:[function(require,module,exports){
+},{"./converter":205,"./defaults":208,"./handlebars/mock":217,"./memory":219,"./utils":226,"lodash":27,"lodash-deep":26,"traverse":204}],212:[function(require,module,exports){
 (function() {
   var BaseHelpers;
 
@@ -62335,8 +62357,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       $ = require('jquery');
       Defaults = require('../defaults');
       return _.each($(code).find('input[defaultValue]'), function(el) {
-        var path_str, val;
-        path_str = $(el).prop('value').match('{this\.state\.(.*?)}')[1];
+        var path_str, val, value_binding;
+        value_binding = $(el).prop('value');
+        path_str = value_binding.match('{this\.state\.(.*?)}')[1];
         val = $(el).attr('defaultValue');
         return Defaults.save(path_str, val);
       });
@@ -62572,7 +62595,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     toReactCode = function(jsx_code) {
       jsx_code = removeExtraQuotes(jsx_code);
       jsx_code = capitalizations(jsx_code);
-      return jsx_code = replaceToBindings(jsx_code);
+      jsx_code = replaceToBindings(jsx_code);
+      return jsx_code;
     };
     removeExtraQuotes = function(jsx_code) {
       return jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
@@ -62589,8 +62613,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return result;
     };
     replaceToBindings = function(jsx_code) {
-      return replace(jsx_code, /value={(.+?)}/gi, function(attribute) {
-        return "value={" + attribute + "} onChange={_.partial(this.onChange, '" + attribute + "')}";
+      return replace(jsx_code, /\ value={(.+?)}/gi, function(attribute) {
+        return " value={" + attribute + "} onChange={_.partial(this.onChange, '" + attribute + "')}";
       });
     };
     replace = function(code, from, to) {

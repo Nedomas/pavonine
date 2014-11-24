@@ -5,6 +5,7 @@ Replacer = module.exports = (->
     jsx_code = removeExtraQuotes(jsx_code)
     jsx_code = capitalizations(jsx_code)
     jsx_code = replaceToBindings(jsx_code)
+    jsx_code
 
   removeExtraQuotes = (jsx_code) ->
     jsx_code.replace(/"{/g, '{').replace(/}"/g, '}')
@@ -22,8 +23,8 @@ Replacer = module.exports = (->
     # value={email}
     # =>
     # value={email} onChange={_.partial(this.onChange, 'subscriber.email')}
-    replace jsx_code, /value={(.+?)}/gi, (attribute) ->
-      "value={#{attribute}} onChange={_.partial(this.onChange, '#{attribute}')}"
+    replace jsx_code, /\ value={(.+?)}/gi, (attribute) ->
+      " value={#{attribute}} onChange={_.partial(this.onChange, '#{attribute}')}"
 
   replace = (code, from, to) ->
     result = code

@@ -5,6 +5,7 @@ class FilledModel
   Memory = require './memory'
   Utils = require './utils'
   Defaults = require './defaults'
+  Converter = require './converter'
   HandlebarsMock = require './handlebars/mock'
 
   constructor: ->
@@ -23,7 +24,14 @@ class FilledModel
       path = path_str.split('.')
       return if _this.existingValue(path)
 
+      fn = val.match(/^{(.*)}$/)
+
+      val = _this.defaultFunction(path_str, fn[1]) if fn
       _.deepSet(_this.attributes, path_str, val)
+
+  defaultFunction: (path_str, fn) ->
+    # TODO: replace state
+    Converter.evalWithDependencies(fn)
 
   fillFromEmptyMock: ->
     _this = @

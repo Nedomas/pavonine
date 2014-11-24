@@ -39,8 +39,10 @@ HandlebarsMock = (->
     Defaults = require '../defaults'
 
     _.each $(code).find('input[defaultValue]'), (el) ->
-      path_str = $(el).prop('value').match('{this\.state\.(.*?)}')[1]
+      value_binding = $(el).prop('value')
+      path_str = value_binding.match('{this\.state\.(.*?)}')[1]
       val = $(el).attr('defaultValue')
+
       Defaults.save(path_str, val)
 
   return {

@@ -6,7 +6,6 @@ Defaults = (->
 
   save = (path, val) ->
     data[path] = val
-    # _.deepSet(data, path, val)
 
   getAll = ->
     data

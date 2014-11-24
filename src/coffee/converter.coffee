@@ -13,17 +13,23 @@ Converter = (->
 
   toComponent = (klass_name, jsx) ->
     component_code = react_tools.transform(jsx)
+    evalWithDependencies(component_code, klass_name)
+
+  evalWithDependencies = (code, additional = '') ->
     ReactMixin = require './react_mixin'
     React = require 'react'
     _ = require 'lodash'
     moment = require 'moment'
-    eval(component_code)
-    eval(klass_name)
+    result = eval(code)
+    result = eval(additional) if additional
+
+    result
 
   toJSX = (klass_name, html) ->
     HandlebarsLookups.clean()
     template = Handlebars.compile(html, trackIds: true)
     t = template() # gather data
+    console.log('t', html)
     HandlebarsMock.scanDefaultValues(t)
 
     mocked = template(HandlebarsMock.get()).toString()
@@ -51,6 +57,7 @@ Converter = (->
 
   return {
     htmlToReactComponent: htmlToReactComponent
+    evalWithDependencies: evalWithDependencies
   }
 )()
 
