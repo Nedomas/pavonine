@@ -61575,11 +61575,10 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         trackIds: true
       });
       t = template();
-      console.log(t);
+      HandlebarsMock.scanDefaultValues(t);
       mocked = template(HandlebarsMock.get()).toString();
       wrapped = wrapInJSX(klass_name, mocked);
-      react_code = Replacer.toReactCode(wrapped);
-      return react_code;
+      return react_code = Replacer.toReactCode(wrapped);
     };
     wrapInJSX = function(klass_name, html) {
       var converter, jsx_code, render_index;
@@ -61609,7 +61608,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":226,"./handlebars/lookups":214,"./handlebars/mock":216,"./react_mixin":221,"./replacer":222,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":227,"./handlebars/lookups":215,"./handlebars/mock":217,"./react_mixin":222,"./replacer":223,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
 (function() {
   var Data,
     __slice = [].slice;
@@ -61660,7 +61659,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data_loader":207,"./handlebars/lookups":214,"./memory":218,"databound":1,"lodash":27}],207:[function(require,module,exports){
+},{"./data_loader":207,"./handlebars/lookups":215,"./memory":219,"databound":1,"lodash":27}],207:[function(require,module,exports){
 (function() {
   var DataLoader;
 
@@ -61713,7 +61712,32 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":218,"./persistance":220,"./utils":225,"databound":1,"jquery":25,"lodash":27}],208:[function(require,module,exports){
+},{"./memory":219,"./persistance":221,"./utils":226,"databound":1,"jquery":25,"lodash":27}],208:[function(require,module,exports){
+(function() {
+  var Defaults;
+
+  Defaults = (function() {
+    var data, getAll, save, _;
+    _ = require('lodash');
+    _.mixin(require('lodash-deep'));
+    data = {};
+    save = function(path, val) {
+      return data[path] = val;
+    };
+    getAll = function() {
+      return data;
+    };
+    return {
+      save: save,
+      getAll: getAll
+    };
+  })();
+
+  module.exports = Defaults;
+
+}).call(this);
+
+},{"lodash":27,"lodash-deep":26}],209:[function(require,module,exports){
 (function() {
   var Facebook;
 
@@ -61772,7 +61796,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":218,"./persistance":220,"./router":223,"jquery":25,"lodash":27,"lodash-deep":26}],209:[function(require,module,exports){
+},{"./memory":219,"./persistance":221,"./router":224,"jquery":25,"lodash":27,"lodash-deep":26}],210:[function(require,module,exports){
 (function() {
   var Core;
 
@@ -61796,12 +61820,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":208,"./handlebars/manager":215,"./router":223}],210:[function(require,module,exports){
+},{"./facebook":209,"./handlebars/manager":216,"./router":224}],211:[function(require,module,exports){
 (function() {
   var FilledModel;
 
   FilledModel = (function() {
-    var HandlebarsMock, Memory, Utils, traverse, _;
+    var Defaults, HandlebarsMock, Memory, Utils, traverse, _;
 
     _ = require('lodash');
 
@@ -61813,6 +61837,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
     Utils = require('./utils');
 
+    Defaults = require('./defaults');
+
     HandlebarsMock = require('./handlebars/mock');
 
     function FilledModel() {
@@ -61822,7 +61848,21 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     FilledModel.prototype.fillAttributes = function() {
       this.attributes = {};
       this.fillFromEmptyMock();
-      return this.fillFromMemory();
+      this.fillFromMemory();
+      return this.fillDefaults();
+    };
+
+    FilledModel.prototype.fillDefaults = function() {
+      var _this;
+      _this = this;
+      return _.each(Defaults.getAll(), function(val, path_str) {
+        var path;
+        path = path_str.split('.');
+        if (_this.existingValue(path)) {
+          return;
+        }
+        return _.deepSet(_this.attributes, path_str, val);
+      });
     };
 
     FilledModel.prototype.fillFromEmptyMock = function() {
@@ -61907,7 +61947,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebars/mock":216,"./memory":218,"./utils":225,"lodash":27,"lodash-deep":26,"traverse":204}],211:[function(require,module,exports){
+},{"./defaults":208,"./handlebars/mock":217,"./memory":219,"./utils":226,"lodash":27,"lodash-deep":26,"traverse":204}],212:[function(require,module,exports){
 (function() {
   var BaseHelpers;
 
@@ -61973,7 +62013,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":222,"./helpers":212,"./lookups":214}],212:[function(require,module,exports){
+},{"../replacer":223,"./helpers":213,"./lookups":215}],213:[function(require,module,exports){
 (function() {
   var HandlebarsHelpers,
     __slice = [].slice;
@@ -62124,7 +62164,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":222,"./base_helpers":211,"./lodash_helpers":213,"./mock":216,"./moment_helpers":217,"handlebars":24,"lodash":27}],213:[function(require,module,exports){
+},{"../replacer":223,"./base_helpers":212,"./lodash_helpers":214,"./mock":217,"./moment_helpers":218,"handlebars":24,"lodash":27}],214:[function(require,module,exports){
 (function() {
   var LodashHelpers,
     __slice = [].slice;
@@ -62161,7 +62201,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":212,"lodash":27}],214:[function(require,module,exports){
+},{"./helpers":213,"lodash":27}],215:[function(require,module,exports){
 (function() {
   var HandlebarsLookups;
 
@@ -62210,7 +62250,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":27}],215:[function(require,module,exports){
+},{"lodash":27}],216:[function(require,module,exports){
 (function() {
   var HandlebarsManager;
 
@@ -62252,12 +62292,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":212,"./lookups":214,"handlebars":24,"lodash":27}],216:[function(require,module,exports){
+},{"./helpers":213,"./lookups":215,"handlebars":24,"lodash":27}],217:[function(require,module,exports){
 (function() {
   var HandlebarsMock;
 
   HandlebarsMock = (function() {
-    var HandlebarsHelpers, HandlebarsLookups, Replacer, get, getEmpty, isAction, _;
+    var HandlebarsHelpers, HandlebarsLookups, Replacer, get, getEmpty, isAction, scanDefaultValues, _;
     _ = require('lodash');
     _.mixin(require('lodash-deep'));
     Replacer = require('../replacer');
@@ -62290,9 +62330,21 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     isAction = function(lookup) {
       return _.include(HandlebarsHelpers.constant('actions'), _.last(lookup.split('.')));
     };
+    scanDefaultValues = function(code) {
+      var $, Defaults;
+      $ = require('jquery');
+      Defaults = require('../defaults');
+      return _.each($(code).find('input[defaultValue]'), function(el) {
+        var path_str, val;
+        path_str = $(el).prop('value').match('{this\.state\.(.*?)}')[1];
+        val = $(el).attr('defaultValue');
+        return Defaults.save(path_str, val);
+      });
+    };
     return {
       get: get,
-      getEmpty: getEmpty
+      getEmpty: getEmpty,
+      scanDefaultValues: scanDefaultValues
     };
   })();
 
@@ -62300,7 +62352,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":222,"./helpers":212,"./lookups":214,"lodash":27,"lodash-deep":26}],217:[function(require,module,exports){
+},{"../defaults":208,"../replacer":223,"./helpers":213,"./lookups":215,"jquery":25,"lodash":27,"lodash-deep":26}],218:[function(require,module,exports){
 (function() {
   var MomentHelpers;
 
@@ -62328,7 +62380,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":212,"lodash":27}],218:[function(require,module,exports){
+},{"./helpers":213,"lodash":27}],219:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -62382,7 +62434,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{}],219:[function(require,module,exports){
+},{}],220:[function(require,module,exports){
 (function() {
   var Model;
 
@@ -62415,7 +62467,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./filled_model":210}],220:[function(require,module,exports){
+},{"./filled_model":211}],221:[function(require,module,exports){
 (function() {
   var Persistance;
 
@@ -62462,7 +62514,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":218,"./model":219,"databound":1,"lodash":27}],221:[function(require,module,exports){
+},{"./memory":219,"./model":220,"databound":1,"lodash":27}],222:[function(require,module,exports){
 (function() {
   var ReactMixin,
     __slice = [].slice;
@@ -62510,24 +62562,24 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":208,"./model":219,"./persistance":220,"./replacer":222,"./router":223,"lodash":27,"lodash-deep":26}],222:[function(require,module,exports){
+},{"./facebook":209,"./model":220,"./persistance":221,"./replacer":223,"./router":224,"lodash":27,"lodash-deep":26}],223:[function(require,module,exports){
 (function() {
   var Replacer;
 
   Replacer = module.exports = (function() {
-    var addAction, addState, capitalizeActionCase, removeExtraQuotes, replace, replaceToBindings, splice, toAttribute, toReactCode, toState, _;
+    var addAction, addState, capitalizations, removeExtraQuotes, replace, replaceToBindings, splice, toAttribute, toReactCode, toState, _;
     _ = require('lodash');
     toReactCode = function(jsx_code) {
       jsx_code = removeExtraQuotes(jsx_code);
-      jsx_code = capitalizeActionCase(jsx_code);
+      jsx_code = capitalizations(jsx_code);
       return jsx_code = replaceToBindings(jsx_code);
     };
     removeExtraQuotes = function(jsx_code) {
       return jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
     };
-    capitalizeActionCase = function(jsx_code) {
+    capitalizations = function(jsx_code) {
       var result, words;
-      words = ['onChange', 'onClick'];
+      words = ['onChange', 'onClick', 'defaultValue'];
       result = jsx_code;
       _.each(words, function(word) {
         return result = replace(result, word.toLowerCase(), function() {
@@ -62586,7 +62638,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":27}],223:[function(require,module,exports){
+},{"lodash":27}],224:[function(require,module,exports){
 (function() {
   var Router;
 
@@ -62633,7 +62685,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data":206,"./ui":224}],224:[function(require,module,exports){
+},{"./data":206,"./ui":225}],225:[function(require,module,exports){
 (function() {
   var UI;
 
@@ -62731,7 +62783,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./converter":205,"jquery":25,"lodash":27,"react":203}],225:[function(require,module,exports){
+},{"./converter":205,"jquery":25,"lodash":27,"react":203}],226:[function(require,module,exports){
 (function() {
   var Utils;
 
@@ -62761,7 +62813,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"jquery":25}],226:[function(require,module,exports){
+},{"jquery":25}],227:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.
@@ -62772,4 +62824,4 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 	 *
 	 */
 "use strict";function e(t,e){if(1===e)return t;if(0>e)throw new Error;for(var n="";e;)1&e&&(n+=t),(e>>=1)&&(t+=t);return n}function n(t,e){return t.slice(-e.length)===e}function i(t,e){return n(t,e)?t.slice(0,-e.length):t}function s(t){return t.replace(/-(.)/g,function(t,e){return e.toUpperCase()})}function o(t){return!/[^\s]/.test(t)}function r(t){return void 0!==t&&null!==t&&("number"==typeof t||parseInt(t,10)==t)}var u={ELEMENT:1,TEXT:3,COMMENT:8},c={"for":"htmlFor","class":"className"},h=function(t){this.config=t||{},void 0===this.config.createClass&&(this.config.createClass=!0),this.config.indent||(this.config.indent="  "),this.config.outputClassName||(this.config.outputClassName="NewComponent")};h.prototype={reset:function(){this.output="",this.level=0},convert:function(t){this.reset();var e,e;return e=document.createElement("div"),e.innerHTML="\n"+this._cleanInput(t)+"\n",this.config.createClass&&(this.output=this.config.outputClassName?"var "+this.config.outputClassName+" = React.createClass({\n":"React.createClass({\n",this.output+=this.config.indent+"render: function() {\n",this.output+=this.config.indent+this.config.indent+"return (\n"),this._onlyOneTopLevel(e)?this._traverse(e):(this.output+=this.config.indent+this.config.indent+this.config.indent,this.level++,this._visit(e)),this.output=this.output.trim()+"\n",this.config.createClass&&(this.output+=this.config.indent+this.config.indent+");\n",this.output+=this.config.indent+"}\n",this.output+="});"),this.output},_cleanInput:function(t){return t=t.trim(),t=t.replace(/<script([\s\S]*?)<\/script>/g,"")},_onlyOneTopLevel:function(t){if(1===t.childNodes.length&&t.childNodes[0].nodeType===u.ELEMENT)return!0;for(var e=!1,n=0,i=t.childNodes.length;i>n;n++){var s=t.childNodes[n];if(s.nodeType===u.ELEMENT){if(e)return!1;e=!0}else if(s.nodeType===u.TEXT&&!o(s.textContent))return!1}return!0},_getIndentedNewline:function(){return"\n"+e(this.config.indent,this.level+2)},_visit:function(t){this._beginVisit(t),this._traverse(t),this._endVisit(t)},_traverse:function(t){this.level++;for(var e=0,n=t.childNodes.length;n>e;e++)this._visit(t.childNodes[e]);this.level--},_beginVisit:function(t){switch(t.nodeType){case u.ELEMENT:this._beginVisitElement(t);break;case u.TEXT:this._visitText(t);break;case u.COMMENT:this._visitComment(t);break;default:console.warn("Unrecognised node type: "+t.nodeType)}},_endVisit:function(t){switch(t.nodeType){case u.ELEMENT:this._endVisitElement(t);break;case u.TEXT:case u.COMMENT:}},_beginVisitElement:function(t){for(var e=t.tagName.toLowerCase(),n=[],i=0,s=t.attributes.length;s>i;i++)n.push(this._getElementAttribute(t,t.attributes[i]));this.output+="<"+e,n.length>0&&(this.output+=" "+n.join(" ")),t.firstChild&&(this.output+=">")},_endVisitElement:function(t){this.output=i(this.output,this.config.indent),this.output+=t.firstChild?"</"+t.tagName.toLowerCase()+">":" />"},_visitText:function(t){var e=t.textContent;e.indexOf("\n")>-1&&(e=t.textContent.replace(/\n\s*/g,this._getIndentedNewline())),this.output+=e},_visitComment:function(t){this.output+="{/*"+t.textContent.replace("*/","* /")+"*/}"},_getElementAttribute:function(t,e){switch(e.name){case"style":return this._getStyleAttribute(e.value);default:var n=c[e.name]||e.name,i=n+"=";return i+=r(e.value)?"{"+e.value+"}":'"'+e.value.replace('"',"&quot;")+'"'}},_getStyleAttribute:function(t){var e=new a(t).toJSXString();return"style={{"+e+"}}"}};var a=function(t){this.parse(t)};a.prototype={parse:function(t){this.styles={},t.split(";").forEach(function(t){t=t.trim();var e=t.indexOf(":"),n=t.substr(0,e),i=t.substr(e+1).trim();""!==n&&(this.styles[n]=i)},this)},toJSXString:function(){var t=[];for(var e in this.styles)this.styles.hasOwnProperty(e)&&t.push(this.toJSXKey(e)+": "+this.toJSXValue(this.styles[e]));return t.join(", ")},toJSXKey:function(t){return s(t)},toJSXValue:function(t){return r(t)?t:n(t,"px")?i(t,"px"):"'"+t.replace(/'/g,'"')+"'"}},t.exports=h}])});
-},{}]},{},[209])
+},{}]},{},[210])

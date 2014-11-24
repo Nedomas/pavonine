@@ -4,6 +4,7 @@ class FilledModel
   traverse = require 'traverse'
   Memory = require './memory'
   Utils = require './utils'
+  Defaults = require './defaults'
   HandlebarsMock = require './handlebars/mock'
 
   constructor: ->
@@ -13,6 +14,16 @@ class FilledModel
     @attributes = {}
     @fillFromEmptyMock()
     @fillFromMemory()
+    @fillDefaults()
+
+  fillDefaults: ->
+    _this = @
+
+    _.each Defaults.getAll(), (val, path_str) ->
+      path = path_str.split('.')
+      return if _this.existingValue(path)
+
+      _.deepSet(_this.attributes, path_str, val)
 
   fillFromEmptyMock: ->
     _this = @

@@ -3,14 +3,14 @@ Replacer = module.exports = (->
 
   toReactCode = (jsx_code) ->
     jsx_code = removeExtraQuotes(jsx_code)
-    jsx_code = capitalizeActionCase(jsx_code)
+    jsx_code = capitalizations(jsx_code)
     jsx_code = replaceToBindings(jsx_code)
 
   removeExtraQuotes = (jsx_code) ->
     jsx_code.replace(/"{/g, '{').replace(/}"/g, '}')
 
-  capitalizeActionCase = (jsx_code) ->
-    words = ['onChange', 'onClick']
+  capitalizations = (jsx_code) ->
+    words = ['onChange', 'onClick', 'defaultValue']
     result = jsx_code
 
     _.each words, (word) ->

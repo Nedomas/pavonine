@@ -34,9 +34,19 @@ HandlebarsMock = (->
   isAction = (lookup) ->
     _.include(HandlebarsHelpers.constant('actions'), _.last(lookup.split('.')))
 
+  scanDefaultValues = (code) ->
+    $ = require 'jquery'
+    Defaults = require '../defaults'
+
+    _.each $(code).find('input[defaultValue]'), (el) ->
+      path_str = $(el).prop('value').match('{this\.state\.(.*?)}')[1]
+      val = $(el).attr('defaultValue')
+      Defaults.save(path_str, val)
+
   return {
     get: get
     getEmpty: getEmpty
+    scanDefaultValues: scanDefaultValues
   }
 )()
 

@@ -24,12 +24,11 @@ Converter = (->
     HandlebarsLookups.clean()
     template = Handlebars.compile(html, trackIds: true)
     t = template() # gather data
-    console.log(t)
+    HandlebarsMock.scanDefaultValues(t)
 
     mocked = template(HandlebarsMock.get()).toString()
     wrapped = wrapInJSX(klass_name, mocked)
     react_code = Replacer.toReactCode(wrapped)
-    react_code
 
   wrapInJSX = (klass_name, html) ->
     converter = new HTMLtoJSX
