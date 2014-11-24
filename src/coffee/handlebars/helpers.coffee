@@ -5,6 +5,7 @@ HandlebarsHelpers = (->
   LodashHelpers = require './lodash_helpers'
   BaseHelpers = require './base_helpers'
   MomentHelpers = require './moment_helpers'
+  VanillaHelpers = require './vanilla_helpers'
 
   HTML_REGEX = /^<([\s\S]*?.+?[\s\S]*?)>$/
 
@@ -18,6 +19,7 @@ HandlebarsHelpers = (->
     LodashHelpers.register()
     BaseHelpers.register()
     MomentHelpers.register()
+    VanillaHelpers.register()
 
   firstArgObject = (method, final_fn, argums) ->
     [initial_ctx, initial_args..., initial_opts] = [undefined].concat(argums[0])
@@ -42,6 +44,7 @@ HandlebarsHelpers = (->
     HandlebarsMock = require './mock'
     opts.fn = initial_opts.fn(HandlebarsMock.get()) if initial_opts.fn
     opts.inverse = initial_opts.inverse(HandlebarsMock.get()) if initial_opts.inverse
+    opts.method = initial_opts.name
 
     result = final_fn(raw_ctx, wrapped_state_ctx, args, opts)
 
@@ -77,6 +80,7 @@ HandlebarsHelpers = (->
     HandlebarsMock = require './mock'
     opts.fn = initial_opts.fn(HandlebarsMock.get()) if initial_opts.fn
     opts.inverse = initial_opts.inverse(HandlebarsMock.get()) if initial_opts.inverse
+    opts.method = initial_opts.name
 
     result = final_fn(raw_ctx, wrapped_state_ctx, args, opts)
 

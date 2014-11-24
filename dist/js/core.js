@@ -61620,7 +61620,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":227,"./handlebars/lookups":215,"./handlebars/mock":217,"./react_mixin":222,"./replacer":223,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":228,"./handlebars/lookups":215,"./handlebars/mock":217,"./react_mixin":223,"./replacer":224,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
 (function() {
   var Data,
     __slice = [].slice;
@@ -61671,7 +61671,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data_loader":207,"./handlebars/lookups":215,"./memory":219,"databound":1,"lodash":27}],207:[function(require,module,exports){
+},{"./data_loader":207,"./handlebars/lookups":215,"./memory":220,"databound":1,"lodash":27}],207:[function(require,module,exports){
 (function() {
   var DataLoader;
 
@@ -61724,7 +61724,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":219,"./persistance":221,"./utils":226,"databound":1,"jquery":25,"lodash":27}],208:[function(require,module,exports){
+},{"./memory":220,"./persistance":222,"./utils":227,"databound":1,"jquery":25,"lodash":27}],208:[function(require,module,exports){
 (function() {
   var Defaults;
 
@@ -61808,7 +61808,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":219,"./persistance":221,"./router":224,"jquery":25,"lodash":27,"lodash-deep":26}],210:[function(require,module,exports){
+},{"./memory":220,"./persistance":222,"./router":225,"jquery":25,"lodash":27,"lodash-deep":26}],210:[function(require,module,exports){
 (function() {
   var Core;
 
@@ -61832,7 +61832,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":209,"./handlebars/manager":216,"./router":224}],211:[function(require,module,exports){
+},{"./facebook":209,"./handlebars/manager":216,"./router":225}],211:[function(require,module,exports){
 (function() {
   var FilledModel;
 
@@ -61969,7 +61969,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./converter":205,"./defaults":208,"./handlebars/mock":217,"./memory":219,"./utils":226,"lodash":27,"lodash-deep":26,"traverse":204}],212:[function(require,module,exports){
+},{"./converter":205,"./defaults":208,"./handlebars/mock":217,"./memory":220,"./utils":227,"lodash":27,"lodash-deep":26,"traverse":204}],212:[function(require,module,exports){
 (function() {
   var BaseHelpers;
 
@@ -62035,19 +62035,20 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":223,"./helpers":213,"./lookups":215}],213:[function(require,module,exports){
+},{"../replacer":224,"./helpers":213,"./lookups":215}],213:[function(require,module,exports){
 (function() {
   var HandlebarsHelpers,
     __slice = [].slice;
 
   HandlebarsHelpers = (function() {
-    var BaseHelpers, CONSTANTS, HTML_REGEX, Handlebars, LodashHelpers, MomentHelpers, Replacer, constant, firstArgElemental, firstArgObject, init, raw, register, wrap, wrapped, wrapped_state, _;
+    var BaseHelpers, CONSTANTS, HTML_REGEX, Handlebars, LodashHelpers, MomentHelpers, Replacer, VanillaHelpers, constant, firstArgElemental, firstArgObject, init, raw, register, wrap, wrapped, wrapped_state, _;
     _ = require('lodash');
     Handlebars = require('handlebars');
     Replacer = require('../replacer');
     LodashHelpers = require('./lodash_helpers');
     BaseHelpers = require('./base_helpers');
     MomentHelpers = require('./moment_helpers');
+    VanillaHelpers = require('./vanilla_helpers');
     HTML_REGEX = /^<([\s\S]*?.+?[\s\S]*?)>$/;
     CONSTANTS = {
       actions: ['create', 'update', 'destroy', 'previous', 'next', 'facebook']
@@ -62058,7 +62059,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     init = function() {
       LodashHelpers.register();
       BaseHelpers.register();
-      return MomentHelpers.register();
+      MomentHelpers.register();
+      return VanillaHelpers.register();
     };
     firstArgObject = function(method, final_fn, argums) {
       var HandlebarsMock, arg_ids, args, code, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref, _ref1;
@@ -62083,6 +62085,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       if (initial_opts.inverse) {
         opts.inverse = initial_opts.inverse(HandlebarsMock.get());
       }
+      opts.method = initial_opts.name;
       result = final_fn(raw_ctx, wrapped_state_ctx, args, opts);
       if (result.match(HTML_REGEX)) {
         code = wrap(result);
@@ -62112,6 +62115,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       if (initial_opts.inverse) {
         opts.inverse = initial_opts.inverse(HandlebarsMock.get());
       }
+      opts.method = initial_opts.name;
       result = final_fn(raw_ctx, wrapped_state_ctx, args, opts);
       if (result.match(HTML_REGEX)) {
         code = wrap(result);
@@ -62186,7 +62190,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":223,"./base_helpers":212,"./lodash_helpers":214,"./mock":217,"./moment_helpers":218,"handlebars":24,"lodash":27}],214:[function(require,module,exports){
+},{"../replacer":224,"./base_helpers":212,"./lodash_helpers":214,"./mock":217,"./moment_helpers":218,"./vanilla_helpers":219,"handlebars":24,"lodash":27}],214:[function(require,module,exports){
 (function() {
   var LodashHelpers,
     __slice = [].slice;
@@ -62375,7 +62379,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../defaults":208,"../replacer":223,"./helpers":213,"./lookups":215,"jquery":25,"lodash":27,"lodash-deep":26}],218:[function(require,module,exports){
+},{"../defaults":208,"../replacer":224,"./helpers":213,"./lookups":215,"jquery":25,"lodash":27,"lodash-deep":26}],218:[function(require,module,exports){
 (function() {
   var MomentHelpers;
 
@@ -62404,6 +62408,32 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 }).call(this);
 
 },{"./helpers":213,"lodash":27}],219:[function(require,module,exports){
+(function() {
+  var VanillaHelpers;
+
+  VanillaHelpers = (function() {
+    var register, _;
+    _ = require('lodash');
+    register = function() {
+      var HandlebarsHelpers, helpers;
+      HandlebarsHelpers = require('./helpers');
+      helpers = ['reverse'];
+      return _.each(helpers, function(method) {
+        return HandlebarsHelpers.register(method, function(raw_ctx, wrapped_ctx, args, opts) {
+          return "" + wrapped_ctx + "." + method + "(" + (args.join(', ')) + ")";
+        });
+      });
+    };
+    return {
+      register: register
+    };
+  })();
+
+  module.exports = VanillaHelpers;
+
+}).call(this);
+
+},{"./helpers":213,"lodash":27}],220:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -62457,7 +62487,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{}],220:[function(require,module,exports){
+},{}],221:[function(require,module,exports){
 (function() {
   var Model;
 
@@ -62490,7 +62520,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./filled_model":211}],221:[function(require,module,exports){
+},{"./filled_model":211}],222:[function(require,module,exports){
 (function() {
   var Persistance;
 
@@ -62537,7 +62567,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":219,"./model":220,"databound":1,"lodash":27}],222:[function(require,module,exports){
+},{"./memory":220,"./model":221,"databound":1,"lodash":27}],223:[function(require,module,exports){
 (function() {
   var ReactMixin,
     __slice = [].slice;
@@ -62585,7 +62615,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":209,"./model":220,"./persistance":221,"./replacer":223,"./router":224,"lodash":27,"lodash-deep":26}],223:[function(require,module,exports){
+},{"./facebook":209,"./model":221,"./persistance":222,"./replacer":224,"./router":225,"lodash":27,"lodash-deep":26}],224:[function(require,module,exports){
 (function() {
   var Replacer;
 
@@ -62662,7 +62692,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":27}],224:[function(require,module,exports){
+},{"lodash":27}],225:[function(require,module,exports){
 (function() {
   var Router;
 
@@ -62709,7 +62739,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data":206,"./ui":225}],225:[function(require,module,exports){
+},{"./data":206,"./ui":226}],226:[function(require,module,exports){
 (function() {
   var UI;
 
@@ -62807,7 +62837,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./converter":205,"jquery":25,"lodash":27,"react":203}],226:[function(require,module,exports){
+},{"./converter":205,"jquery":25,"lodash":27,"react":203}],227:[function(require,module,exports){
 (function() {
   var Utils;
 
@@ -62837,7 +62867,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"jquery":25}],227:[function(require,module,exports){
+},{"jquery":25}],228:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.
