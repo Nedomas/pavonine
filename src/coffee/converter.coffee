@@ -29,7 +29,6 @@ Converter = (->
     HandlebarsLookups.clean()
     template = Handlebars.compile(html, trackIds: true)
     t = template() # gather data
-    console.log('t', html)
     HandlebarsMock.scanDefaultValues(t)
 
     mocked = template(HandlebarsMock.get()).toString()

@@ -61585,7 +61585,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         trackIds: true
       });
       t = template();
-      console.log('t', html);
       HandlebarsMock.scanDefaultValues(t);
       mocked = template(HandlebarsMock.get()).toString();
       wrapped = wrapInJSX(klass_name, mocked);
