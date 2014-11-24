@@ -44,7 +44,7 @@ Pavonine = (->
 
   installMain = ->
     script = window.document.createElement('script')
-    script.src = "#{window.PAVONINE_SERVER}/core.js"
+    script.src = "#{window.PAVONINE_SERVER}/core#{window.PAVONINE_MIN}.js"
     window.document.body.appendChild(script)
 
   return {
@@ -52,9 +52,6 @@ Pavonine = (->
     scan: scan
   }
 )()
-Pavonine.init()
-
-window.onload = ->
-  Pavonine.scan()
 
 module.exports = Pavonine
+window.Pavonine = Pavonine
