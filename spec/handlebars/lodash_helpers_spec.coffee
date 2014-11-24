@@ -52,12 +52,12 @@ describe 'Lodash helpers', ->
     it '#max', ->
       html = "{{#max messages 'stars'}}<p>Max stars: {{stars}}</p>{{/max}}"
       expect(compile(html)).to.equal(
-        "<p>Max stars: {_.max(this.state.messages, 'stars').stars}</p>"
+        "<div><p>Max stars: {_.max(this.state.messages, 'stars').stars}</p></div>"
       )
 
   describe 'nested as block context', ->
     it '#last and #sortBy', ->
       html = "{{#last (sortBy messages 'stars')}}<p>{{content}}</p>{{/last}}"
       expect(compile(html)).to.equal(
-        "<p>{_.last(_.sortBy(this.state.messages, 'stars')).content}</p>"
+        "<div><p>{_.last(_.sortBy(this.state.messages, 'stars')).content}</p></div>"
       )
