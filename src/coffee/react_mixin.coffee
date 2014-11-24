@@ -15,11 +15,12 @@ ReactMixin = module.exports = (->
     @setState(new_state)
   action: (path, e) ->
     [model_path..., action] = path.split('.')
-    model_path_str = model_path.join('.')
-    return Facebook.login() if model_path_str == 'facebook'
+
+    return Facebook.login() if action == 'facebook'
     return Router.next() if action == 'next'
     return Router.previous() if action == 'previous'
 
+    model_path_str = model_path.join('.')
     attributes = _.deepGet(@state, model_path_str)
     attributes.model = _.last(model_path_str.split('.'))
 

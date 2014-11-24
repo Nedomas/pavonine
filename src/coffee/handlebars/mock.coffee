@@ -31,14 +31,8 @@ HandlebarsMock = (->
 
     result
 
-  CONSTANTS =
-    actions: ['create', 'update', 'destroy', 'previous', 'next', 'login']
-
-  constant = (name) ->
-    CONSTANTS[name]
-
   isAction = (lookup) ->
-    _.include(constant('actions'), _.last(lookup.split('.')))
+    _.include(HandlebarsHelpers.constant('actions'), _.last(lookup.split('.')))
 
   return {
     get: get

@@ -28,7 +28,7 @@ BaseHelpers = (->
   registerIf = ->
     HandlebarsHelpers = require './helpers'
     HandlebarsHelpers.register 'if', (raw_ctx, wrapped_ctx, args, opts) ->
-      "#{wrapped_ctx} ? #{wrap(opts.fn || null)} : #{wrap(opts.inverse || null)}"
+      "#{wrapped_ctx} ? #{HandlebarsHelpers.wrap(opts.fn || null)} : #{HandlebarsHelpers.wrap(opts.inverse || null)}"
 
   registerWith = ->
     HandlebarsHelpers = require './helpers'
@@ -47,13 +47,6 @@ BaseHelpers = (->
           "#{Replacer.addAction(path)}"
 
       result
-
-  wrap = (content) ->
-    return unless content
-
-    "<div>" +
-    content +
-    "</div>"
 
   return {
     register: register

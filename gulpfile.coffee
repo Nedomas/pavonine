@@ -15,20 +15,7 @@ gulp.task 'default', ['build']
 gulp.task 'watch', ->
   gulp.watch('./src/coffee/**/*.coffee', ['coffee'])
   gulp.watch('./node_modules/**/*.js', ['coffee'])
-  gulp.watch('./src/jade/*.jade', ['jade'])
   gulp.watch('./test/**/*.coffee', ['test'])
-
-gulp.task 'jade', ->
-  gulp.src('./src/jade/*.jade')
-  .pipe(jade({
-    locals: {}
-  }))
-  .pipe(gulp.dest('./dist/html/'))
-
-gulp.task 'sass', ->
-  gulp.src('./src/scss/*.scss')
-  .pipe(sass())
-  .pipe(gulp.dest('./dist/css/'))
 
 gulp.task 'coffee', ->
   gulp
@@ -64,4 +51,4 @@ gulp.task 'test', ->
     reporter: 'spec'
   ).on("error", gutil.log))
 
-gulp.task 'build', ['coffee', 'jade', 'ugly', 'watch']
+gulp.task 'build', ['coffee', 'ugly', 'watch']

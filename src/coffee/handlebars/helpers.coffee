@@ -6,8 +6,10 @@ HandlebarsHelpers = (->
   BaseHelpers = require './base_helpers'
   MomentHelpers = require './moment_helpers'
 
+  HTML_REGEX = /^<([\s\S]*?.+?[\s\S]*?)>$/
+
   CONSTANTS =
-    actions: ['create', 'update', 'destroy', 'previous', 'next', 'login']
+    actions: ['create', 'update', 'destroy', 'previous', 'next', 'facebook']
 
   constant = (name) ->
     CONSTANTS[name]
@@ -17,39 +19,82 @@ HandlebarsHelpers = (->
     BaseHelpers.register()
     MomentHelpers.register()
 
-  register = (method, final_fn) ->
-    Handlebars.registerHelper method, ->
-      [initial_ctx, initial_args..., initial_opts] = arguments
-      [ctx_id, arg_ids...] = initial_opts.ids
+  firstArgObject = (method, final_fn, argums) ->
+    [initial_ctx, initial_args..., initial_opts] = [undefined].concat(argums[0])
+    [ctx_id, arg_ids...] = initial_opts.ids || []
+
+    if initial_ctx or ctx_id
       wrapped_state_ctx = wrapped_state(initial_ctx, ctx_id)
       raw_ctx = raw(initial_ctx, ctx_id)
 
-      args = []
-      _.each initial_args, (arg, i) ->
-        args[i] = raw(initial_args[i], arg_ids[i])
+    args = []
+    _.each initial_args, (arg, i) ->
+      args[i] = raw(initial_args[i], arg_ids[i])
 
-      args.push(initial_opts.hash) unless _.isEmpty(_.keys(initial_opts.hash))
+    args.push(initial_opts.hash) unless _.isEmpty(_.keys(initial_opts.hash))
 
-      # data = Handlebars.createFrame(initial_opts.data)
-      # data.contextPath = Handlebars.Utils.appendContextPath(data.contextPath, 'foo')
-      # initial_opts.data = data
+    # data = Handlebars.createFrame(initial_opts.data)
+    # data.contextPath = Handlebars.Utils.appendContextPath(data.contextPath, 'foo')
+    # initial_opts.data = data
 
-      opts = {}
-      # TODO: Cant require outside method
-      HandlebarsMock = require './mock'
-      opts.fn = initial_opts.fn(HandlebarsMock.get()) if initial_opts.fn
-      opts.inverse = initial_opts.inverse(HandlebarsMock.get()) if initial_opts.inverse
+    opts = {}
+    # TODO: Cant require outside method
+    HandlebarsMock = require './mock'
+    opts.fn = initial_opts.fn(HandlebarsMock.get()) if initial_opts.fn
+    opts.inverse = initial_opts.inverse(HandlebarsMock.get()) if initial_opts.inverse
 
-      result = final_fn(raw_ctx, wrapped_state_ctx, args, opts)
+    result = final_fn(raw_ctx, wrapped_state_ctx, args, opts)
 
-      if result.match(/^<(.*)>$/)
-        code = result
+    if result.match(HTML_REGEX)
+      code = wrap(result)
+    else
+      code = "{#{result}}"
+      # code = "\n<div>\n" +
+      # "{#{result}}\n" +
+      # "</div>"
+
+    new Handlebars.SafeString code
+
+  firstArgElemental = (method, final_fn, argums) ->
+    [initial_ctx, initial_args..., initial_opts] = argums
+    [ctx_id, arg_ids...] = initial_opts.ids
+
+    wrapped_state_ctx = wrapped_state(initial_ctx, ctx_id)
+    raw_ctx = raw(initial_ctx, ctx_id)
+
+    args = []
+    _.each initial_args, (arg, i) ->
+      args[i] = raw(initial_args[i], arg_ids[i])
+
+    args.push(initial_opts.hash) unless _.isEmpty(_.keys(initial_opts.hash))
+
+    # data = Handlebars.createFrame(initial_opts.data)
+    # data.contextPath = Handlebars.Utils.appendContextPath(data.contextPath, 'foo')
+    # initial_opts.data = data
+
+    opts = {}
+    # TODO: Cant require outside method
+    HandlebarsMock = require './mock'
+    opts.fn = initial_opts.fn(HandlebarsMock.get()) if initial_opts.fn
+    opts.inverse = initial_opts.inverse(HandlebarsMock.get()) if initial_opts.inverse
+
+    result = final_fn(raw_ctx, wrapped_state_ctx, args, opts)
+
+    if result.match(HTML_REGEX)
+      code = wrap(result)
+    else
+      code = "\n<div>\n" +
+      "{#{result}}\n" +
+      "</div>"
+
+    new Handlebars.SafeString code
+
+  register = (method, final_fn) ->
+    Handlebars.registerHelper method, ->
+      if arguments.length == 1 and _.isPlainObject(arguments[0])
+        firstArgObject(method, final_fn, arguments)
       else
-        code = "\n<div>\n" +
-        "{#{result}}\n" +
-        "</div>"
-
-      new Handlebars.SafeString code
+        firstArgElemental(method, final_fn, arguments)
 
   wrapped_state = (initial, from_ids) ->
     name = raw(initial, from_ids)
@@ -62,7 +107,7 @@ HandlebarsHelpers = (->
 
   wrapped = (initial, from_ids) ->
     result = initial || from_ids
-    result = result.toString()
+    try result = result.toString(); catch e then debugger
 
     if div_match = result.match(/<div>\n{(.*?)}\n<\/div>/)
       result = div_match[1]
@@ -86,10 +131,18 @@ HandlebarsHelpers = (->
 
     result.replace('this.state.', '')
 
+  wrap = (content) ->
+    return unless content
+
+    "<div>" +
+    content +
+    "</div>"
+
   return {
     init: init
     constant: constant
     register: register
+    wrap: wrap
   }
 )()
 

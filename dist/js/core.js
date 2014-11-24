@@ -963,7 +963,7 @@ Buffer.prototype.copy = function (target, target_start, start, end) {
 
   var len = end - start
 
-  if (len < 100 || !Buffer.TYPED_ARRAY_SUPPORT) {
+  if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
     for (var i = 0; i < len; i++) {
       target[i + target_start] = this[i + start]
     }
@@ -1032,6 +1032,7 @@ var BP = Buffer.prototype
  * Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods
  */
 Buffer._augment = function (arr) {
+  arr.constructor = Buffer
   arr._isBuffer = true
 
   // save reference to original Uint8Array get/set methods before overwriting
@@ -21112,7 +21113,7 @@ return jQuery;
 },{}],28:[function(require,module,exports){
 (function (global){
 //! moment.js
-//! version : 2.8.3
+//! version : 2.8.4
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
 //! license : MIT
 //! momentjs.com
@@ -21123,7 +21124,7 @@ return jQuery;
     ************************************/
 
     var moment,
-        VERSION = '2.8.3',
+        VERSION = '2.8.4',
         // the global-scope this is NOT the global object in Node.js
         globalScope = typeof global !== 'undefined' ? global : this,
         oldGlobalMoment,
@@ -21146,7 +21147,7 @@ return jQuery;
         momentProperties = [],
 
         // check for nodeJS
-        hasModule = (typeof module !== 'undefined' && module.exports),
+        hasModule = (typeof module !== 'undefined' && module && module.exports),
 
         // ASP.NET json date format regex
         aspNetJsonRegex = /^\/?Date\((\-?\d+)/i,
@@ -21157,8 +21158,8 @@ return jQuery;
         isoDurationRegex = /^(-)?P(?:(?:([0-9,.]*)Y)?(?:([0-9,.]*)M)?(?:([0-9,.]*)D)?(?:T(?:([0-9,.]*)H)?(?:([0-9,.]*)M)?(?:([0-9,.]*)S)?)?|([0-9,.]*)W)$/,
 
         // format tokens
-        formattingTokens = /(\[[^\[]*\])|(\\)?(Mo|MM?M?M?|Do|DDDo|DD?D?D?|ddd?d?|do?|w[o|w]?|W[o|W]?|Q|YYYYYY|YYYYY|YYYY|YY|gg(ggg?)?|GG(GGG?)?|e|E|a|A|hh?|HH?|mm?|ss?|S{1,4}|X|zz?|ZZ?|.)/g,
-        localFormattingTokens = /(\[[^\[]*\])|(\\)?(LT|LL?L?L?|l{1,4})/g,
+        formattingTokens = /(\[[^\[]*\])|(\\)?(Mo|MM?M?M?|Do|DDDo|DD?D?D?|ddd?d?|do?|w[o|w]?|W[o|W]?|Q|YYYYYY|YYYYY|YYYY|YY|gg(ggg?)?|GG(GGG?)?|e|E|a|A|hh?|HH?|mm?|ss?|S{1,4}|x|X|zz?|ZZ?|.)/g,
+        localFormattingTokens = /(\[[^\[]*\])|(\\)?(LTS|LT|LL?L?L?|l{1,4})/g,
 
         // parsing token regexes
         parseTokenOneOrTwoDigits = /\d\d?/, // 0 - 99
@@ -21169,8 +21170,8 @@ return jQuery;
         parseTokenWord = /[0-9]*['a-z\u00A0-\u05FF\u0700-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]+|[\u0600-\u06FF\/]+(\s*?[\u0600-\u06FF]+){1,2}/i, // any word (or two) characters or numbers including two/three word month in arabic.
         parseTokenTimezone = /Z|[\+\-]\d\d:?\d\d/gi, // +00:00 -00:00 +0000 -0000 or Z
         parseTokenT = /T/i, // T (ISO separator)
+        parseTokenOffsetMs = /[\+\-]?\d+/, // 1234567890123
         parseTokenTimestampMs = /[\+\-]?\d+(\.\d{1,3})?/, // 123456789 123456789.123
-        parseTokenOrdinal = /\d{1,2}/,
 
         //strict parsing regexes
         parseTokenOneDigit = /\d/, // 0 - 9
@@ -21384,6 +21385,9 @@ return jQuery;
             },
             zz : function () {
                 return this.zoneName();
+            },
+            x    : function () {
+                return this.valueOf();
             },
             X    : function () {
                 return this.unix();
@@ -21811,7 +21815,10 @@ return jQuery;
             overflow =
                 m._a[MONTH] < 0 || m._a[MONTH] > 11 ? MONTH :
                 m._a[DATE] < 1 || m._a[DATE] > daysInMonth(m._a[YEAR], m._a[MONTH]) ? DATE :
-                m._a[HOUR] < 0 || m._a[HOUR] > 23 ? HOUR :
+                m._a[HOUR] < 0 || m._a[HOUR] > 24 ||
+                    (m._a[HOUR] === 24 && (m._a[MINUTE] !== 0 ||
+                                           m._a[SECOND] !== 0 ||
+                                           m._a[MILLISECOND] !== 0)) ? HOUR :
                 m._a[MINUTE] < 0 || m._a[MINUTE] > 59 ? MINUTE :
                 m._a[SECOND] < 0 || m._a[SECOND] > 59 ? SECOND :
                 m._a[MILLISECOND] < 0 || m._a[MILLISECOND] > 999 ? MILLISECOND :
@@ -21838,7 +21845,8 @@ return jQuery;
             if (m._strict) {
                 m._isValid = m._isValid &&
                     m._pf.charsLeftOver === 0 &&
-                    m._pf.unusedTokens.length === 0;
+                    m._pf.unusedTokens.length === 0 &&
+                    m._pf.bigHour === undefined;
             }
         }
         return m._isValid;
@@ -21890,8 +21898,18 @@ return jQuery;
 
     // Return a moment from input, that is local/utc/zone equivalent to model.
     function makeAs(input, model) {
-        return model._isUTC ? moment(input).zone(model._offset || 0) :
-            moment(input).local();
+        var res, diff;
+        if (model._isUTC) {
+            res = model.clone();
+            diff = (moment.isMoment(input) || isDate(input) ?
+                    +input : +moment(input)) - (+res);
+            // Use low-level api, because this fn is low-level api.
+            res._d.setTime(+res._d + diff);
+            moment.updateOffset(res, false);
+            return res;
+        } else {
+            return moment(input).local();
+        }
     }
 
     /************************************
@@ -21911,6 +21929,9 @@ return jQuery;
                     this['_' + i] = prop;
                 }
             }
+            // Lenient ordinal parsing accepts just a number in addition to
+            // number + (possibly) stuff coming from _ordinalParseLenient.
+            this._ordinalParseLenient = new RegExp(this._ordinalParse.source + '|' + /\d{1,2}/.source);
         },
 
         _months : 'January_February_March_April_May_June_July_August_September_October_November_December'.split('_'),
@@ -21923,22 +21944,32 @@ return jQuery;
             return this._monthsShort[m.month()];
         },
 
-        monthsParse : function (monthName) {
+        monthsParse : function (monthName, format, strict) {
             var i, mom, regex;
 
             if (!this._monthsParse) {
                 this._monthsParse = [];
+                this._longMonthsParse = [];
+                this._shortMonthsParse = [];
             }
 
             for (i = 0; i < 12; i++) {
                 // make the regex if we don't have it already
-                if (!this._monthsParse[i]) {
-                    mom = moment.utc([2000, i]);
+                mom = moment.utc([2000, i]);
+                if (strict && !this._longMonthsParse[i]) {
+                    this._longMonthsParse[i] = new RegExp('^' + this.months(mom, '').replace('.', '') + '$', 'i');
+                    this._shortMonthsParse[i] = new RegExp('^' + this.monthsShort(mom, '').replace('.', '') + '$', 'i');
+                }
+                if (!strict && !this._monthsParse[i]) {
                     regex = '^' + this.months(mom, '') + '|^' + this.monthsShort(mom, '');
                     this._monthsParse[i] = new RegExp(regex.replace('.', ''), 'i');
                 }
                 // test the regex
-                if (this._monthsParse[i].test(monthName)) {
+                if (strict && format === 'MMMM' && this._longMonthsParse[i].test(monthName)) {
+                    return i;
+                } else if (strict && format === 'MMM' && this._shortMonthsParse[i].test(monthName)) {
+                    return i;
+                } else if (!strict && this._monthsParse[i].test(monthName)) {
                     return i;
                 }
             }
@@ -21981,6 +22012,7 @@ return jQuery;
         },
 
         _longDateFormat : {
+            LTS : 'h:mm:ss A',
             LT : 'h:mm A',
             L : 'MM/DD/YYYY',
             LL : 'MMMM D, YYYY',
@@ -22021,9 +22053,9 @@ return jQuery;
             lastWeek : '[Last] dddd [at] LT',
             sameElse : 'L'
         },
-        calendar : function (key, mom) {
+        calendar : function (key, mom, now) {
             var output = this._calendar[key];
-            return typeof output === 'function' ? output.apply(mom) : output;
+            return typeof output === 'function' ? output.apply(mom, [now]) : output;
         },
 
         _relativeTime : {
@@ -22058,6 +22090,7 @@ return jQuery;
             return this._ordinal.replace('%d', number);
         },
         _ordinal : '%d',
+        _ordinalParse : /\d{1,2}/,
 
         preparse : function (string) {
             return string;
@@ -22199,6 +22232,8 @@ return jQuery;
         case 'a':
         case 'A':
             return config._locale._meridiemParse;
+        case 'x':
+            return parseTokenOffsetMs;
         case 'X':
             return parseTokenTimestampMs;
         case 'Z':
@@ -22233,7 +22268,7 @@ return jQuery;
         case 'E':
             return parseTokenOneOrTwoDigits;
         case 'Do':
-            return parseTokenOrdinal;
+            return strict ? config._locale._ordinalParse : config._locale._ordinalParseLenient;
         default :
             a = new RegExp(regexpEscape(unescapeFormat(token.replace('\\', '')), 'i'));
             return a;
@@ -22270,7 +22305,7 @@ return jQuery;
             break;
         case 'MMM' : // fall through to MMMM
         case 'MMMM' :
-            a = config._locale.monthsParse(input);
+            a = config._locale.monthsParse(input, token, config._strict);
             // if we didn't find a month name, mark the date as invalid.
             if (a != null) {
                 datePartArray[MONTH] = a;
@@ -22287,7 +22322,8 @@ return jQuery;
             break;
         case 'Do' :
             if (input != null) {
-                datePartArray[DATE] = toInt(parseInt(input, 10));
+                datePartArray[DATE] = toInt(parseInt(
+                            input.match(/\d{1,2}/)[0], 10));
             }
             break;
         // DAY OF YEAR
@@ -22312,11 +22348,13 @@ return jQuery;
         case 'A' :
             config._isPm = config._locale.isPM(input);
             break;
-        // 24 HOUR
-        case 'H' : // fall through to hh
-        case 'HH' : // fall through to hh
+        // HOUR
         case 'h' : // fall through to hh
         case 'hh' :
+            config._pf.bigHour = true;
+            /* falls through */
+        case 'H' : // fall through to HH
+        case 'HH' :
             datePartArray[HOUR] = toInt(input);
             break;
         // MINUTE
@@ -22335,6 +22373,10 @@ return jQuery;
         case 'SSS' :
         case 'SSSS' :
             datePartArray[MILLISECOND] = toInt(('0.' + input) * 1000);
+            break;
+        // UNIX OFFSET (MILLISECONDS)
+        case 'x':
+            config._d = new Date(toInt(input));
             break;
         // UNIX TIMESTAMP WITH MS
         case 'X':
@@ -22472,11 +22514,24 @@ return jQuery;
             config._a[i] = input[i] = (config._a[i] == null) ? (i === 2 ? 1 : 0) : config._a[i];
         }
 
+        // Check for 24:00:00.000
+        if (config._a[HOUR] === 24 &&
+                config._a[MINUTE] === 0 &&
+                config._a[SECOND] === 0 &&
+                config._a[MILLISECOND] === 0) {
+            config._nextDay = true;
+            config._a[HOUR] = 0;
+        }
+
         config._d = (config._useUTC ? makeUTCDate : makeDate).apply(null, input);
         // Apply timezone offset from input. The actual zone can be changed
         // with parseZone.
         if (config._tzm != null) {
             config._d.setUTCMinutes(config._d.getUTCMinutes() + config._tzm);
+        }
+
+        if (config._nextDay) {
+            config._a[HOUR] = 24;
         }
     }
 
@@ -22491,7 +22546,7 @@ return jQuery;
         config._a = [
             normalizedInput.year,
             normalizedInput.month,
-            normalizedInput.day,
+            normalizedInput.day || normalizedInput.date,
             normalizedInput.hour,
             normalizedInput.minute,
             normalizedInput.second,
@@ -22564,6 +22619,10 @@ return jQuery;
             config._pf.unusedInput.push(string);
         }
 
+        // clear _12h flag if hour is <= 12
+        if (config._pf.bigHour === true && config._a[HOUR] <= 12) {
+            config._pf.bigHour = undefined;
+        }
         // handle am pm
         if (config._isPm && config._a[HOUR] < 12) {
             config._a[HOUR] += 12;
@@ -22572,7 +22631,6 @@ return jQuery;
         if (config._isPm === false && config._a[HOUR] === 12) {
             config._a[HOUR] = 0;
         }
-
         dateFromConfig(config);
         checkOverflow(config);
     }
@@ -22832,7 +22890,8 @@ return jQuery;
 
     function makeMoment(config) {
         var input = config._i,
-            format = config._f;
+            format = config._f,
+            res;
 
         config._locale = config._locale || moment.localeData(config._l);
 
@@ -22856,7 +22915,14 @@ return jQuery;
             makeDateFromInput(config);
         }
 
-        return new Moment(config);
+        res = new Moment(config);
+        if (res._nextDay) {
+            // Adding is smart enough around DST
+            res.add(1, 'd');
+            res._nextDay = undefined;
+        }
+
+        return res;
     }
 
     moment = function (input, format, locale, strict) {
@@ -22888,7 +22954,7 @@ return jQuery;
         'release. Please refer to ' +
         'https://github.com/moment/moment/issues/1407 for more info.',
         function (config) {
-            config._d = new Date(config._i);
+            config._d = new Date(config._i + (config._useUTC ? ' UTC' : ''));
         }
     );
 
@@ -23200,7 +23266,12 @@ return jQuery;
         toISOString : function () {
             var m = moment(this).utc();
             if (0 < m.year() && m.year() <= 9999) {
-                return formatMoment(m, 'YYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
+                if ('function' === typeof Date.prototype.toISOString) {
+                    // native implementation is ~50x faster, use it when we can
+                    return this.toDate().toISOString();
+                } else {
+                    return formatMoment(m, 'YYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
+                }
             } else {
                 return formatMoment(m, 'YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
             }
@@ -23319,7 +23390,7 @@ return jQuery;
                     diff < 1 ? 'sameDay' :
                     diff < 2 ? 'nextDay' :
                     diff < 7 ? 'nextWeek' : 'sameElse';
-            return this.format(this.localeData().calendar(format, this));
+            return this.format(this.localeData().calendar(format, this, moment(now)));
         },
 
         isLeapYear : function () {
@@ -23388,36 +23459,45 @@ return jQuery;
 
         endOf: function (units) {
             units = normalizeUnits(units);
+            if (units === undefined || units === 'millisecond') {
+                return this;
+            }
             return this.startOf(units).add(1, (units === 'isoWeek' ? 'week' : units)).subtract(1, 'ms');
         },
 
         isAfter: function (input, units) {
+            var inputMs;
             units = normalizeUnits(typeof units !== 'undefined' ? units : 'millisecond');
             if (units === 'millisecond') {
                 input = moment.isMoment(input) ? input : moment(input);
                 return +this > +input;
             } else {
-                return +this.clone().startOf(units) > +moment(input).startOf(units);
+                inputMs = moment.isMoment(input) ? +input : +moment(input);
+                return inputMs < +this.clone().startOf(units);
             }
         },
 
         isBefore: function (input, units) {
+            var inputMs;
             units = normalizeUnits(typeof units !== 'undefined' ? units : 'millisecond');
             if (units === 'millisecond') {
                 input = moment.isMoment(input) ? input : moment(input);
                 return +this < +input;
             } else {
-                return +this.clone().startOf(units) < +moment(input).startOf(units);
+                inputMs = moment.isMoment(input) ? +input : +moment(input);
+                return +this.clone().endOf(units) < inputMs;
             }
         },
 
         isSame: function (input, units) {
+            var inputMs;
             units = normalizeUnits(units || 'millisecond');
             if (units === 'millisecond') {
                 input = moment.isMoment(input) ? input : moment(input);
                 return +this === +input;
             } else {
-                return +this.clone().startOf(units) === +makeAs(input, this).startOf(units);
+                inputMs = +moment(input);
+                return +(this.clone().startOf(units)) <= inputMs && inputMs <= +(this.clone().endOf(units));
             }
         },
 
@@ -23594,7 +23674,7 @@ return jQuery;
         },
 
         lang : deprecate(
-            'moment().lang() is deprecated. Use moment().localeData() instead.',
+            'moment().lang() is deprecated. Instead, use moment().localeData() to get the language configuration. Use moment().locale() to change languages.',
             function (key) {
                 if (key === undefined) {
                     return this.localeData();
@@ -23815,7 +23895,7 @@ return jQuery;
                 return units === 'month' ? months : months / 12;
             } else {
                 // handle milliseconds separately because of floating point math errors (issue #1867)
-                days = this._days + yearsToDays(this._months / 12);
+                days = this._days + Math.round(yearsToDays(this._months / 12));
                 switch (units) {
                     case 'week': return days / 7 + this._milliseconds / 6048e5;
                     case 'day': return days + this._milliseconds / 864e5;
@@ -23917,6 +23997,7 @@ return jQuery;
 
     // Set default locale, other locale will inherit from English.
     moment.locale('en', {
+        ordinalParse: /\d{1,2}(th|st|nd|rd)/,
         ordinal : function (number) {
             var b = number % 10,
                 output = (toInt(number % 100 / 10) === 1) ? 'th' :
@@ -41806,90 +41887,7 @@ exports.visitorList = [
 /*global exports:true*/
 "use strict";
 
-var Syntax = {
-        ArrayExpression: 'ArrayExpression',
-        ArrayPattern: 'ArrayPattern',
-        ArrowFunctionExpression: 'ArrowFunctionExpression',
-        AssignmentExpression: 'AssignmentExpression',
-        BinaryExpression: 'BinaryExpression',
-        BlockStatement: 'BlockStatement',
-        BreakStatement: 'BreakStatement',
-        CallExpression: 'CallExpression',
-        CatchClause: 'CatchClause',
-        ClassBody: 'ClassBody',
-        ClassDeclaration: 'ClassDeclaration',
-        ClassExpression: 'ClassExpression',
-        ClassProperty: 'ClassProperty',
-        ComprehensionBlock: 'ComprehensionBlock',
-        ComprehensionExpression: 'ComprehensionExpression',
-        ConditionalExpression: 'ConditionalExpression',
-        ContinueStatement: 'ContinueStatement',
-        DebuggerStatement: 'DebuggerStatement',
-        DoWhileStatement: 'DoWhileStatement',
-        EmptyStatement: 'EmptyStatement',
-        ExportDeclaration: 'ExportDeclaration',
-        ExportBatchSpecifier: 'ExportBatchSpecifier',
-        ExportSpecifier: 'ExportSpecifier',
-        ExpressionStatement: 'ExpressionStatement',
-        ForInStatement: 'ForInStatement',
-        ForOfStatement: 'ForOfStatement',
-        ForStatement: 'ForStatement',
-        FunctionDeclaration: 'FunctionDeclaration',
-        FunctionExpression: 'FunctionExpression',
-        Identifier: 'Identifier',
-        IfStatement: 'IfStatement',
-        ImportDeclaration: 'ImportDeclaration',
-        ImportSpecifier: 'ImportSpecifier',
-        LabeledStatement: 'LabeledStatement',
-        Literal: 'Literal',
-        LogicalExpression: 'LogicalExpression',
-        MemberExpression: 'MemberExpression',
-        MethodDefinition: 'MethodDefinition',
-        ModuleDeclaration: 'ModuleDeclaration',
-        NewExpression: 'NewExpression',
-        ObjectExpression: 'ObjectExpression',
-        ObjectPattern: 'ObjectPattern',
-        ObjectTypeAnnotation: 'ObjectTypeAnnotation',
-        OptionalParameter: 'OptionalParameter',
-        ParametricTypeAnnotation: 'ParametricTypeAnnotation',
-        ParametricallyTypedIdentifier: 'ParametricallyTypedIdentifier',
-        Program: 'Program',
-        Property: 'Property',
-        ReturnStatement: 'ReturnStatement',
-        SequenceExpression: 'SequenceExpression',
-        SpreadElement: 'SpreadElement',
-        SpreadProperty: 'SpreadProperty',
-        SwitchCase: 'SwitchCase',
-        SwitchStatement: 'SwitchStatement',
-        TaggedTemplateExpression: 'TaggedTemplateExpression',
-        TemplateElement: 'TemplateElement',
-        TemplateLiteral: 'TemplateLiteral',
-        ThisExpression: 'ThisExpression',
-        ThrowStatement: 'ThrowStatement',
-        TryStatement: 'TryStatement',
-        TypeAnnotatedIdentifier: 'TypeAnnotatedIdentifier',
-        TypeAnnotation: 'TypeAnnotation',
-        UnaryExpression: 'UnaryExpression',
-        UpdateExpression: 'UpdateExpression',
-        VariableDeclaration: 'VariableDeclaration',
-        VariableDeclarator: 'VariableDeclarator',
-        VoidTypeAnnotation: 'VoidTypeAnnotation',
-        WhileStatement: 'WhileStatement',
-        WithStatement: 'WithStatement',
-        XJSIdentifier: 'XJSIdentifier',
-        XJSNamespacedName: 'XJSNamespacedName',
-        XJSMemberExpression: 'XJSMemberExpression',
-        XJSEmptyExpression: 'XJSEmptyExpression',
-        XJSExpressionContainer: 'XJSExpressionContainer',
-        XJSElement: 'XJSElement',
-        XJSClosingElement: 'XJSClosingElement',
-        XJSOpeningElement: 'XJSOpeningElement',
-        XJSAttribute: 'XJSAttribute',
-        XJSSpreadAttribute: 'XJSSpreadAttribute',
-        XJSText: 'XJSText',
-        YieldExpression: 'YieldExpression',
-        AwaitExpression: 'AwaitExpression'
-    };
+var Syntax = require('esprima-fb').Syntax;
 var utils = require('jstransform/src/utils');
 
 var FALLBACK_TAGS = require('./xjs').knownTags;
@@ -42160,7 +42158,7 @@ exports.visitorList = [
   visitReactTag
 ];
 
-},{"./xjs":58,"jstransform/src/utils":45}],57:[function(require,module,exports){
+},{"./xjs":58,"esprima-fb":30,"jstransform/src/utils":45}],57:[function(require,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -61914,7 +61912,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var BaseHelpers;
 
   BaseHelpers = (function() {
-    var HandlebarsLookups, Replacer, register, registerEach, registerIf, registerWith, wrap;
+    var HandlebarsLookups, Replacer, register, registerEach, registerIf, registerWith;
     HandlebarsLookups = require('./lookups');
     Replacer = require('../replacer');
     register = function() {
@@ -61943,7 +61941,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       var HandlebarsHelpers;
       HandlebarsHelpers = require('./helpers');
       return HandlebarsHelpers.register('if', function(raw_ctx, wrapped_ctx, args, opts) {
-        return "" + wrapped_ctx + " ? " + (wrap(opts.fn || null)) + " : " + (wrap(opts.inverse || null));
+        return "" + wrapped_ctx + " ? " + (HandlebarsHelpers.wrap(opts.fn || null)) + " : " + (HandlebarsHelpers.wrap(opts.inverse || null));
       });
     };
     registerWith = function() {
@@ -61966,12 +61964,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         return result;
       });
     };
-    wrap = function(content) {
-      if (!content) {
-        return;
-      }
-      return "<div>" + content + "</div>";
-    };
     return {
       register: register
     };
@@ -61987,15 +61979,16 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     __slice = [].slice;
 
   HandlebarsHelpers = (function() {
-    var BaseHelpers, CONSTANTS, Handlebars, LodashHelpers, MomentHelpers, Replacer, constant, init, raw, register, wrapped, wrapped_state, _;
+    var BaseHelpers, CONSTANTS, HTML_REGEX, Handlebars, LodashHelpers, MomentHelpers, Replacer, constant, firstArgElemental, firstArgObject, init, raw, register, wrap, wrapped, wrapped_state, _;
     _ = require('lodash');
     Handlebars = require('handlebars');
     Replacer = require('../replacer');
     LodashHelpers = require('./lodash_helpers');
     BaseHelpers = require('./base_helpers');
     MomentHelpers = require('./moment_helpers');
+    HTML_REGEX = /^<([\s\S]*?.+?[\s\S]*?)>$/;
     CONSTANTS = {
-      actions: ['create', 'update', 'destroy', 'previous', 'next', 'login']
+      actions: ['create', 'update', 'destroy', 'previous', 'next', 'facebook']
     };
     constant = function(name) {
       return CONSTANTS[name];
@@ -62005,35 +61998,73 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       BaseHelpers.register();
       return MomentHelpers.register();
     };
-    register = function(method, final_fn) {
-      return Handlebars.registerHelper(method, function() {
-        var HandlebarsMock, arg_ids, args, code, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref;
-        initial_ctx = arguments[0], initial_args = 3 <= arguments.length ? __slice.call(arguments, 1, _i = arguments.length - 1) : (_i = 1, []), initial_opts = arguments[_i++];
-        _ref = initial_opts.ids, ctx_id = _ref[0], arg_ids = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+    firstArgObject = function(method, final_fn, argums) {
+      var HandlebarsMock, arg_ids, args, code, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref, _ref1;
+      _ref = [void 0].concat(argums[0]), initial_ctx = _ref[0], initial_args = 3 <= _ref.length ? __slice.call(_ref, 1, _i = _ref.length - 1) : (_i = 1, []), initial_opts = _ref[_i++];
+      _ref1 = initial_opts.ids || [], ctx_id = _ref1[0], arg_ids = 2 <= _ref1.length ? __slice.call(_ref1, 1) : [];
+      if (initial_ctx || ctx_id) {
         wrapped_state_ctx = wrapped_state(initial_ctx, ctx_id);
         raw_ctx = raw(initial_ctx, ctx_id);
-        args = [];
-        _.each(initial_args, function(arg, i) {
-          return args[i] = raw(initial_args[i], arg_ids[i]);
-        });
-        if (!_.isEmpty(_.keys(initial_opts.hash))) {
-          args.push(initial_opts.hash);
-        }
-        opts = {};
-        HandlebarsMock = require('./mock');
-        if (initial_opts.fn) {
-          opts.fn = initial_opts.fn(HandlebarsMock.get());
-        }
-        if (initial_opts.inverse) {
-          opts.inverse = initial_opts.inverse(HandlebarsMock.get());
-        }
-        result = final_fn(raw_ctx, wrapped_state_ctx, args, opts);
-        if (result.match(/^<(.*)>$/)) {
-          code = result;
+      }
+      args = [];
+      _.each(initial_args, function(arg, i) {
+        return args[i] = raw(initial_args[i], arg_ids[i]);
+      });
+      if (!_.isEmpty(_.keys(initial_opts.hash))) {
+        args.push(initial_opts.hash);
+      }
+      opts = {};
+      HandlebarsMock = require('./mock');
+      if (initial_opts.fn) {
+        opts.fn = initial_opts.fn(HandlebarsMock.get());
+      }
+      if (initial_opts.inverse) {
+        opts.inverse = initial_opts.inverse(HandlebarsMock.get());
+      }
+      result = final_fn(raw_ctx, wrapped_state_ctx, args, opts);
+      if (result.match(HTML_REGEX)) {
+        code = wrap(result);
+      } else {
+        code = "{" + result + "}";
+      }
+      return new Handlebars.SafeString(code);
+    };
+    firstArgElemental = function(method, final_fn, argums) {
+      var HandlebarsMock, arg_ids, args, code, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref;
+      initial_ctx = argums[0], initial_args = 3 <= argums.length ? __slice.call(argums, 1, _i = argums.length - 1) : (_i = 1, []), initial_opts = argums[_i++];
+      _ref = initial_opts.ids, ctx_id = _ref[0], arg_ids = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+      wrapped_state_ctx = wrapped_state(initial_ctx, ctx_id);
+      raw_ctx = raw(initial_ctx, ctx_id);
+      args = [];
+      _.each(initial_args, function(arg, i) {
+        return args[i] = raw(initial_args[i], arg_ids[i]);
+      });
+      if (!_.isEmpty(_.keys(initial_opts.hash))) {
+        args.push(initial_opts.hash);
+      }
+      opts = {};
+      HandlebarsMock = require('./mock');
+      if (initial_opts.fn) {
+        opts.fn = initial_opts.fn(HandlebarsMock.get());
+      }
+      if (initial_opts.inverse) {
+        opts.inverse = initial_opts.inverse(HandlebarsMock.get());
+      }
+      result = final_fn(raw_ctx, wrapped_state_ctx, args, opts);
+      if (result.match(HTML_REGEX)) {
+        code = wrap(result);
+      } else {
+        code = "\n<div>\n" + ("{" + result + "}\n") + "</div>";
+      }
+      return new Handlebars.SafeString(code);
+    };
+    register = function(method, final_fn) {
+      return Handlebars.registerHelper(method, function() {
+        if (arguments.length === 1 && _.isPlainObject(arguments[0])) {
+          return firstArgObject(method, final_fn, arguments);
         } else {
-          code = "\n<div>\n" + ("{" + result + "}\n") + "</div>";
+          return firstArgElemental(method, final_fn, arguments);
         }
-        return new Handlebars.SafeString(code);
       });
     };
     wrapped_state = function(initial, from_ids) {
@@ -62044,9 +62075,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return result.replace(name, Replacer.addState(name));
     };
     wrapped = function(initial, from_ids) {
-      var braces_match, div_match, result;
+      var braces_match, div_match, e, result;
       result = initial || from_ids;
-      result = result.toString();
+      try {
+        result = result.toString();
+      } catch (_error) {
+        e = _error;
+        debugger;
+      }
       if (div_match = result.match(/<div>\n{(.*?)}\n<\/div>/)) {
         result = div_match[1];
       } else if (braces_match = result.match(/^{(.*?)}$/)) {
@@ -62070,10 +62106,17 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       }
       return result.replace('this.state.', '');
     };
+    wrap = function(content) {
+      if (!content) {
+        return;
+      }
+      return "<div>" + content + "</div>";
+    };
     return {
       init: init,
       constant: constant,
-      register: register
+      register: register,
+      wrap: wrap
     };
   })();
 
@@ -62214,7 +62257,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var HandlebarsMock;
 
   HandlebarsMock = (function() {
-    var CONSTANTS, HandlebarsHelpers, HandlebarsLookups, Replacer, constant, get, getEmpty, isAction, _;
+    var HandlebarsHelpers, HandlebarsLookups, Replacer, get, getEmpty, isAction, _;
     _ = require('lodash');
     _.mixin(require('lodash-deep'));
     Replacer = require('../replacer');
@@ -62244,14 +62287,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       });
       return result;
     };
-    CONSTANTS = {
-      actions: ['create', 'update', 'destroy', 'previous', 'next', 'login']
-    };
-    constant = function(name) {
-      return CONSTANTS[name];
-    };
     isAction = function(lookup) {
-      return _.include(constant('actions'), _.last(lookup.split('.')));
+      return _.include(HandlebarsHelpers.constant('actions'), _.last(lookup.split('.')));
     };
     return {
       get: get,
@@ -62452,8 +62489,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       action: function(path, e) {
         var action, attributes, model_path, model_path_str, _i, _ref;
         _ref = path.split('.'), model_path = 2 <= _ref.length ? __slice.call(_ref, 0, _i = _ref.length - 1) : (_i = 0, []), action = _ref[_i++];
-        model_path_str = model_path.join('.');
-        if (model_path_str === 'facebook') {
+        if (action === 'facebook') {
           return Facebook.login();
         }
         if (action === 'next') {
@@ -62462,6 +62498,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         if (action === 'previous') {
           return Router.previous();
         }
+        model_path_str = model_path.join('.');
         attributes = _.deepGet(this.state, model_path_str);
         attributes.model = _.last(model_path_str.split('.'));
         return Persistance.act(action, e, attributes).then(function(new_model) {
@@ -62478,8 +62515,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Replacer;
 
   Replacer = module.exports = (function() {
-    var Handlebars, addAction, addState, capitalizeActionCase, removeExtraQuotes, replace, replaceToBindings, splice, toAttribute, toReactCode, toState, _;
-    Handlebars = require('handlebars');
+    var addAction, addState, capitalizeActionCase, removeExtraQuotes, replace, replaceToBindings, splice, toAttribute, toReactCode, toState, _;
     _ = require('lodash');
     toReactCode = function(jsx_code) {
       jsx_code = removeExtraQuotes(jsx_code);
@@ -62550,7 +62586,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"handlebars":24,"lodash":27}],223:[function(require,module,exports){
+},{"lodash":27}],223:[function(require,module,exports){
 (function() {
   var Router;
 

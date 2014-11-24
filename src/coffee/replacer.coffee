@@ -1,5 +1,4 @@
 Replacer = module.exports = (->
-  Handlebars = require 'handlebars'
   _ = require 'lodash'
 
   toReactCode = (jsx_code) ->
