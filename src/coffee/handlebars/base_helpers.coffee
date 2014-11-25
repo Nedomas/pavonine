@@ -46,7 +46,7 @@ BaseHelpers = (->
           path = [raw_ctx, attribute].join('.')
           "#{Replacer.addAction(path)}"
 
-      result
+      HandlebarsHelpers.wrap(result)
 
   return {
     register: register

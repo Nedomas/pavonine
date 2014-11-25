@@ -62022,7 +62022,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           path = [raw_ctx, attribute].join('.');
           return "" + (Replacer.addAction(path));
         });
-        return result;
+        return HandlebarsHelpers.wrap(result);
       });
     };
     return {

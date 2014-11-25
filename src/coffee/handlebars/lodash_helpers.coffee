@@ -17,7 +17,6 @@ LodashHelpers = (->
           fn_args = [wrapped_ctx, args...]
           "_.#{method}(#{fn_args.join(', ')})"
 
-
   return {
     register: register
   }
