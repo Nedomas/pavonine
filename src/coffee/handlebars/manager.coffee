@@ -15,6 +15,7 @@ HandlebarsManager = (->
 
         # ``name`` is a receiver (e.g. current_user)
         return if _.include(_.keys(Handlebars.helpers), name)
+        HandlebarsLookups.addOnContext(name)
 
         # ``lookup`` is a full lookup
         lookup = opcode.args[0].join('.')

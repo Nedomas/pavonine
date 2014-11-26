@@ -62299,6 +62299,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           if (_.include(_.keys(Handlebars.helpers), name)) {
             return;
           }
+          HandlebarsLookups.addOnContext(name);
           lookup = opcode.args[0].join('.');
           return HandlebarsLookups.addOnContext(lookup);
         });
