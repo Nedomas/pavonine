@@ -10,7 +10,10 @@ Persistance = module.exports = (->
     throw new Error 'No model specified' unless attributes.model
 
     model = new Model(attributes)
-    connection = new Databound('models', app_token: window.PAVONINE_APP)
+    connection = new Databound 'models',
+      app_token: window.PAVONINE_APP
+      model: model.model
+
     connection[action](model.serialize()).then (resp) ->
       new_attributes = if _.isObject(resp) then resp else {}
       metadata =

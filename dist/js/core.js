@@ -62540,7 +62540,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       }
       model = new Model(attributes);
       connection = new Databound('models', {
-        app_token: window.PAVONINE_APP
+        app_token: window.PAVONINE_APP,
+        model: model.model
       });
       return connection[action](model.serialize()).then(function(resp) {
         var metadata, new_attributes, new_model;
