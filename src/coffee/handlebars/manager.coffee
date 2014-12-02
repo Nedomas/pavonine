@@ -13,8 +13,13 @@ HandlebarsManager = (->
       _.each @environment.opcodes, (opcode) ->
         return unless opcode.opcode == 'lookupOnContext'
 
+        # ``name`` is a receiver (e.g. current_user)
         return if _.include(_.keys(Handlebars.helpers), name)
         HandlebarsLookups.addOnContext(name)
+
+        # ``lookup`` is a full lookup
+        lookup = opcode.args[0].join('.')
+        HandlebarsLookups.addOnContext(lookup)
 
       if Handlebars.JavaScriptCompiler.isValidJavaScriptVariableName(name)
         "#{parent}.#{name}"

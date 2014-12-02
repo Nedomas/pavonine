@@ -16,6 +16,10 @@ global.mockDOM = (body, fn) ->
       window.PAVONINE_SERVER = 'http://pavonine-testing.com'
       window.PAVONINE_MIN = ''
 
+      xmldom = require 'xmldom'
+      window.DOMParser = xmldom.DOMParser
+      window.XMLSerializer = xmldom.XMLSerializer
+
       Pavonine = require '../src/coffee/pavonine'
       fn(Pavonine)
 

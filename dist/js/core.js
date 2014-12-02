@@ -62292,13 +62292,16 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     patchCompiler = function() {
       return Handlebars.JavaScriptCompiler.prototype.nameLookup = function(parent, name, type) {
         _.each(this.environment.opcodes, function(opcode) {
+          var lookup;
           if (opcode.opcode !== 'lookupOnContext') {
             return;
           }
           if (_.include(_.keys(Handlebars.helpers), name)) {
             return;
           }
-          return HandlebarsLookups.addOnContext(name);
+          HandlebarsLookups.addOnContext(name);
+          lookup = opcode.args[0].join('.');
+          return HandlebarsLookups.addOnContext(lookup);
         });
         if (Handlebars.JavaScriptCompiler.isValidJavaScriptVariableName(name)) {
           return "" + parent + "." + name;
@@ -62537,7 +62540,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       }
       model = new Model(attributes);
       connection = new Databound('models', {
-        app_token: window.PAVONINE_APP
+        app_token: window.PAVONINE_APP,
+        model: model.model
       });
       return connection[action](model.serialize()).then(function(resp) {
         var metadata, new_attributes, new_model;
