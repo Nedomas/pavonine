@@ -81,11 +81,11 @@ describe 'Base helpers', ->
     it 'should scope attributes', ->
       html = "{{#with message}}<p>{{content}}</p>{{/with}}"
       expect(compile(html)).to.equal(
-        "<div><p>{this.state.message.content}</p></div>"
+        "<div><div><p>{this.state.message.content}</p></div></div>"
       )
 
     it 'should scope actions', ->
       html = "{{#with message}}<button onclick='{{create}}'>Save</button>{{/with}}"
       expect(compile(html)).to.equal(
-        "<div><button onclick='{_.partial(this.action, 'message.create')}'>Save</button></div>"
+        "<div><div><button onclick='{_.partial(this.action, 'message.create')}'>Save</button></div></div>"
       )
