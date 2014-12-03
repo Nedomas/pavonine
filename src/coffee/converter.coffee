@@ -6,10 +6,6 @@ class Converter
   HandlebarsLookups = require './handlebars/lookups'
   HandlebarsMock = require './handlebars/mock'
 
-  xmldom = require 'xmldom'
-  DOMParser = xmldom.DOMParser
-  XMLSerializer = xmldom.XMLSerializer
-
   INNER_BODY_REGEX = /<div>([\s\S]*?.*[\s\S*?])<\/div>/
 
   constructor: (klass_name, element) ->

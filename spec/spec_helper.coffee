@@ -21,8 +21,8 @@ global.mockDOM = (body, fn) ->
       global.navigator = window.navigator
 
       xmldom = require 'xmldom'
-      window.DOMParser = xmldom.DOMParser
-      window.XMLSerializer = xmldom.XMLSerializer
+      global.DOMParser = xmldom.DOMParser
+      global.XMLSerializer = xmldom.XMLSerializer
 
       Pavonine = require '../src/coffee/pavonine'
       fn(Pavonine)
