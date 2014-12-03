@@ -68,3 +68,23 @@ describe 'Converter', ->
           l("  }") +
            ("});")
         )
+
+  describe 'double nesting', ->
+    it '#with and #with', ->
+      html = "{{#with country}}{{#with user}}<p>{{message.content}}</p>{{/with}}{{/with}}"
+      mockDOM html, (Pavonine) ->
+        Converter = require '../src/coffee/converter'
+        converter = new Converter('test_1', html)
+
+        expect(converter.componentCode()).to.equal(
+          l("/** @jsx React.DOM */") +
+          l("var test_1 = React.createClass({displayName: 'test_1',") +
+          l("  mixins: [ReactMixin],") +
+          l("  render: function() {") +
+          l("    return (") +
+          l() +
+          l("      React.DOM.div(null, React.DOM.div(null, React.DOM.div(null, React.DOM.div(null, React.DOM.p(null, this.state.country.user.message.content)))))") +
+          l("    );") +
+          l("  }") +
+           ("});")
+        )

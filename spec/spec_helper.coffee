@@ -3,8 +3,9 @@ global.compile = (html) ->
   result = Handlebars.compile(html, trackIds: true)()
   result?.string || result
 
-jsdom = require('jsdom')
 global.mockDOM = (body, fn) ->
+  jsdom = require('jsdom')
+
   jsdom.env(
     html: "<html><body>#{body}</body></html>"
     scripts: ['../bower_components/jquery/dist/jquery.min.js']

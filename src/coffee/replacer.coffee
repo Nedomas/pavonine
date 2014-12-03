@@ -56,7 +56,7 @@ Replacer = module.exports = (->
     initial.replace('this.state.', '')
 
   splice = (string, idx, rem, s) ->
-    (string.slice(0, idx) + s + string.slice(idx + Math.abs(rem)))
+    (string.toString().slice(0, idx) + s + string.toString().slice(idx + Math.abs(rem)))
 
   return {
     toReactCode: toReactCode

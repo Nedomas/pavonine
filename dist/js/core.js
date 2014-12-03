@@ -62693,7 +62693,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       return initial.replace('this.state.', '');
     };
     splice = function(string, idx, rem, s) {
-      return string.slice(0, idx) + s + string.slice(idx + Math.abs(rem));
+      return string.toString().slice(0, idx) + s + string.toString().slice(idx + Math.abs(rem));
     };
     return {
       toReactCode: toReactCode,
