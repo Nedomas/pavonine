@@ -88,3 +88,27 @@ describe 'Converter', ->
           l("  }") +
            ("});")
         )
+
+    it '#with and #each', ->
+      html = "{{#with country}}{{#each users}}<p>{{message.content}}</p>{{/each}}{{/with}}"
+      mockDOM html, (Pavonine) ->
+        Converter = require '../src/coffee/converter'
+        converter = new Converter('test_1', html)
+
+        expect(converter.componentCode()).to.equal(
+          l("/** @jsx React.DOM */") +
+          l("var test_1 = React.createClass({displayName: 'test_1',") +
+          l("  mixins: [ReactMixin],") +
+          l("  render: function() {") +
+          l("    return (") +
+          l() +
+          l("      React.DOM.div(null, React.DOM.div(null, ") +
+          l("          React.DOM.div(null, ")+
+          l("            _.map(this.state.users, function(record, i) {") +
+          l("            return React.DOM.p(null, record.message.content)") +
+          l("            })") +
+          l("          )))") +
+          l("    );") +
+          l("  }") +
+           ("});")
+        )

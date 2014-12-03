@@ -84,8 +84,20 @@ describe 'Base helpers', ->
         "<div><div><p>{this.state.message.content}</p></div></div>"
       )
 
+    it 'should scope deeper attributes', ->
+      html = "{{#with user}}{{#with message}}<p>{{content}}</p>{{/with}}{{/with}}"
+      expect(compile(html)).to.equal(
+        "<div><div><div><div><p>{this.state.user.message.content}</p></div></div></div></div>"
+      )
+
     it 'should scope actions', ->
       html = "{{#with message}}<button onclick='{{create}}'>Save</button>{{/with}}"
       expect(compile(html)).to.equal(
         "<div><div><button onclick='{_.partial(this.action, 'message.create')}'>Save</button></div></div>"
       )
+
+    it 'should handle deeper action scopings', ->
+      html = "{{#with user}}{{#with message}}<button onclick='{{create}}'>Save</button>{{/with}}{{/with}}"
+      # expect(compile(html)).to.equal(
+      #   "<div><div><button onclick='{_.partial(this.action, 'user.message.create')}'>Save</button></div></div>"
+      # )
