@@ -1,4 +1,4 @@
-Converter = (->
+class Converter
   react_tools = require 'react-tools'
   HTMLtoJSX = require '../vendor/htmltojsx.min'
   Replacer = require './replacer'
@@ -6,16 +6,23 @@ Converter = (->
   HandlebarsLookups = require './handlebars/lookups'
   HandlebarsMock = require './handlebars/mock'
 
-  htmlToReactComponent = (klass_name, element) ->
-    xhtml = toXHTML(element)
-    jsx = toJSX(klass_name, xhtml)
-    toComponent(klass_name, jsx)
+  xmldom = require 'xmldom'
+  DOMParser = xmldom.DOMParser
+  XMLSerializer = xmldom.XMLSerializer
 
-  toComponent = (klass_name, jsx) ->
-    component_code = react_tools.transform(jsx)
-    evalWithDependencies(component_code, klass_name)
+  INNER_BODY_REGEX = /<div>([\s\S]*?.*[\s\S*?])<\/div>/
 
-  evalWithDependencies = (code, additional = '') ->
+  constructor: (klass_name, element) ->
+    @klass_name = klass_name
+    @element = element
+
+  componentCode: ->
+    react_tools.transform(@reactCode())
+
+  component: ->
+    @evalWithDependencies(@componentCode(), @klass_name)()
+
+  evalWithDependencies: (code, additional = '') ->
     ReactMixin = require './react_mixin'
     React = require 'react'
     _ = require 'lodash'
@@ -25,39 +32,38 @@ Converter = (->
 
     result
 
-  toJSX = (klass_name, html) ->
+  mocked: ->
     HandlebarsLookups.clean()
-    template = Handlebars.compile(html, trackIds: true)
+    template = Handlebars.compile(@xhtml(), trackIds: true)
     t = template() # gather data
     HandlebarsMock.scanDefaultValues(t)
 
-    mocked = template(HandlebarsMock.get()).toString()
-    wrapped = wrapInJSX(klass_name, mocked)
-    react_code = Replacer.toReactCode(wrapped)
+    template(HandlebarsMock.get()).toString()
 
-  wrapInJSX = (klass_name, html) ->
+  xhtml: ->
+    without_spaces = @element.replace('\n', '').replace(/\s{2,}/g, '')
+    doc = new DOMParser().parseFromString("<div>#{without_spaces}</div>",
+      'text/html')
+    result = new XMLSerializer().serializeToString(doc)
+
+    @extractBody(result)
+
+  jsx: ->
     converter = new HTMLtoJSX
       createClass: true
-      outputClassName: klass_name
+      outputClassName: @klass_name
 
-    jsx_code = "/** @jsx React.DOM */\n" + converter.convert(html)
+    converter.convert(@mocked())
+
+  reactCode: ->
+    jsx_code = "/** @jsx React.DOM */\n" + @jsx()
     render_index = jsx_code.match('render').index
     jsx_code = Replacer.splice(jsx_code, render_index, 0,
       'mixins: [ReactMixin],\n  ')
+    Replacer.toReactCode(jsx_code)
 
-  INNER_BODY_REGEX = /<body>([\s\S]*?.*[\s\S*?])<\/body>/
-
-  toXHTML = (input) ->
-    without_spaces = input.replace('\n', '').replace(/\s{2,}/g, '')
-    doc = new DOMParser().parseFromString(without_spaces, 'text/html')
-    result = new XMLSerializer().serializeToString(doc)
-    INNER_BODY_REGEX.exec(result)
+  extractBody: (input) ->
+    INNER_BODY_REGEX.exec(input)
     RegExp.$1
-
-  return {
-    htmlToReactComponent: htmlToReactComponent
-    evalWithDependencies: evalWithDependencies
-  }
-)()
 
 module.exports = Converter

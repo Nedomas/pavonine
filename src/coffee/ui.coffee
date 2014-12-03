@@ -14,7 +14,8 @@ class UI
     "pavonine_#{@step}"
 
   component: ->
-    Converter.htmlToReactComponent(@klassName(), @content())()
+    converter = new Converter(@klassName(), @content())
+    converter.component()
 
   content: ->
     window.PAVONINE_STEPS[@step] or throw new Error("No step '#{@step}'")

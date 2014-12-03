@@ -16,6 +16,10 @@ global.mockDOM = (body, fn) ->
       window.PAVONINE_SERVER = 'http://pavonine-testing.com'
       window.PAVONINE_MIN = ''
 
+      global.document = window.document
+      global.IN_BROWSER = true
+      global.navigator = window.navigator
+
       xmldom = require 'xmldom'
       window.DOMParser = xmldom.DOMParser
       window.XMLSerializer = xmldom.XMLSerializer
@@ -25,3 +29,6 @@ global.mockDOM = (body, fn) ->
 
       window.close()
   )
+
+global.l = (code = '') ->
+  "#{code}\n"
