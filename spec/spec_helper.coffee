@@ -25,6 +25,9 @@ global.mockDOM = (body, fn) ->
       global.DOMParser = xmldom.DOMParser
       global.XMLSerializer = xmldom.XMLSerializer
 
+      global.jQuery = window.jQuery
+      global.jQuery.Deferred = window.jQuery.Deferred
+
       Pavonine = require '../src/coffee/pavonine'
       fn(Pavonine)
 
