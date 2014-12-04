@@ -62039,6 +62039,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         ACTION_PARTIAL_REGEX = /_\.partial\(this\.action\,\ &#x27;(.+?)&#x27;\)/g;
         result = Replacer.replace(result, ACTION_PARTIAL_REGEX, function(attribute, initial) {
           var path;
+          console.log(wrapped_ctx);
           path = [raw_ctx, attribute].join('.');
           return "" + (Replacer.addAction(path));
         });

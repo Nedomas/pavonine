@@ -8,7 +8,9 @@ class Converter
 
   INNER_BODY_REGEX = /<div>([\s\S]*?.*[\s\S*?])<\/div>/
 
-  constructor: (@klass_name, @element) ->
+  constructor: (klass_name, element) ->
+    @klass_name = klass_name
+    @element = element
 
   componentCode: ->
     react_tools.transform(@reactCode())

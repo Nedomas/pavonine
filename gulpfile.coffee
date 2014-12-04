@@ -9,7 +9,6 @@ mocha = require 'gulp-mocha'
 chai  = require 'chai'
 sinon = require 'sinon'
 sinonChai = require 'sinon-chai'
-jest = require 'gulp-jest'
 
 gulp.task 'default', ['build']
 
@@ -51,22 +50,5 @@ gulp.task 'test', ->
   .pipe(mocha(
     reporter: 'spec'
   ).on("error", gutil.log))
-
-gulp.task 'jest', ->
-  gulp.src(__dirname).pipe jest(
-    scriptPreprocessor: './spec/support/preprocessor.js'
-    unmockedModulePathPatterns: ['node_modules/react']
-    # testDirectoryName: 'spec'
-    testPathIgnorePatterns: [
-      'node_modules'
-      'spec/support'
-    ]
-    testFileExtensions: [
-      'coffee'
-      'js'
-      'json'
-      'react'
-    ]
-  )
 
 gulp.task 'build', ['coffee', 'ugly', 'watch']
