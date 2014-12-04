@@ -6,8 +6,17 @@ HandlebarsManager = (->
 
   init = ->
     @patchCompiler()
+    # this patches Handlebars base helpers (each, with, if) and adds additional
+    # helpers
     HandlebarsHelpers.init()
 
+  # this patch is for the tracking of required models for the DOM
+  #
+  # ```
+  # <p>{{subscriber.email}}</p>
+  # ```
+  # would register that we need a ``subscriber`` object with a property
+  # ``email``
   patchCompiler = ->
     Handlebars.JavaScriptCompiler::nameLookup = (parent, name, type) ->
       _.each @environment.opcodes, (opcode) ->

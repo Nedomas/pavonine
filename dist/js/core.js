@@ -61832,10 +61832,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Core;
 
   Core = (function() {
-    var Facebook, HandlebarsManager, Router, init;
+    var HandlebarsManager, Router, init;
     HandlebarsManager = require('./handlebars/manager');
     Router = require('./router');
-    Facebook = require('./facebook');
     init = function() {
       HandlebarsManager.init();
       return Router.change(1);
@@ -61851,7 +61850,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":209,"./handlebars/manager":216,"./router":225}],211:[function(require,module,exports){
+},{"./handlebars/manager":216,"./router":225}],211:[function(require,module,exports){
 (function() {
   var FilledModel;
 
@@ -62039,7 +62038,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         ACTION_PARTIAL_REGEX = /_\.partial\(this\.action\,\ &#x27;(.+?)&#x27;\)/g;
         result = Replacer.replace(result, ACTION_PARTIAL_REGEX, function(attribute, initial) {
           var path;
-          console.log(wrapped_ctx);
           path = [raw_ctx, attribute].join('.');
           return "" + (Replacer.addAction(path));
         });
