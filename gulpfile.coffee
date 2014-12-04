@@ -55,9 +55,17 @@ gulp.task 'test', ->
 gulp.task 'jest', ->
   gulp.src(__dirname).pipe jest(
     scriptPreprocessor: './spec/support/preprocessor.js'
-    setupEnvScriptFile: './spec/spec_helper.coffee'
+    unmockedModulePathPatterns: ['node_modules/react']
+    # testDirectoryName: 'spec'
+    testPathIgnorePatterns: [
+      'node_modules'
+      'spec/support'
+    ]
     testFileExtensions: [
       'coffee'
+      'js'
+      'json'
+      'react'
     ]
   )
 
