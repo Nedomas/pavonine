@@ -16,9 +16,13 @@ HandlebarsHelpers = (->
     CONSTANTS[name]
 
   init = ->
+    # register sortBy, first, last, max, etc.
     LodashHelpers.register()
+    # register each, if, with.
     BaseHelpers.register()
+    # register moment helper
     MomentHelpers.register()
+    # register some regular javascript helpers (reverse, etc.)
     VanillaHelpers.register()
 
   firstArgObject = (method, final_fn, argums) ->
@@ -135,6 +139,8 @@ HandlebarsHelpers = (->
 
     result.replace('this.state.', '')
 
+  # there cannot be unwrapped DOM elements (like [<div></div><p></p>]) given
+  # to React render method. You got to wrap them with one parent DOM
   wrap = (content) ->
     return unless content
 
