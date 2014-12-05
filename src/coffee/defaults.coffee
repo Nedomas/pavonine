@@ -1,19 +1,11 @@
-Defaults = (->
-  _ = require 'lodash'
-  _.mixin require('lodash-deep')
-
+# persistance of all default values of fields (defaultValue in DOM)
+class Defaults
   data = {}
 
-  save = (path, val) ->
+  @save: (path, val) ->
     data[path] = val
 
-  getAll = ->
+  @getAll: ->
     data
-
-  return {
-    save: save
-    getAll: getAll
-  }
-)()
 
 module.exports = Defaults

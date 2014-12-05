@@ -4,7 +4,7 @@ Persistance = module.exports = (->
   Databound.API_URL = window.PAVONINE_SERVER
 
   Model = require './model'
-  Memory = require './memory'
+  StepMemory = require './step_memory'
 
   communicate = (action, attributes) ->
     throw new Error 'No model specified' unless attributes.model
@@ -21,7 +21,7 @@ Persistance = module.exports = (->
 
       new_model = new Model(_.assign(new_attributes, metadata))
 
-      Memory.setArray(new_model.plural, connection.takeAll())
+      StepMemory.setArray(new_model.plural, connection.takeAll())
 
       if _.isArray(resp)
         Databound::promise(connection.takeAll())

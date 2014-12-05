@@ -2,7 +2,7 @@ class FilledModel
   _ = require 'lodash'
   _.mixin require('lodash-deep')
   traverse = require 'traverse'
-  Memory = require './memory'
+  StepMemory = require './step_memory'
   Utils = require './utils'
   Defaults = require './defaults'
   Converter = require './converter'
@@ -83,7 +83,7 @@ class FilledModel
     _.deepSet(@attributes, Utils.pathString(path), @valueFromMemory(path))
 
   valueFromMemory: (path) ->
-    Memory.get(Utils.pathString(path))
+    StepMemory.get(Utils.pathString(path))
 
   existingValue: (path) ->
     _.deepGet(@attributes, Utils.pathString(path))

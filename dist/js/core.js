@@ -61639,154 +61639,111 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":231,"./handlebars/lookups":215,"./handlebars/mock":217,"./react_mixin":226,"./replacer":227,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
-(function() {
-  var MissingData,
-    __slice = [].slice;
-
-  MissingData = (function() {
-    var DataLoader, Databound, HandlebarsLookups, Memory, _;
-
-    function MissingData() {}
-
-    _ = require('lodash');
-
-    Databound = require('databound');
-
-    HandlebarsLookups = require('./handlebars/lookups');
-
-    Memory = require('./memory');
-
-    DataLoader = require('./data_loader');
-
-    MissingData.missingVariables = function() {
-      return _.uniq(this.missingCollections());
-    };
-
-    MissingData.missingCollections = function() {
-      var result;
-      result = [];
-      _.each(HandlebarsLookups.getCollection(), function(lookup) {
-        var owner, path, _ref;
-        _ref = lookup.split('.'), owner = _ref[0], path = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
-        if (!Memory.has(owner)) {
-          return result.push(owner);
-        }
-      });
-      if (this.used('current_user')) {
-        result.push('current_user');
-      }
-      return result;
-    };
-
-    MissingData.used = function(key) {
-      return _.contains(HandlebarsLookups.getIndividual(), key);
-    };
-
-    MissingData.get = function() {
-      if (_.isEmpty(this.missingVariables())) {
-        return Databound.prototype.promise(true);
-      }
-      return DataLoader.load(this.missingVariables());
-    };
-
-    return MissingData;
-
-  })();
-
-  module.exports = Data;
-
-}).call(this);
-
-},{"./data_loader":207,"./handlebars/lookups":215,"./memory":223,"databound":1,"lodash":27}],207:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":232,"./handlebars/lookups":214,"./handlebars/mock":216,"./react_mixin":226,"./replacer":227,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
 (function() {
   var DataLoader;
 
   DataLoader = (function() {
-    var $, Databound, Memory, Persistance, Utils, currentUserTokens, load, loadCurrentUser, loadSingle, _;
+    var $, Databound, LocalMemory, Persistance, Utils, _;
+
+    function DataLoader() {}
+
     Databound = require('databound');
+
     $ = require('jquery');
+
     _ = require('lodash');
+
     Persistance = require('./persistance');
+
     Utils = require('./utils');
-    Memory = require('./memory');
-    load = function(missings) {
-      return $.when.apply($, _.map(missings, function(missing) {
-        return loadSingle(missing);
-      }));
+
+    LocalMemory = require('./local_memory');
+
+    DataLoader.load = function(missings) {
+      return $.when.apply($, _.map(missings, (function(_this) {
+        return function(missing) {
+          return _this.loadSingle(missing);
+        };
+      })(this)));
     };
-    loadSingle = function(name) {
+
+    DataLoader.loadSingle = function(name) {
       var attributes;
       if (name === 'current_user') {
-        return loadCurrentUser();
+        return this.loadCurrentUser();
       }
       attributes = {
         model: Utils.singularize(name)
       };
       return Persistance.communicate('where', attributes);
     };
-    loadCurrentUser = function() {
-      if (!currentUserTokens()) {
+
+    DataLoader.loadCurrentUser = function() {
+      if (!this.currentUserTokens()) {
         return Utils.failedPromise('login');
       }
-      return Persistance.communicate('update', currentUserTokens()).then(function(current_user) {
-        Memory.setForever(current_user.attributes);
+      return Persistance.communicate('update', this.currentUserTokens()).then(function(current_user) {
+        LocalMemory.set(current_user.attributes);
         return Databound.prototype.promise(true);
       });
     };
-    currentUserTokens = function() {
+
+    DataLoader.currentUserTokens = function() {
       var from_storage;
-      from_storage = Memory.getForever('current_user');
+      from_storage = LocalMemory.get('current_user');
       if (_.isEmpty(from_storage)) {
         return;
       }
       return _.pick(from_storage, 'id', 'access_token', 'model');
     };
-    return {
-      load: load
-    };
+
+    return DataLoader;
+
   })();
 
   module.exports = DataLoader;
 
 }).call(this);
 
-},{"./memory":223,"./persistance":225,"./utils":230,"databound":1,"jquery":25,"lodash":27}],208:[function(require,module,exports){
+},{"./local_memory":222,"./persistance":225,"./utils":231,"databound":1,"jquery":25,"lodash":27}],207:[function(require,module,exports){
 (function() {
   var Defaults;
 
   Defaults = (function() {
-    var data, getAll, save, _;
-    _ = require('lodash');
-    _.mixin(require('lodash-deep'));
+    var data;
+
+    function Defaults() {}
+
     data = {};
-    save = function(path, val) {
+
+    Defaults.save = function(path, val) {
       return data[path] = val;
     };
-    getAll = function() {
+
+    Defaults.getAll = function() {
       return data;
     };
-    return {
-      save: save,
-      getAll: getAll
-    };
+
+    return Defaults;
+
   })();
 
   module.exports = Defaults;
 
 }).call(this);
 
-},{"lodash":27,"lodash-deep":26}],209:[function(require,module,exports){
+},{}],208:[function(require,module,exports){
 (function() {
   var Facebook;
 
   Facebook = (function() {
-    var $, Memory, Persistance, Router, ensureInit, init, loggedIn, login, _;
+    var $, LocalMemory, Persistance, Router, ensureInit, init, loggedIn, login, _;
     $ = require('jquery');
     _ = require('lodash');
     _.mixin(require('lodash-deep'));
     Router = require('./router');
-    Memory = require('./memory');
+    LocalMemory = require('./local_memory');
     Persistance = require('./persistance');
     ensureInit = function() {
       var deferred;
@@ -61815,7 +61772,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         model: 'current_user'
       };
       return Persistance.communicate('create', attributes).then(function(current_user) {
-        Memory.setForever(current_user.attributes);
+        LocalMemory.set(current_user.attributes);
         return Router.goOn();
       });
     };
@@ -61835,7 +61792,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":223,"./persistance":225,"./router":228,"jquery":25,"lodash":27,"lodash-deep":26}],210:[function(require,module,exports){
+},{"./local_memory":222,"./persistance":225,"./router":228,"jquery":25,"lodash":27,"lodash-deep":26}],209:[function(require,module,exports){
 (function() {
   var Core;
 
@@ -61863,12 +61820,12 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebars/manager":216,"./router":228}],211:[function(require,module,exports){
+},{"./handlebars/manager":215,"./router":228}],210:[function(require,module,exports){
 (function() {
   var FilledModel;
 
   FilledModel = (function() {
-    var Converter, Defaults, HandlebarsMock, Memory, Utils, traverse, _;
+    var Converter, Defaults, HandlebarsMock, StepMemory, Utils, traverse, _;
 
     _ = require('lodash');
 
@@ -61876,7 +61833,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
     traverse = require('traverse');
 
-    Memory = require('./memory');
+    StepMemory = require('./step_memory');
 
     Utils = require('./utils');
 
@@ -61985,7 +61942,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
 
     FilledModel.prototype.valueFromMemory = function(path) {
-      return Memory.get(Utils.pathString(path));
+      return StepMemory.get(Utils.pathString(path));
     };
 
     FilledModel.prototype.existingValue = function(path) {
@@ -62000,7 +61957,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./converter":205,"./defaults":208,"./handlebars/mock":217,"./memory":223,"./utils":230,"lodash":27,"lodash-deep":26,"traverse":204}],212:[function(require,module,exports){
+},{"./converter":205,"./defaults":207,"./handlebars/mock":216,"./step_memory":229,"./utils":231,"lodash":27,"lodash-deep":26,"traverse":204}],211:[function(require,module,exports){
 (function() {
   var BaseHelpers;
 
@@ -62075,7 +62032,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":227,"./helpers":213,"./lookups":215,"./safe_wrapper":221}],213:[function(require,module,exports){
+},{"../replacer":227,"./helpers":212,"./lookups":214,"./safe_wrapper":220}],212:[function(require,module,exports){
 (function() {
   var HandlebarsHelpers;
 
@@ -62137,7 +62094,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./base_helpers":212,"./lodash_helpers":214,"./moment_helpers":218,"./params":220,"./safe_wrapper":221,"./vanilla_helpers":222,"handlebars":24}],214:[function(require,module,exports){
+},{"./base_helpers":211,"./lodash_helpers":213,"./moment_helpers":217,"./params":219,"./safe_wrapper":220,"./vanilla_helpers":221,"handlebars":24}],213:[function(require,module,exports){
 (function() {
   var LodashHelpers,
     __slice = [].slice;
@@ -62178,7 +62135,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":213,"lodash":27}],215:[function(require,module,exports){
+},{"./helpers":212,"lodash":27}],214:[function(require,module,exports){
 (function() {
   var HandlebarsLookups;
 
@@ -62234,7 +62191,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":27}],216:[function(require,module,exports){
+},{"lodash":27}],215:[function(require,module,exports){
 (function() {
   var HandlebarsManager;
 
@@ -62279,7 +62236,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":213,"./lookups":215,"handlebars":24,"lodash":27}],217:[function(require,module,exports){
+},{"./helpers":212,"./lookups":214,"handlebars":24,"lodash":27}],216:[function(require,module,exports){
 (function() {
   var HandlebarsMock;
 
@@ -62333,7 +62290,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../defaults":208,"../replacer":227,"./helpers":213,"./lookups":215,"jquery":25,"lodash":27,"lodash-deep":26}],218:[function(require,module,exports){
+},{"../defaults":207,"../replacer":227,"./helpers":212,"./lookups":214,"jquery":25,"lodash":27,"lodash-deep":26}],217:[function(require,module,exports){
 (function() {
   var MomentHelpers;
 
@@ -62365,7 +62322,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":213,"lodash":27}],219:[function(require,module,exports){
+},{"./helpers":212,"lodash":27}],218:[function(require,module,exports){
 (function() {
   var ParamUtils,
     __slice = [].slice;
@@ -62417,7 +62374,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":27}],220:[function(require,module,exports){
+},{"lodash":27}],219:[function(require,module,exports){
 (function() {
   var HandlebarsParams,
     __slice = [].slice;
@@ -62492,7 +62449,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":227,"./mock":217,"./param_utils":219,"lodash":27}],221:[function(require,module,exports){
+},{"../replacer":227,"./mock":216,"./param_utils":218,"lodash":27}],220:[function(require,module,exports){
 (function() {
   var SafeWrapper;
 
@@ -62530,7 +62487,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"handlebars":24}],222:[function(require,module,exports){
+},{"handlebars":24}],221:[function(require,module,exports){
 (function() {
   var VanillaHelpers;
 
@@ -62560,61 +62517,93 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":213,"lodash":27}],223:[function(require,module,exports){
+},{"./helpers":212,"lodash":27}],222:[function(require,module,exports){
 (function() {
-  var Memory;
+  var LocalMemory, StepMemory;
 
-  Memory = (function() {
-    var app_data, clean, get, getAll, getForever, has, set, setArray, setForever;
-    app_data = {};
-    set = function(data) {
-      return app_data[data.model] = data;
-    };
-    setForever = function(data) {
-      set(data);
+  StepMemory = require('./step_memory');
+
+  LocalMemory = (function() {
+    function LocalMemory() {}
+
+    LocalMemory.set = function(data) {
       return localStorage[data.model] = JSON.stringify(data);
     };
-    getForever = function(model) {
+
+    LocalMemory.get = function(model) {
       var data, json;
       json = localStorage[model];
       if (!json) {
         return;
       }
       data = JSON.parse(json);
-      return set(data);
+      return StepMemory.set(data);
     };
-    setArray = function(name, records) {
-      return app_data[name] = records;
-    };
-    get = function(model) {
-      return app_data[model];
-    };
-    getAll = function() {
-      return app_data;
-    };
-    has = function(key) {
-      return !!app_data[key];
-    };
-    clean = function() {
-      return app_data = {};
-    };
-    return {
-      set: set,
-      setForever: setForever,
-      setArray: setArray,
-      get: get,
-      getForever: getForever,
-      getAll: getAll,
-      has: has,
-      clean: clean
-    };
+
+    return LocalMemory;
+
   })();
 
-  module.exports = Memory;
+  module.exports = LocalMemory;
 
 }).call(this);
 
-},{}],224:[function(require,module,exports){
+},{"./step_memory":229}],223:[function(require,module,exports){
+(function() {
+  var MissingData,
+    __slice = [].slice;
+
+  MissingData = (function() {
+    var DataLoader, Databound, HandlebarsLookups, StepMemory, _;
+
+    function MissingData() {}
+
+    _ = require('lodash');
+
+    Databound = require('databound');
+
+    HandlebarsLookups = require('./handlebars/lookups');
+
+    StepMemory = require('./step_memory');
+
+    DataLoader = require('./data_loader');
+
+    MissingData.collections = function() {
+      var result;
+      result = [];
+      _.each(HandlebarsLookups.getCollection(), function(lookup) {
+        var owner, path, _ref;
+        _ref = lookup.split('.'), owner = _ref[0], path = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+        if (!StepMemory.has(owner)) {
+          return result.push(owner);
+        }
+      });
+      if (this.used('current_user')) {
+        result.push('current_user');
+      }
+      return _.uniq(result);
+    };
+
+    MissingData.used = function(key) {
+      return _.contains(HandlebarsLookups.getIndividual(), key);
+    };
+
+    MissingData.get = function() {
+      if (_.isEmpty(this.collections())) {
+        return Databound.prototype.promise(true);
+      }
+      return DataLoader.load(this.collections());
+    };
+
+    return MissingData;
+
+  })();
+
+  module.exports = MissingData;
+
+}).call(this);
+
+},{"./data_loader":206,"./handlebars/lookups":214,"./step_memory":229,"databound":1,"lodash":27}],224:[function(require,module,exports){
 (function() {
   var Model;
 
@@ -62647,17 +62636,17 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./filled_model":211}],225:[function(require,module,exports){
+},{"./filled_model":210}],225:[function(require,module,exports){
 (function() {
   var Persistance;
 
   Persistance = module.exports = (function() {
-    var Databound, Memory, Model, act, communicate, _;
+    var Databound, Model, StepMemory, act, communicate, _;
     _ = require('lodash');
     Databound = require('databound');
     Databound.API_URL = window.PAVONINE_SERVER;
     Model = require('./model');
-    Memory = require('./memory');
+    StepMemory = require('./step_memory');
     communicate = function(action, attributes) {
       var connection, model;
       if (!attributes.model) {
@@ -62675,7 +62664,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           model: model.model
         };
         new_model = new Model(_.assign(new_attributes, metadata));
-        Memory.setArray(new_model.plural, connection.takeAll());
+        StepMemory.setArray(new_model.plural, connection.takeAll());
         if (_.isArray(resp)) {
           return Databound.prototype.promise(connection.takeAll());
         } else {
@@ -62695,7 +62684,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":223,"./model":224,"databound":1,"lodash":27}],226:[function(require,module,exports){
+},{"./model":224,"./step_memory":229,"databound":1,"lodash":27}],226:[function(require,module,exports){
 (function() {
   var ReactMixin,
     __slice = [].slice;
@@ -62743,7 +62732,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":209,"./model":224,"./persistance":225,"./replacer":227,"./router":228,"lodash":27,"lodash-deep":26}],227:[function(require,module,exports){
+},{"./facebook":208,"./model":224,"./persistance":225,"./replacer":227,"./router":228,"lodash":27,"lodash-deep":26}],227:[function(require,module,exports){
 (function() {
   var Replacer;
 
@@ -62825,13 +62814,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Router;
 
   Router = (function() {
-    var Data, UI, return_to, step;
+    var MissingData, UI, return_to, step;
 
     function Router() {}
 
     UI = require('./ui');
 
-    Data = require('./data');
+    MissingData = require('./missing_data');
 
     step = 1;
 
@@ -62876,7 +62865,50 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data":206,"./ui":229}],229:[function(require,module,exports){
+},{"./missing_data":223,"./ui":230}],229:[function(require,module,exports){
+(function() {
+  var StepMemory;
+
+  StepMemory = (function() {
+    var app_data;
+
+    function StepMemory() {}
+
+    app_data = {};
+
+    StepMemory.set = function(data) {
+      return app_data[data.model] = data;
+    };
+
+    StepMemory.setArray = function(name, records) {
+      return app_data[name] = records;
+    };
+
+    StepMemory.get = function(model) {
+      return app_data[model];
+    };
+
+    StepMemory.getAll = function() {
+      return app_data;
+    };
+
+    StepMemory.has = function(key) {
+      return !!app_data[key];
+    };
+
+    StepMemory.clean = function() {
+      return app_data = {};
+    };
+
+    return StepMemory;
+
+  })();
+
+  module.exports = StepMemory;
+
+}).call(this);
+
+},{}],230:[function(require,module,exports){
 (function() {
   var UI;
 
@@ -62976,7 +63008,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./converter":205,"jquery":25,"lodash":27,"react":203}],230:[function(require,module,exports){
+},{"./converter":205,"jquery":25,"lodash":27,"react":203}],231:[function(require,module,exports){
 (function() {
   var Utils;
 
@@ -63006,7 +63038,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"jquery":25}],231:[function(require,module,exports){
+},{"jquery":25}],232:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.
@@ -63017,4 +63049,4 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 	 *
 	 */
 "use strict";function e(t,e){if(1===e)return t;if(0>e)throw new Error;for(var n="";e;)1&e&&(n+=t),(e>>=1)&&(t+=t);return n}function n(t,e){return t.slice(-e.length)===e}function i(t,e){return n(t,e)?t.slice(0,-e.length):t}function s(t){return t.replace(/-(.)/g,function(t,e){return e.toUpperCase()})}function o(t){return!/[^\s]/.test(t)}function r(t){return void 0!==t&&null!==t&&("number"==typeof t||parseInt(t,10)==t)}var u={ELEMENT:1,TEXT:3,COMMENT:8},c={"for":"htmlFor","class":"className"},h=function(t){this.config=t||{},void 0===this.config.createClass&&(this.config.createClass=!0),this.config.indent||(this.config.indent="  "),this.config.outputClassName||(this.config.outputClassName="NewComponent")};h.prototype={reset:function(){this.output="",this.level=0},convert:function(t){this.reset();var e,e;return e=document.createElement("div"),e.innerHTML="\n"+this._cleanInput(t)+"\n",this.config.createClass&&(this.output=this.config.outputClassName?"var "+this.config.outputClassName+" = React.createClass({\n":"React.createClass({\n",this.output+=this.config.indent+"render: function() {\n",this.output+=this.config.indent+this.config.indent+"return (\n"),this._onlyOneTopLevel(e)?this._traverse(e):(this.output+=this.config.indent+this.config.indent+this.config.indent,this.level++,this._visit(e)),this.output=this.output.trim()+"\n",this.config.createClass&&(this.output+=this.config.indent+this.config.indent+");\n",this.output+=this.config.indent+"}\n",this.output+="});"),this.output},_cleanInput:function(t){return t=t.trim(),t=t.replace(/<script([\s\S]*?)<\/script>/g,"")},_onlyOneTopLevel:function(t){if(1===t.childNodes.length&&t.childNodes[0].nodeType===u.ELEMENT)return!0;for(var e=!1,n=0,i=t.childNodes.length;i>n;n++){var s=t.childNodes[n];if(s.nodeType===u.ELEMENT){if(e)return!1;e=!0}else if(s.nodeType===u.TEXT&&!o(s.textContent))return!1}return!0},_getIndentedNewline:function(){return"\n"+e(this.config.indent,this.level+2)},_visit:function(t){this._beginVisit(t),this._traverse(t),this._endVisit(t)},_traverse:function(t){this.level++;for(var e=0,n=t.childNodes.length;n>e;e++)this._visit(t.childNodes[e]);this.level--},_beginVisit:function(t){switch(t.nodeType){case u.ELEMENT:this._beginVisitElement(t);break;case u.TEXT:this._visitText(t);break;case u.COMMENT:this._visitComment(t);break;default:console.warn("Unrecognised node type: "+t.nodeType)}},_endVisit:function(t){switch(t.nodeType){case u.ELEMENT:this._endVisitElement(t);break;case u.TEXT:case u.COMMENT:}},_beginVisitElement:function(t){for(var e=t.tagName.toLowerCase(),n=[],i=0,s=t.attributes.length;s>i;i++)n.push(this._getElementAttribute(t,t.attributes[i]));this.output+="<"+e,n.length>0&&(this.output+=" "+n.join(" ")),t.firstChild&&(this.output+=">")},_endVisitElement:function(t){this.output=i(this.output,this.config.indent),this.output+=t.firstChild?"</"+t.tagName.toLowerCase()+">":" />"},_visitText:function(t){var e=t.textContent;e.indexOf("\n")>-1&&(e=t.textContent.replace(/\n\s*/g,this._getIndentedNewline())),this.output+=e},_visitComment:function(t){this.output+="{/*"+t.textContent.replace("*/","* /")+"*/}"},_getElementAttribute:function(t,e){switch(e.name){case"style":return this._getStyleAttribute(e.value);default:var n=c[e.name]||e.name,i=n+"=";return i+=r(e.value)?"{"+e.value+"}":'"'+e.value.replace('"',"&quot;")+'"'}},_getStyleAttribute:function(t){var e=new a(t).toJSXString();return"style={{"+e+"}}"}};var a=function(t){this.parse(t)};a.prototype={parse:function(t){this.styles={},t.split(";").forEach(function(t){t=t.trim();var e=t.indexOf(":"),n=t.substr(0,e),i=t.substr(e+1).trim();""!==n&&(this.styles[n]=i)},this)},toJSXString:function(){var t=[];for(var e in this.styles)this.styles.hasOwnProperty(e)&&t.push(this.toJSXKey(e)+": "+this.toJSXValue(this.styles[e]));return t.join(", ")},toJSXKey:function(t){return s(t)},toJSXValue:function(t){return r(t)?t:n(t,"px")?i(t,"px"):"'"+t.replace(/'/g,'"')+"'"}},t.exports=h}])});
-},{}]},{},[210])
+},{}]},{},[209])

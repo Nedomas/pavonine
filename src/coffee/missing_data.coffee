@@ -4,7 +4,7 @@ class MissingData
   Databound = require 'databound'
 
   HandlebarsLookups = require './handlebars/lookups'
-  Memory = require './memory'
+  StepMemory = require './step_memory'
   DataLoader = require './data_loader'
 
   @collections: ->
@@ -12,7 +12,7 @@ class MissingData
 
     _.each HandlebarsLookups.getCollection(), (lookup) ->
       [owner, path...] = lookup.split('.')
-      result.push(owner) unless Memory.has(owner)
+      result.push(owner) unless StepMemory.has(owner)
 
     result.push('current_user') if @used('current_user')
     _.uniq(result)

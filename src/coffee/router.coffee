@@ -1,7 +1,7 @@
 # gets data from the backend and renders requested step
 class Router
   UI = require './ui'
-  Data = require './data'
+  MissingData = require './missing_data'
 
   step = 1
   return_to = 1

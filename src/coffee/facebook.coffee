@@ -3,7 +3,7 @@ Facebook = (->
   _ = require 'lodash'
   _.mixin require('lodash-deep')
   Router = require './router'
-  Memory = require './memory'
+  LocalMemory = require './local_memory'
   Persistance = require './persistance'
 
   ensureInit = ->
@@ -30,7 +30,7 @@ Facebook = (->
       model: 'current_user'
 
     Persistance.communicate('create', attributes).then (current_user) ->
-      Memory.setForever(current_user.attributes)
+      LocalMemory.set(current_user.attributes)
       Router.goOn()
 
   login = ->
