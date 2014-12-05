@@ -61641,25 +61641,29 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 },{"../vendor/htmltojsx.min":231,"./handlebars/lookups":215,"./handlebars/mock":217,"./react_mixin":226,"./replacer":227,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
 (function() {
-  var Data,
+  var MissingData,
     __slice = [].slice;
 
-  Data = (function() {
-    var DataLoader, Databound, HandlebarsLookups, Memory, getMissing, missingCollections, missingVariables, used, _;
+  MissingData = (function() {
+    var DataLoader, Databound, HandlebarsLookups, Memory, _;
+
+    function MissingData() {}
+
     _ = require('lodash');
+
     Databound = require('databound');
+
     HandlebarsLookups = require('./handlebars/lookups');
+
     Memory = require('./memory');
+
     DataLoader = require('./data_loader');
-    missingVariables = function() {
-      var result;
-      result = missingCollections();
-      if (used('current_user')) {
-        result.push('current_user');
-      }
-      return _.uniq(result);
+
+    MissingData.missingVariables = function() {
+      return _.uniq(this.missingCollections());
     };
-    missingCollections = function() {
+
+    MissingData.missingCollections = function() {
       var result;
       result = [];
       _.each(HandlebarsLookups.getCollection(), function(lookup) {
@@ -61669,21 +61673,25 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           return result.push(owner);
         }
       });
+      if (this.used('current_user')) {
+        result.push('current_user');
+      }
       return result;
     };
-    used = function(key) {
+
+    MissingData.used = function(key) {
       return _.contains(HandlebarsLookups.getIndividual(), key);
     };
-    getMissing = function() {
-      if (_.isEmpty(missingVariables())) {
+
+    MissingData.get = function() {
+      if (_.isEmpty(this.missingVariables())) {
         return Databound.prototype.promise(true);
       }
-      return DataLoader.load(missingVariables());
+      return DataLoader.load(this.missingVariables());
     };
-    return {
-      missingVariables: missingVariables,
-      getMissing: getMissing
-    };
+
+    return MissingData;
+
   })();
 
   module.exports = Data;
@@ -61832,16 +61840,21 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Core;
 
   Core = (function() {
-    var HandlebarsManager, Router, init;
+    var HandlebarsManager, Router;
+
+    function Core() {}
+
     HandlebarsManager = require('./handlebars/manager');
+
     Router = require('./router');
-    init = function() {
+
+    Core.init = function() {
       HandlebarsManager.init();
       return Router.change(1);
     };
-    return {
-      init: init
-    };
+
+    return Core;
+
   })();
 
   Core.init();
@@ -62028,12 +62041,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     };
 
     BaseHelpers.registerIf = function() {
+      HandlebarsHelpers = require('./helpers');
       return HandlebarsHelpers.register('if', function(raw_ctx, wrapped_ctx, args, opts) {
         return "" + wrapped_ctx + " ? " + (SafeWrapper.div(opts.fn || null)) + " : " + (SafeWrapper.div(opts.inverse || null));
       });
     };
 
     BaseHelpers.registerWith = function() {
+      HandlebarsHelpers = require('./helpers');
       return HandlebarsHelpers.register('with', function(raw_ctx, wrapped_ctx, args, opts) {
         var ACTION_PARTIAL_REGEX, result;
         result = Replacer.replace(opts.fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
@@ -62122,7 +62137,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./base_helpers":212,"./lodash_helpers":214,"./moment_helpers":218,"./params":219,"./safe_wrapper":221,"./vanilla_helpers":222,"handlebars":24}],214:[function(require,module,exports){
+},{"./base_helpers":212,"./lodash_helpers":214,"./moment_helpers":218,"./params":220,"./safe_wrapper":221,"./vanilla_helpers":222,"handlebars":24}],214:[function(require,module,exports){
 (function() {
   var LodashHelpers,
     __slice = [].slice;
@@ -62168,44 +62183,51 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var HandlebarsLookups;
 
   HandlebarsLookups = (function() {
-    var add, addCollection, addOnContext, clean, collection, getCollection, getIndividual, getOnContext, individual, on_context, _;
+    var collection, individual, on_context, _;
+
+    function HandlebarsLookups() {}
+
     _ = require('lodash');
+
     individual = [];
+
     collection = [];
+
     on_context = [];
-    add = function(name) {
+
+    HandlebarsLookups.add = function(name) {
       return individual.push(name);
     };
-    addCollection = function(name) {
-      add(name);
+
+    HandlebarsLookups.addCollection = function(name) {
+      this.add(name);
       return collection.push(name);
     };
-    clean = function() {
+
+    HandlebarsLookups.clean = function() {
       individual = [];
       return collection = [];
     };
-    getIndividual = function() {
+
+    HandlebarsLookups.getIndividual = function() {
       return individual;
     };
-    getCollection = function() {
+
+    HandlebarsLookups.getCollection = function() {
       return collection;
     };
-    addOnContext = function(name) {
-      add(name);
+
+    HandlebarsLookups.addOnContext = function(name) {
+      this.add(name);
       return on_context.push(name);
     };
-    getOnContext = function() {
+
+    HandlebarsLookups.getOnContext = function() {
       return on_context;
     };
-    return {
-      add: add,
-      addCollection: addCollection,
-      clean: clean,
-      getIndividual: getIndividual,
-      getCollection: getCollection,
-      addOnContext: addOnContext,
-      getOnContext: getOnContext
-    };
+
+    return HandlebarsLookups;
+
   })();
 
   module.exports = HandlebarsLookups;
@@ -62316,9 +62338,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var MomentHelpers;
 
   MomentHelpers = (function() {
-    var register, _;
+    var _;
+
+    function MomentHelpers() {}
+
     _ = require('lodash');
-    register = function() {
+
+    MomentHelpers.register = function() {
       var HandlebarsHelpers;
       HandlebarsHelpers = require('./helpers');
       return HandlebarsHelpers.register('moment', function(raw_ctx, wrapped_ctx, args, opts) {
@@ -62330,9 +62356,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         return "moment(" + wrapped_ctx + ")." + (methods.join('.'));
       });
     };
-    return {
-      register: register
-    };
+
+    return MomentHelpers;
+
   })();
 
   module.exports = MomentHelpers;
@@ -62341,11 +62367,63 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 },{"./helpers":213,"lodash":27}],219:[function(require,module,exports){
 (function() {
+  var ParamUtils,
+    __slice = [].slice;
+
+  ParamUtils = (function() {
+    var _;
+
+    function ParamUtils() {}
+
+    _ = require('lodash');
+
+    ParamUtils.raw = function(ctx, ctx_id) {
+      var match, options, result, _ref;
+      if (!(ctx || ctx_id)) {
+        return;
+      }
+      result = this.unwrap(ctx, ctx_id);
+      if (match = result.match(/\((.*?)\)/)) {
+        _ref = match[1].split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+      } else if (_.isString(ctx)) {
+        if (ctx.match(/^{(.*)}$/)) {
+          result = ctx_id;
+        } else {
+          result = "'" + result + "'";
+        }
+      } else {
+        result = ctx_id;
+      }
+      return result.replace('this.state.', '');
+    };
+
+    ParamUtils.unwrap = function(ctx, ctx_id) {
+      var braces_match, div_match, result;
+      result = ctx || ctx_id;
+      result = result.toString();
+      if (div_match = result.match(/<div>\n{(.*?)}\n<\/div>/)) {
+        result = div_match[1];
+      } else if (braces_match = result.match(/^{(.*?)}$/)) {
+        result = braces_match[1];
+      }
+      return result;
+    };
+
+    return ParamUtils;
+
+  })();
+
+  module.exports = ParamUtils;
+
+}).call(this);
+
+},{"lodash":27}],220:[function(require,module,exports){
+(function() {
   var HandlebarsParams,
     __slice = [].slice;
 
   HandlebarsParams = (function() {
-    var HandlebarsMock, ParamsUtils, Replacer, _;
+    var HandlebarsMock, ParamUtils, Replacer, _;
 
     _ = require('lodash');
 
@@ -62353,7 +62431,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
     HandlebarsMock = require('./mock');
 
-    ParamsUtils = require('./params_utils');
+    ParamUtils = require('./param_utils');
 
     function HandlebarsParams(args) {
       var _i, _ref;
@@ -62366,7 +62444,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     }
 
     HandlebarsParams.prototype.ctx = function() {
-      return ParamsUtils.raw(this.initial_ctx, this.initial_ctx_id);
+      return ParamUtils.raw(this.initial_ctx, this.initial_ctx_id);
     };
 
     HandlebarsParams.prototype.wrappedCtx = function() {
@@ -62374,7 +62452,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       if (!(this.initial_ctx || this.initial_ctx_id)) {
         return;
       }
-      result = ParamsUtils.wrap(this.initial_ctx, this.initial_ctx_id);
+      result = ParamUtils.unwrap(this.initial_ctx, this.initial_ctx_id);
       result = result.replace("this.state." + (this.ctx()), this.ctx());
       return result.replace(this.ctx(), Replacer.addState(this.ctx()));
     };
@@ -62384,7 +62462,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
       result = [];
       _.each(this.initial_args, (function(_this) {
         return function(arg, i) {
-          return result[i] = ParamsUtils.raw(_this.initial_args[i], _this.initial_arg_ids[i]);
+          return result[i] = ParamUtils.raw(_this.initial_args[i], _this.initial_arg_ids[i]);
         };
       })(this));
       if (!_.isEmpty(_.keys(this.initial_opts.hash))) {
@@ -62414,59 +62492,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../replacer":227,"./mock":217,"./params_utils":220,"lodash":27}],220:[function(require,module,exports){
-(function() {
-  var ParamsUtils,
-    __slice = [].slice;
-
-  ParamsUtils = (function() {
-    var _;
-
-    function ParamsUtils() {}
-
-    _ = require('lodash');
-
-    ParamsUtils.raw = function(ctx, ctx_id) {
-      var match, options, result, _ref;
-      if (!(ctx || ctx_id)) {
-        return;
-      }
-      result = this.wrap(ctx, ctx_id);
-      if (match = result.match(/\((.*?)\)/)) {
-        _ref = match[1].split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
-      } else if (_.isString(ctx)) {
-        if (ctx.match(/^{(.*)}$/)) {
-          result = ctx_id;
-        } else {
-          result = "'" + result + "'";
-        }
-      } else {
-        result = ctx_id;
-      }
-      return result.replace('this.state.', '');
-    };
-
-    ParamsUtils.wrap = function(ctx, ctx_id) {
-      var braces_match, div_match, result;
-      result = ctx || ctx_id;
-      result = result.toString();
-      if (div_match = result.match(/<div>\n{(.*?)}\n<\/div>/)) {
-        result = div_match[1];
-      } else if (braces_match = result.match(/^{(.*?)}$/)) {
-        result = braces_match[1];
-      }
-      return result;
-    };
-
-    return ParamsUtils;
-
-  })();
-
-  module.exports = ParamsUtils;
-
-}).call(this);
-
-},{"lodash":27}],221:[function(require,module,exports){
+},{"../replacer":227,"./mock":217,"./param_utils":219,"lodash":27}],221:[function(require,module,exports){
 (function() {
   var SafeWrapper;
 
@@ -62509,9 +62535,13 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var VanillaHelpers;
 
   VanillaHelpers = (function() {
-    var register, _;
+    var _;
+
+    function VanillaHelpers() {}
+
     _ = require('lodash');
-    register = function() {
+
+    VanillaHelpers.register = function() {
       var HandlebarsHelpers, helpers;
       HandlebarsHelpers = require('./helpers');
       helpers = ['reverse'];
@@ -62521,9 +62551,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         });
       });
     };
-    return {
-      register: register
-    };
+
+    return VanillaHelpers;
+
   })();
 
   module.exports = VanillaHelpers;
@@ -62795,42 +62825,51 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Router;
 
   Router = (function() {
-    var Data, UI, change, goOn, next, previous, return_to, step;
+    var Data, UI, return_to, step;
+
+    function Router() {}
+
     UI = require('./ui');
+
     Data = require('./data');
+
     step = 1;
+
     return_to = 1;
-    change = function(_step, dont_clean) {
+
+    Router.change = function(_step) {
       var ui;
       step = _step;
       ui = new UI(step);
       ui.compile();
-      return Data.getMissing().then(function() {
+      return MissingData.get().then(function() {
         return ui.render();
-      }).fail(function(resp) {
-        if (resp === 'login') {
-          return_to = step;
-          return change('login');
-        } else {
-          throw new Error("Server responded with error " + resp);
-        }
-      });
+      }).fail((function(_this) {
+        return function(resp) {
+          if (resp === 'login') {
+            return_to = step;
+            return _this.change('login');
+          } else {
+            throw new Error("Server responded with error " + resp);
+          }
+        };
+      })(this));
     };
-    previous = function(current_data) {
-      return change(step - 1);
+
+    Router.previous = function() {
+      return this.change(step - 1);
     };
-    next = function(current_data) {
-      return change(step + 1);
+
+    Router.next = function() {
+      return this.change(step + 1);
     };
-    goOn = function() {
-      return change(return_to);
+
+    Router.goOn = function() {
+      return this.change(return_to);
     };
-    return {
-      change: change,
-      previous: previous,
-      next: next,
-      goOn: goOn
-    };
+
+    return Router;
+
   })();
 
   module.exports = Router;

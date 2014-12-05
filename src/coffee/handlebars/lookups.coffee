@@ -1,42 +1,31 @@
-HandlebarsLookups = (->
+class HandlebarsLookups
   _ = require 'lodash'
   individual = []
   collection = []
   on_context = []
 
-  add = (name) ->
+  @add: (name) ->
     individual.push(name)
 
-  addCollection = (name) ->
-    add(name)
+  @addCollection: (name) ->
+    @add(name)
     collection.push(name)
 
-  clean = ->
+  @clean: ->
     individual = []
     collection = []
 
-  getIndividual = ->
+  @getIndividual: ->
     individual
 
-  getCollection = ->
+  @getCollection: ->
     collection
 
-  addOnContext = (name) ->
-    add(name)
+  @addOnContext: (name) ->
+    @add(name)
     on_context.push(name)
 
-  getOnContext = ->
+  @getOnContext: ->
     on_context
-
-  return {
-    add: add
-    addCollection: addCollection
-    clean: clean
-    getIndividual: getIndividual
-    getCollection: getCollection
-    addOnContext: addOnContext
-    getOnContext: getOnContext
-  }
-)()
 
 module.exports = HandlebarsLookups
