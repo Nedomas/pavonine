@@ -1,13 +1,15 @@
-BaseHelpers = (->
+class BaseHelpers
   HandlebarsLookups = require './lookups'
+  HandlebarsHelpers = require './helpers'
   Replacer = require '../replacer'
+  SafeWrapper = require './safe_wrapper'
 
-  register = ->
-    registerEach()
-    registerIf()
-    registerWith()
+  @register: ->
+    @registerEach()
+    @registerIf()
+    @registerWith()
 
-  registerEach = ->
+  @registerEach: ->
     HandlebarsHelpers = require './helpers'
     HandlebarsHelpers.register 'each', (raw_ctx, wrapped_ctx, args, opts) ->
       HandlebarsLookups.addCollection(raw_ctx)
@@ -25,13 +27,11 @@ BaseHelpers = (->
       else
         records_exist
 
-  registerIf = ->
-    HandlebarsHelpers = require './helpers'
+  @registerIf: ->
     HandlebarsHelpers.register 'if', (raw_ctx, wrapped_ctx, args, opts) ->
-      "#{wrapped_ctx} ? #{HandlebarsHelpers.wrap(opts.fn || null)} : #{HandlebarsHelpers.wrap(opts.inverse || null)}"
+      "#{wrapped_ctx} ? #{SafeWrapper.div(opts.fn || null)} : #{SafeWrapper.div(opts.inverse || null)}"
 
-  registerWith = ->
-    HandlebarsHelpers = require './helpers'
+  @registerWith: ->
     HandlebarsHelpers.register 'with', (raw_ctx, wrapped_ctx, args, opts) ->
       result = Replacer.replace opts.fn, /{this\.state\.(.+?)}/g,
         (attribute, initial) ->
@@ -46,11 +46,6 @@ BaseHelpers = (->
           path = [raw_ctx, attribute].join('.')
           "#{Replacer.addAction(path)}"
 
-      HandlebarsHelpers.wrap(result)
-
-  return {
-    register: register
-  }
-)()
+      SafeWrapper.div(result)
 
 module.exports = BaseHelpers

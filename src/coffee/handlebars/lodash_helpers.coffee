@@ -1,7 +1,7 @@
-LodashHelpers = (->
+class LodashHelpers
   _ = require 'lodash'
 
-  register = ->
+  @register: ->
     HandlebarsHelpers = require './helpers'
     helpers = _.without(_.keys(_), HandlebarsHelpers.constant('actions')...)
 
@@ -16,10 +16,5 @@ LodashHelpers = (->
         else
           fn_args = [wrapped_ctx, args...]
           "_.#{method}(#{fn_args.join(', ')})"
-
-  return {
-    register: register
-  }
-)()
 
 module.exports = LodashHelpers

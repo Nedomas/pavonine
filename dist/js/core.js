@@ -61639,7 +61639,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../vendor/htmltojsx.min":228,"./handlebars/lookups":215,"./handlebars/mock":217,"./react_mixin":223,"./replacer":224,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
+},{"../vendor/htmltojsx.min":230,"./handlebars/lookups":215,"./handlebars/mock":217,"./react_mixin":225,"./replacer":226,"handlebars":24,"lodash":27,"moment":28,"react":203,"react-tools":29}],206:[function(require,module,exports){
 (function() {
   var Data,
     __slice = [].slice;
@@ -61690,7 +61690,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data_loader":207,"./handlebars/lookups":215,"./memory":220,"databound":1,"lodash":27}],207:[function(require,module,exports){
+},{"./data_loader":207,"./handlebars/lookups":215,"./memory":222,"databound":1,"lodash":27}],207:[function(require,module,exports){
 (function() {
   var DataLoader;
 
@@ -61743,7 +61743,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":220,"./persistance":222,"./utils":227,"databound":1,"jquery":25,"lodash":27}],208:[function(require,module,exports){
+},{"./memory":222,"./persistance":224,"./utils":229,"databound":1,"jquery":25,"lodash":27}],208:[function(require,module,exports){
 (function() {
   var Defaults;
 
@@ -61827,7 +61827,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":220,"./persistance":222,"./router":225,"jquery":25,"lodash":27,"lodash-deep":26}],210:[function(require,module,exports){
+},{"./memory":222,"./persistance":224,"./router":227,"jquery":25,"lodash":27,"lodash-deep":26}],210:[function(require,module,exports){
 (function() {
   var Core;
 
@@ -61850,7 +61850,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./handlebars/manager":216,"./router":225}],211:[function(require,module,exports){
+},{"./handlebars/manager":216,"./router":227}],211:[function(require,module,exports){
 (function() {
   var FilledModel;
 
@@ -61987,21 +61987,30 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./converter":205,"./defaults":208,"./handlebars/mock":217,"./memory":220,"./utils":227,"lodash":27,"lodash-deep":26,"traverse":204}],212:[function(require,module,exports){
+},{"./converter":205,"./defaults":208,"./handlebars/mock":217,"./memory":222,"./utils":229,"lodash":27,"lodash-deep":26,"traverse":204}],212:[function(require,module,exports){
 (function() {
   var BaseHelpers;
 
   BaseHelpers = (function() {
-    var HandlebarsLookups, Replacer, register, registerEach, registerIf, registerWith;
+    var HandlebarsHelpers, HandlebarsLookups, Replacer, SafeWrapper;
+
+    function BaseHelpers() {}
+
     HandlebarsLookups = require('./lookups');
+
+    HandlebarsHelpers = require('./helpers');
+
     Replacer = require('../replacer');
-    register = function() {
-      registerEach();
-      registerIf();
-      return registerWith();
+
+    SafeWrapper = require('./safe_wrapper');
+
+    BaseHelpers.register = function() {
+      this.registerEach();
+      this.registerIf();
+      return this.registerWith();
     };
-    registerEach = function() {
-      var HandlebarsHelpers;
+
+    BaseHelpers.registerEach = function() {
       HandlebarsHelpers = require('./helpers');
       return HandlebarsHelpers.register('each', function(raw_ctx, wrapped_ctx, args, opts) {
         var each_iteration, records_exist;
@@ -62017,16 +62026,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         }
       });
     };
-    registerIf = function() {
-      var HandlebarsHelpers;
-      HandlebarsHelpers = require('./helpers');
+
+    BaseHelpers.registerIf = function() {
       return HandlebarsHelpers.register('if', function(raw_ctx, wrapped_ctx, args, opts) {
-        return "" + wrapped_ctx + " ? " + (HandlebarsHelpers.wrap(opts.fn || null)) + " : " + (HandlebarsHelpers.wrap(opts.inverse || null));
+        return "" + wrapped_ctx + " ? " + (SafeWrapper.div(opts.fn || null)) + " : " + (SafeWrapper.div(opts.inverse || null));
       });
     };
-    registerWith = function() {
-      var HandlebarsHelpers;
-      HandlebarsHelpers = require('./helpers');
+
+    BaseHelpers.registerWith = function() {
       return HandlebarsHelpers.register('with', function(raw_ctx, wrapped_ctx, args, opts) {
         var ACTION_PARTIAL_REGEX, result;
         result = Replacer.replace(opts.fn, /{this\.state\.(.+?)}/g, function(attribute, initial) {
@@ -62041,182 +62048,93 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           path = [raw_ctx, attribute].join('.');
           return "" + (Replacer.addAction(path));
         });
-        return HandlebarsHelpers.wrap(result);
+        return SafeWrapper.div(result);
       });
     };
-    return {
-      register: register
-    };
+
+    return BaseHelpers;
+
   })();
 
   module.exports = BaseHelpers;
 
 }).call(this);
 
-},{"../replacer":224,"./helpers":213,"./lookups":215}],213:[function(require,module,exports){
+},{"../replacer":226,"./helpers":213,"./lookups":215,"./safe_wrapper":220}],213:[function(require,module,exports){
 (function() {
-  var HandlebarsHelpers,
-    __slice = [].slice;
+  var HandlebarsHelpers;
 
   HandlebarsHelpers = (function() {
-    var BaseHelpers, CONSTANTS, HTML_REGEX, Handlebars, LodashHelpers, MomentHelpers, Replacer, VanillaHelpers, constant, firstArgElemental, firstArgObject, init, raw, register, wrap, wrapped, wrapped_state, _;
-    _ = require('lodash');
+    var BaseHelpers, Handlebars, LodashHelpers, MomentHelpers, SafeWrapper, VanillaHelpers;
+
+    function HandlebarsHelpers() {}
+
     Handlebars = require('handlebars');
-    Replacer = require('../replacer');
+
     LodashHelpers = require('./lodash_helpers');
+
     BaseHelpers = require('./base_helpers');
+
     MomentHelpers = require('./moment_helpers');
+
     VanillaHelpers = require('./vanilla_helpers');
-    HTML_REGEX = /^<([\s\S]*?.+?[\s\S]*?)>$/;
-    CONSTANTS = {
-      actions: ['create', 'update', 'destroy', 'previous', 'next', 'facebook']
+
+    SafeWrapper = require('./safe_wrapper');
+
+    HandlebarsHelpers.CONSTANTS = function() {
+      return {
+        actions: ['create', 'update', 'destroy', 'previous', 'next', 'facebook']
+      };
     };
-    constant = function(name) {
-      return CONSTANTS[name];
+
+    HandlebarsHelpers.constant = function(name) {
+      return this.CONSTANTS()[name];
     };
-    init = function() {
+
+    HandlebarsHelpers.init = function() {
       LodashHelpers.register();
       BaseHelpers.register();
       MomentHelpers.register();
       return VanillaHelpers.register();
     };
-    firstArgObject = function(method, final_fn, argums) {
-      var HandlebarsMock, arg_ids, args, code, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref, _ref1;
-      _ref = [void 0].concat(argums[0]), initial_ctx = _ref[0], initial_args = 3 <= _ref.length ? __slice.call(_ref, 1, _i = _ref.length - 1) : (_i = 1, []), initial_opts = _ref[_i++];
-      _ref1 = initial_opts.ids || [], ctx_id = _ref1[0], arg_ids = 2 <= _ref1.length ? __slice.call(_ref1, 1) : [];
-      if (initial_ctx || ctx_id) {
-        wrapped_state_ctx = wrapped_state(initial_ctx, ctx_id);
-        raw_ctx = raw(initial_ctx, ctx_id);
-      }
-      args = [];
-      _.each(initial_args, function(arg, i) {
-        return args[i] = raw(initial_args[i], arg_ids[i]);
-      });
-      if (!_.isEmpty(_.keys(initial_opts.hash))) {
-        args.push(initial_opts.hash);
-      }
-      opts = {};
-      HandlebarsMock = require('./mock');
-      if (initial_opts.fn) {
-        opts.fn = initial_opts.fn(HandlebarsMock.get());
-      }
-      if (initial_opts.inverse) {
-        opts.inverse = initial_opts.inverse(HandlebarsMock.get());
-      }
-      opts.method = initial_opts.name;
-      result = final_fn(raw_ctx, wrapped_state_ctx, args, opts);
-      if (result.match(HTML_REGEX)) {
-        code = wrap(result);
-      } else {
-        code = "{" + result + "}";
-      }
-      return new Handlebars.SafeString(code);
+
+    HandlebarsHelpers.register = function(method, final_fn) {
+      return Handlebars.registerHelper(method, (function(_this) {
+        return function() {
+          return _this.innerRegister(final_fn, arguments);
+        };
+      })(this));
     };
-    firstArgElemental = function(method, final_fn, argums) {
-      var HandlebarsMock, arg_ids, args, code, ctx_id, initial_args, initial_ctx, initial_opts, opts, raw_ctx, result, wrapped_state_ctx, _i, _ref;
-      initial_ctx = argums[0], initial_args = 3 <= argums.length ? __slice.call(argums, 1, _i = argums.length - 1) : (_i = 1, []), initial_opts = argums[_i++];
-      _ref = initial_opts.ids, ctx_id = _ref[0], arg_ids = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
-      wrapped_state_ctx = wrapped_state(initial_ctx, ctx_id);
-      raw_ctx = raw(initial_ctx, ctx_id);
-      args = [];
-      _.each(initial_args, function(arg, i) {
-        return args[i] = raw(initial_args[i], arg_ids[i]);
-      });
-      if (!_.isEmpty(_.keys(initial_opts.hash))) {
-        args.push(initial_opts.hash);
-      }
-      opts = {};
-      HandlebarsMock = require('./mock');
-      if (initial_opts.fn) {
-        opts.fn = initial_opts.fn(HandlebarsMock.get());
-      }
-      if (initial_opts.inverse) {
-        opts.inverse = initial_opts.inverse(HandlebarsMock.get());
-      }
-      opts.method = initial_opts.name;
-      result = final_fn(raw_ctx, wrapped_state_ctx, args, opts);
-      if (result.match(HTML_REGEX)) {
-        code = wrap(result);
-      } else {
-        code = "\n<div>\n" + ("{" + result + "}\n") + "</div>";
-      }
-      return new Handlebars.SafeString(code);
+
+    HandlebarsHelpers.innerRegister = function(final_fn, args) {
+      var HandlebarsParams, final_helper, params;
+      HandlebarsParams = require('./params');
+      params = new HandlebarsParams(args);
+      final_helper = final_fn(params.rawCtx(), params.wrappedCtx(), params.args(), params.opts());
+      return SafeWrapper.string(final_helper);
     };
-    register = function(method, final_fn) {
-      return Handlebars.registerHelper(method, function() {
-        if (arguments.length === 1 && _.isPlainObject(arguments[0])) {
-          return firstArgObject(method, final_fn, arguments);
-        } else {
-          return firstArgElemental(method, final_fn, arguments);
-        }
-      });
-    };
-    wrapped_state = function(initial, from_ids) {
-      var name, result;
-      name = raw(initial, from_ids);
-      result = wrapped(initial, from_ids);
-      result = result.replace("this.state." + name, name);
-      return result.replace(name, Replacer.addState(name));
-    };
-    wrapped = function(initial, from_ids) {
-      var braces_match, div_match, e, result;
-      result = initial || from_ids;
-      try {
-        result = result.toString();
-      } catch (_error) {
-        e = _error;
-        debugger;
-      }
-      if (div_match = result.match(/<div>\n{(.*?)}\n<\/div>/)) {
-        result = div_match[1];
-      } else if (braces_match = result.match(/^{(.*?)}$/)) {
-        result = braces_match[1];
-      }
-      return result;
-    };
-    raw = function(initial, from_ids) {
-      var match, options, result, _ref;
-      result = wrapped(initial, from_ids);
-      if (match = result.match(/\((.*?)\)/)) {
-        _ref = match[1].split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
-      } else if (_.isString(initial)) {
-        if (initial.match(/^{(.*)}$/)) {
-          result = from_ids;
-        } else {
-          result = "'" + result + "'";
-        }
-      } else {
-        result = from_ids;
-      }
-      return result.replace('this.state.', '');
-    };
-    wrap = function(content) {
-      if (!content) {
-        return;
-      }
-      return "<div>" + content + "</div>";
-    };
-    return {
-      init: init,
-      constant: constant,
-      register: register,
-      wrap: wrap
-    };
+
+    return HandlebarsHelpers;
+
   })();
 
   module.exports = HandlebarsHelpers;
 
 }).call(this);
 
-},{"../replacer":224,"./base_helpers":212,"./lodash_helpers":214,"./mock":217,"./moment_helpers":218,"./vanilla_helpers":219,"handlebars":24,"lodash":27}],214:[function(require,module,exports){
+},{"./base_helpers":212,"./lodash_helpers":214,"./moment_helpers":218,"./params":219,"./safe_wrapper":220,"./vanilla_helpers":221,"handlebars":24}],214:[function(require,module,exports){
 (function() {
   var LodashHelpers,
     __slice = [].slice;
 
   LodashHelpers = (function() {
-    var register, _;
+    var _;
+
+    function LodashHelpers() {}
+
     _ = require('lodash');
-    register = function() {
+
+    LodashHelpers.register = function() {
       var HandlebarsHelpers, helpers;
       HandlebarsHelpers = require('./helpers');
       helpers = _.without.apply(_, [_.keys(_)].concat(__slice.call(HandlebarsHelpers.constant('actions'))));
@@ -62236,9 +62154,9 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         });
       });
     };
-    return {
-      register: register
-    };
+
+    return LodashHelpers;
+
   })();
 
   module.exports = LodashHelpers;
@@ -62393,7 +62311,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"../defaults":208,"../replacer":224,"./helpers":213,"./lookups":215,"jquery":25,"lodash":27,"lodash-deep":26}],218:[function(require,module,exports){
+},{"../defaults":208,"../replacer":226,"./helpers":213,"./lookups":215,"jquery":25,"lodash":27,"lodash-deep":26}],218:[function(require,module,exports){
 (function() {
   var MomentHelpers;
 
@@ -62423,6 +62341,153 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 },{"./helpers":213,"lodash":27}],219:[function(require,module,exports){
 (function() {
+  var HandlebarsParams,
+    __slice = [].slice;
+
+  HandlebarsParams = (function() {
+    var HandlebarsMock, Replacer, _;
+
+    _ = require('lodash');
+
+    Replacer = require('../replacer');
+
+    HandlebarsMock = require('./mock');
+
+    function HandlebarsParams(args) {
+      var _i, _ref;
+      this.handlebars_mock = HandlebarsMock.get();
+      if (args.length === 1 && _.isPlainObject(args[0])) {
+        args = [void 0].concat(args[0]);
+      }
+      this.initial_ctx = args[0], this.initial_args = 3 <= args.length ? __slice.call(args, 1, _i = args.length - 1) : (_i = 1, []), this.initial_opts = args[_i++];
+      _ref = this.initial_opts.ids, this.initial_ctx_id = _ref[0], this.initial_arg_ids = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+    }
+
+    HandlebarsParams.prototype.opts = function() {
+      var result;
+      result = {};
+      result.method = this.initial_opts.name;
+      if (this.initial_opts.fn) {
+        result.fn = this.initial_opts.fn(this.handlebars_mock);
+      }
+      if (this.initial_opts.inverse) {
+        result.inverse = this.initial_opts.inverse(this.handlebars_mock);
+      }
+      return result;
+    };
+
+    HandlebarsParams.prototype.args = function() {
+      var result;
+      result = [];
+      _.each(this.initial_args, (function(_this) {
+        return function(arg, i) {
+          return result[i] = _this.getRaw(_this.initial_args[i], _this.initial_arg_ids[i]);
+        };
+      })(this));
+      if (!_.isEmpty(_.keys(this.initial_opts.hash))) {
+        result.push(this.initial_opts.hash);
+      }
+      return result;
+    };
+
+    HandlebarsParams.prototype.rawCtx = function() {
+      if (!(this.initial_ctx || this.initial_ctx_id)) {
+        return;
+      }
+      return this.getRaw(this.initial_ctx, this.initial_ctx_id);
+    };
+
+    HandlebarsParams.prototype.getRaw = function(ctx, ctx_id) {
+      var match, options, result, _ref;
+      result = this.getWrapped(ctx, ctx_id);
+      if (match = result.match(/\((.*?)\)/)) {
+        _ref = match[1].split(', '), result = _ref[0], options = 2 <= _ref.length ? __slice.call(_ref, 1) : [];
+      } else if (_.isString(ctx)) {
+        if (ctx.match(/^{(.*)}$/)) {
+          result = ctx_id;
+        } else {
+          result = "'" + result + "'";
+        }
+      } else {
+        result = ctx_id;
+      }
+      return result.replace('this.state.', '');
+    };
+
+    HandlebarsParams.prototype.wrappedCtx = function() {
+      var result;
+      if (!(this.initial_ctx || this.initial_ctx_id)) {
+        return;
+      }
+      result = this.wrapped();
+      result = result.replace("this.state." + (this.rawCtx()), this.rawCtx());
+      return result.replace(this.rawCtx(), Replacer.addState(this.rawCtx()));
+    };
+
+    HandlebarsParams.prototype.wrapped = function() {
+      return this.getWrapped(this.initial_ctx, this.initial_ctx_id);
+    };
+
+    HandlebarsParams.prototype.getWrapped = function(ctx, ctx_id) {
+      var braces_match, div_match, result;
+      result = ctx || ctx_id;
+      result = result.toString();
+      if (div_match = result.match(/<div>\n{(.*?)}\n<\/div>/)) {
+        result = div_match[1];
+      } else if (braces_match = result.match(/^{(.*?)}$/)) {
+        result = braces_match[1];
+      }
+      return result;
+    };
+
+    return HandlebarsParams;
+
+  })();
+
+  module.exports = HandlebarsParams;
+
+}).call(this);
+
+},{"../replacer":226,"./mock":217,"lodash":27}],220:[function(require,module,exports){
+(function() {
+  var SafeWrapper;
+
+  SafeWrapper = (function() {
+    var HTML_REGEX, Handlebars;
+
+    function SafeWrapper() {}
+
+    Handlebars = require('handlebars');
+
+    HTML_REGEX = /^<([\s\S]*?.+?[\s\S]*?)>$/;
+
+    SafeWrapper.string = function(result) {
+      var code;
+      if (result.match(HTML_REGEX)) {
+        code = this.div(result);
+      } else {
+        code = "\n<div>\n" + ("{" + result + "}\n") + "</div>";
+      }
+      return new Handlebars.SafeString(code);
+    };
+
+    SafeWrapper.div = function(content) {
+      if (!content) {
+        return;
+      }
+      return "<div>" + content + "</div>";
+    };
+
+    return SafeWrapper;
+
+  })();
+
+  module.exports = SafeWrapper;
+
+}).call(this);
+
+},{"handlebars":24}],221:[function(require,module,exports){
+(function() {
   var VanillaHelpers;
 
   VanillaHelpers = (function() {
@@ -62447,7 +62512,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./helpers":213,"lodash":27}],220:[function(require,module,exports){
+},{"./helpers":213,"lodash":27}],222:[function(require,module,exports){
 (function() {
   var Memory;
 
@@ -62501,7 +62566,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{}],221:[function(require,module,exports){
+},{}],223:[function(require,module,exports){
 (function() {
   var Model;
 
@@ -62534,7 +62599,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./filled_model":211}],222:[function(require,module,exports){
+},{"./filled_model":211}],224:[function(require,module,exports){
 (function() {
   var Persistance;
 
@@ -62582,7 +62647,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./memory":220,"./model":221,"databound":1,"lodash":27}],223:[function(require,module,exports){
+},{"./memory":222,"./model":223,"databound":1,"lodash":27}],225:[function(require,module,exports){
 (function() {
   var ReactMixin,
     __slice = [].slice;
@@ -62630,7 +62695,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./facebook":209,"./model":221,"./persistance":222,"./replacer":224,"./router":225,"lodash":27,"lodash-deep":26}],224:[function(require,module,exports){
+},{"./facebook":209,"./model":223,"./persistance":224,"./replacer":226,"./router":227,"lodash":27,"lodash-deep":26}],226:[function(require,module,exports){
 (function() {
   var Replacer;
 
@@ -62707,7 +62772,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"lodash":27}],225:[function(require,module,exports){
+},{"lodash":27}],227:[function(require,module,exports){
 (function() {
   var Router;
 
@@ -62754,7 +62819,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./data":206,"./ui":226}],226:[function(require,module,exports){
+},{"./data":206,"./ui":228}],228:[function(require,module,exports){
 (function() {
   var UI;
 
@@ -62854,7 +62919,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"./converter":205,"jquery":25,"lodash":27,"react":203}],227:[function(require,module,exports){
+},{"./converter":205,"jquery":25,"lodash":27,"react":203}],229:[function(require,module,exports){
 (function() {
   var Utils;
 
@@ -62884,7 +62949,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
 }).call(this);
 
-},{"jquery":25}],228:[function(require,module,exports){
+},{"jquery":25}],230:[function(require,module,exports){
 !function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):"object"==typeof exports?exports.HTMLtoJSX=e():t.HTMLtoJSX=e()}(this,function(){return function(t){function e(i){if(n[i])return n[i].exports;var s=n[i]={exports:{},id:i,loaded:!1};return t[i].call(s.exports,s,s.exports,e),s.loaded=!0,s.exports}var n={};return e.m=t,e.c=n,e.p="",e(0)}([function(t){/** @preserve
 	 *  Copyright (c) 2014, Facebook, Inc.
 	 *  All rights reserved.
