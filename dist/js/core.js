@@ -61738,20 +61738,30 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var Facebook;
 
   Facebook = (function() {
-    var $, LocalMemory, Persistance, Router, ensureInit, init, loggedIn, login, _;
+    var $, LocalMemory, Persistance, Router, _;
+
+    function Facebook() {}
+
     $ = require('jquery');
+
     _ = require('lodash');
+
     _.mixin(require('lodash-deep'));
+
     Router = require('./router');
+
     LocalMemory = require('./local_memory');
+
     Persistance = require('./persistance');
-    ensureInit = function() {
+
+    Facebook.ensureInit = function() {
       var deferred;
       deferred = $.Deferred();
-      _.once(init)(deferred);
+      _.once(this.init)(deferred);
       return deferred.promise();
     };
-    init = function(deferred) {
+
+    Facebook.init = function(deferred) {
       $.ajaxSetup({
         cache: true
       });
@@ -61764,7 +61774,8 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         return deferred.resolve(true);
       });
     };
-    loggedIn = function(resp) {
+
+    Facebook.loggedIn = function(resp) {
       var access_token, attributes;
       access_token = _.deepGet(resp, 'authResponse.accessToken');
       attributes = {
@@ -61776,16 +61787,19 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         return Router.goOn();
       });
     };
-    login = function() {
-      return ensureInit().then(function() {
-        return FB.login(loggedIn, {
-          scope: 'user_about_me'
-        });
-      });
+
+    Facebook.login = function() {
+      return this.ensureInit().then((function(_this) {
+        return function() {
+          return FB.login(_this.loggedIn, {
+            scope: 'user_about_me'
+          });
+        };
+      })(this));
     };
-    return {
-      login: login
-    };
+
+    return Facebook;
+
   })();
 
   module.exports = Facebook;

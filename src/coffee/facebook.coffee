@@ -1,4 +1,5 @@
-Facebook = (->
+# handles Facebook login
+class Facebook
   $ = require 'jquery'
   _ = require 'lodash'
   _.mixin require('lodash-deep')
@@ -6,12 +7,12 @@ Facebook = (->
   LocalMemory = require './local_memory'
   Persistance = require './persistance'
 
-  ensureInit = ->
+  @ensureInit: ->
     deferred = $.Deferred()
-    _.once(init)(deferred)
+    _.once(@init)(deferred)
     deferred.promise()
 
-  init = (deferred) ->
+  @init: (deferred) ->
     $.ajaxSetup
       cache: true
     $.getScript 'https://connect.facebook.net/en_UK/all.js', ->
@@ -22,7 +23,7 @@ Facebook = (->
 
       deferred.resolve true
 
-  loggedIn = (resp) ->
+  @loggedIn: (resp) ->
     access_token = _.deepGet(resp, 'authResponse.accessToken')
 
     attributes =
@@ -33,13 +34,8 @@ Facebook = (->
       LocalMemory.set(current_user.attributes)
       Router.goOn()
 
-  login = ->
-    ensureInit().then ->
-      FB.login(loggedIn, scope: 'user_about_me')
-
-  return {
-    login: login
-  }
-)()
+  @login: ->
+    @ensureInit().then =>
+      FB.login(@loggedIn, scope: 'user_about_me')
 
 module.exports = Facebook
