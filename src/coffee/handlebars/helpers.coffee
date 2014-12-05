@@ -19,19 +19,19 @@ class HandlebarsHelpers
     BaseHelpers.register()
     # register moment helper
     MomentHelpers.register()
-    # register some regular javascript helpers (reverse, etc.)
+    # register some vanilla.js helpers (reverse, etc.)
     VanillaHelpers.register()
 
-  @register: (method, final_fn) ->
+  @register: (method, fn_from_helper) ->
     Handlebars.registerHelper method, =>
-      @innerRegister(final_fn, arguments)
+      @registerWithParsedParams(fn_from_helper, arguments)
 
-  @innerRegister: (final_fn, args) ->
+  @registerWithParsedParams: (fn_from_helper, args) ->
     HandlebarsParams = require './params'
     params = new HandlebarsParams(args)
 
-    final_helper = final_fn(params.rawCtx(), params.wrappedCtx(),
+    result = fn_from_helper(params.ctx(), params.wrappedCtx(),
       params.args(), params.opts())
-    SafeWrapper.string(final_helper)
+    SafeWrapper.string(result)
 
 module.exports = HandlebarsHelpers
