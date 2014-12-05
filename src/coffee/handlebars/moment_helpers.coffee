@@ -1,7 +1,7 @@
-MomentHelpers = (->
+class MomentHelpers
   _ = require 'lodash'
 
-  register = ->
+  @register: ->
     HandlebarsHelpers = require './helpers'
     HandlebarsHelpers.register 'moment', (raw_ctx, wrapped_ctx, args, opts) ->
       methods = []
@@ -10,10 +10,5 @@ MomentHelpers = (->
         methods.push("#{method}('#{param}')")
 
       "moment(#{wrapped_ctx}).#{methods.join('.')}"
-
-  return {
-    register: register
-  }
-)()
 
 module.exports = MomentHelpers

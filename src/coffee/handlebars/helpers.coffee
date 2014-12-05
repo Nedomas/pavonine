@@ -27,6 +27,7 @@ class HandlebarsHelpers
       @registerWithParsedParams(fn_from_helper, arguments)
 
   @registerWithParsedParams: (fn_from_helper, args) ->
+    # give helper registrar parsed information to begin with
     HandlebarsParams = require './params'
     params = new HandlebarsParams(args)
 

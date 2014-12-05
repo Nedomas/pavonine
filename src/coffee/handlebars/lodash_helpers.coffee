@@ -3,6 +3,8 @@ class LodashHelpers
 
   @register: ->
     HandlebarsHelpers = require './helpers'
+    # register all helpers from lodash library
+    # {{min users 'age'}} -> _.min(this.state.users, 'age')
     helpers = _.without(_.keys(_), HandlebarsHelpers.constant('actions')...)
 
     _.each helpers, (method) ->

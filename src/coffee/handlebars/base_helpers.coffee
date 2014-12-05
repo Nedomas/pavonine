@@ -9,6 +9,9 @@ class BaseHelpers
     @registerIf()
     @registerWith()
 
+  # {{#each users}}{{name}}{{/each}}
+  # ->
+  # _.map(this.state.users, (record) -> record.name)
   @registerEach: ->
     HandlebarsHelpers = require './helpers'
     HandlebarsHelpers.register 'each', (raw_ctx, wrapped_ctx, args, opts) ->
@@ -27,11 +30,19 @@ class BaseHelpers
       else
         records_exist
 
+  # {{#if user}}yeah{{else}}no{/if}}
+  # ->
+  # this.state.user ? 'yeah' : 'no'
   @registerIf: ->
+    HandlebarsHelpers = require './helpers'
     HandlebarsHelpers.register 'if', (raw_ctx, wrapped_ctx, args, opts) ->
       "#{wrapped_ctx} ? #{SafeWrapper.div(opts.fn || null)} : #{SafeWrapper.div(opts.inverse || null)}"
 
+  # {{#with user}}{{name}}{/with}}
+  # ->
+  # this.state.user.name
   @registerWith: ->
+    HandlebarsHelpers = require './helpers'
     HandlebarsHelpers.register 'with', (raw_ctx, wrapped_ctx, args, opts) ->
       result = Replacer.replace opts.fn, /{this\.state\.(.+?)}/g,
         (attribute, initial) ->
