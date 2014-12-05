@@ -33,3 +33,6 @@ global.mockDOM = (body, fn) ->
 
 global.l = (code = '') ->
   "#{code}\n"
+
+global.mockedPromise = (result) ->
+  -> { then: (fn) -> fn(result) }
