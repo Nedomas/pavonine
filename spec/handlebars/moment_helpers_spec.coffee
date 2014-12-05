@@ -27,3 +27,12 @@ describe 'Moment.js helpers', ->
         "})}\n" +
         "</div>"
       )
+
+    it 'should return current date if not specified', ->
+      html = "{{moment format='YYYY-MM-DD'}}"
+      expect(compile(html)).to.equal(
+        "\n" +
+        "<div>\n" +
+        "{moment(undefined).format('YYYY-MM-DD')}\n" +
+        "</div>"
+      )
