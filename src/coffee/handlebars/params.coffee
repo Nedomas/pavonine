@@ -2,7 +2,7 @@ class HandlebarsParams
   _ = require 'lodash'
   Replacer = require '../replacer'
   HandlebarsMock = require './mock'
-  ParamsUtils = require './params_utils'
+  ParamUtils = require './param_utils'
 
   constructor: (args) ->
     @handlebars_mock = HandlebarsMock.get()
@@ -22,28 +22,33 @@ class HandlebarsParams
     [@initial_ctx, @initial_args..., @initial_opts] = args
     [@initial_ctx_id, @initial_arg_ids...] = @initial_opts.ids
 
+  # ``{{last 'user'}} -> 'user'
   ctx: ->
-    ParamsUtils.raw(@initial_ctx, @initial_ctx_id)
+    ParamUtils.raw(@initial_ctx, @initial_ctx_id)
 
+  # ``{{last 'user'}} -> 'this.state.user'
   wrappedCtx: ->
     return unless @initial_ctx or @initial_ctx_id
 
-    result = ParamsUtils.wrap(@initial_ctx, @initial_ctx_id)
+    result = ParamUtils.unwrap(@initial_ctx, @initial_ctx_id)
 
     # remove earlier states
     result = result.replace("this.state.#{@ctx()}", @ctx())
 
     result.replace(@ctx(), Replacer.addState(@ctx()))
 
+  # ``{{pluck 'user' 'name'}} -> ['name']
   args: ->
     result = []
 
     _.each @initial_args, (arg, i) =>
-      result[i] = ParamsUtils.raw(@initial_args[i], @initial_arg_ids[i])
+      result[i] = ParamUtils.raw(@initial_args[i], @initial_arg_ids[i])
 
     result.push(@initial_opts.hash) unless _.isEmpty(_.keys(@initial_opts.hash))
     result
 
+  # contains Handlebars functions
+  # ``{{#if test}}FN BRANCH{{else}}INVERSE{{/if}}``
   opts: ->
     result = {}
     result.method = @initial_opts.name

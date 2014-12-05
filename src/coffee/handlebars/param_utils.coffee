@@ -1,10 +1,11 @@
-class ParamsUtils
+class ParamUtils
   _ = require 'lodash'
 
+  # returns ``'user'``
   @raw: (ctx, ctx_id) ->
     return unless ctx or ctx_id
 
-    result = @wrap(ctx, ctx_id)
+    result = @unwrap(ctx, ctx_id)
 
     if match = result.match(/\((.*?)\)/)
       [result, options...] = match[1].split(', ')
@@ -18,7 +19,9 @@ class ParamsUtils
 
     result.replace('this.state.', '')
 
-  @wrap: (ctx, ctx_id) ->
+  # returns unwrapped string
+  # ``<div>{this.state.user}</div>`` -> ``'user'``
+  @unwrap: (ctx, ctx_id) ->
     result = ctx || ctx_id
     result = result.toString()
 
@@ -29,4 +32,4 @@ class ParamsUtils
 
     result
 
-module.exports = ParamsUtils
+module.exports = ParamUtils
