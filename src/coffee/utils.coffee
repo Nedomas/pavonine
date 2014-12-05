@@ -1,22 +1,15 @@
-Utils = (->
+# random utilities which probably should be elsewhere
+module.exports =
+class Utils
   $ = require 'jquery'
 
-  failedPromise = (result) ->
+  @failedPromise: (result) ->
     deferred = $.Deferred()
     deferred.reject result
     deferred.promise()
 
-  singularize = (string) ->
+  @singularize: (string) ->
     string.replace(/s$/, '')
 
-  pathString = (array) ->
+  @pathString: (array) ->
     array.join('.')
-
-  return {
-    failedPromise: failedPromise
-    singularize: singularize
-    pathString: pathString
-  }
-)()
-
-module.exports = Utils

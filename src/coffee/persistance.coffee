@@ -1,4 +1,6 @@
-Persistance = module.exports = (->
+# wrapper for backend connections
+module.exports =
+class Persistance
   _ = require 'lodash'
   Databound = require 'databound'
   Databound.API_URL = window.PAVONINE_SERVER
@@ -6,7 +8,10 @@ Persistance = module.exports = (->
   Model = require './model'
   StepMemory = require './step_memory'
 
-  communicate = (action, attributes) ->
+  # creates, updates, destroy and reads models from backend
+  # also serializers and deserializes them
+  # TODO: Serializer class
+  @communicate: (action, attributes) ->
     throw new Error 'No model specified' unless attributes.model
 
     model = new Model(attributes)
@@ -28,12 +33,6 @@ Persistance = module.exports = (->
       else
         Databound::promise(new_model)
 
-  act = (action, e, attributes) ->
+  @act: (action, e, attributes) ->
     e.preventDefault()
-    communicate(action, attributes)
-
-  return {
-    act: act
-    communicate: communicate
-  }
-)()
+    @communicate(action, attributes)

@@ -4,29 +4,37 @@
     __slice = [].slice;
 
   Pavonine = (function() {
-    var CUSTOM_HELPERS, hide, init, installMain, regexScan, replace, scan, show;
+    var CUSTOM_HELPERS;
+
+    function Pavonine() {}
+
     CUSTOM_HELPERS = {
       step: /{{\#step\ (\d+)}}([\s\S]*?.+?[\s\S]*?){{\/step}}/g,
       login: /{{\#login}}([\s\S]*?.+?[\s\S]*?){{\/login}}/g,
       loading: /{{\#loading}}([\s\S]*?.+?[\s\S]*?){{\/loading}}/g
     };
-    init = function() {
-      return hide();
+
+    Pavonine.init = function() {
+      return this.hide();
     };
-    scan = function() {
+
+    Pavonine.scan = function() {
       var name, regex;
       window.PAVONINE_STEPS = {};
       for (name in CUSTOM_HELPERS) {
         regex = CUSTOM_HELPERS[name];
-        regexScan(regex, function(full_match, content, value) {
-          window.PAVONINE_STEPS[value || name] = content;
-          return replace(full_match, "<div " + name + "='" + value + "'></div>");
-        });
+        this.regexScan(regex, (function(_this) {
+          return function(full_match, content, value) {
+            window.PAVONINE_STEPS[value || name] = content;
+            return _this.replace(full_match, "<div " + name + "='" + value + "'></div>");
+          };
+        })(this));
       }
-      installMain();
-      return show();
+      this.installMain();
+      return this.show();
     };
-    regexScan = function(regex, fn) {
+
+    Pavonine.regexScan = function(regex, fn) {
       var code, content, full_match, matched, regexp, value, _i, _results;
       code = window.document.body.innerHTML;
       regexp = regex;
@@ -42,25 +50,28 @@
       }
       return _results;
     };
-    replace = function(full_match, replacement) {
+
+    Pavonine.replace = function(full_match, replacement) {
       return window.document.body.innerHTML = window.document.body.innerHTML.replace(full_match, replacement);
     };
-    hide = function() {
+
+    Pavonine.hide = function() {
       return window.document.write('<style class="hideBeforeCompilation" ' + 'type="text/css">body {display:none;}<\/style>');
     };
-    show = function() {
+
+    Pavonine.show = function() {
       return window.document.body.style.display = 'block';
     };
-    installMain = function() {
+
+    Pavonine.installMain = function() {
       var script;
       script = window.document.createElement('script');
       script.src = "" + window.PAVONINE_SERVER + "/core" + window.PAVONINE_MIN + ".js";
       return window.document.body.appendChild(script);
     };
-    return {
-      init: init,
-      scan: scan
-    };
+
+    return Pavonine;
+
   })();
 
   module.exports = Pavonine;

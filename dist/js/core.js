@@ -62254,61 +62254,68 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 (function() {
   var HandlebarsMock;
 
-  HandlebarsMock = (function() {
-    var HandlebarsHelpers, HandlebarsLookups, Replacer, get, getEmpty, isAction, scanDefaultValues, _;
+  module.exports = HandlebarsMock = (function() {
+    var HandlebarsHelpers, HandlebarsLookups, Replacer, _;
+
+    function HandlebarsMock() {}
+
     _ = require('lodash');
+
     _.mixin(require('lodash-deep'));
+
     Replacer = require('../replacer');
+
     HandlebarsLookups = require('./lookups');
+
     HandlebarsHelpers = require('./helpers');
-    get = function() {
+
+    HandlebarsMock.get = function() {
       var result;
       result = {};
-      _.each(HandlebarsLookups.getIndividual(), function(lookup) {
-        if (isAction(lookup)) {
-          return _.deepSet(result, lookup, "{" + (Replacer.addAction(lookup)) + "}");
-        } else {
-          return _.deepSet(result, lookup, "{" + (Replacer.addState(lookup)) + "}");
-        }
-      });
+      _.each(HandlebarsLookups.getIndividual(), (function(_this) {
+        return function(lookup) {
+          if (_this.isAction(lookup)) {
+            return _.deepSet(result, lookup, "{" + (Replacer.addAction(lookup)) + "}");
+          } else {
+            return _.deepSet(result, lookup, "{" + (Replacer.addState(lookup)) + "}");
+          }
+        };
+      })(this));
       return result;
     };
-    getEmpty = function() {
+
+    HandlebarsMock.getEmpty = function() {
       var lookups, result;
       result = {};
       lookups = HandlebarsLookups.getIndividual();
-      _.each(lookups, function(lookup) {
-        if (isAction(lookup)) {
-          return;
-        }
-        return _.deepSet(result, lookup, '');
-      });
+      _.each(lookups, (function(_this) {
+        return function(lookup) {
+          if (_this.isAction(lookup)) {
+            return;
+          }
+          return _.deepSet(result, lookup, '');
+        };
+      })(this));
       return result;
     };
-    isAction = function(lookup) {
+
+    HandlebarsMock.isAction = function(lookup) {
       return _.include(HandlebarsHelpers.constant('actions'), _.last(lookup.split('.')));
     };
-    scanDefaultValues = function(code) {
-      var $, Defaults;
-      $ = require('jquery');
-      return Defaults = require('../defaults');
-    };
-    return {
-      get: get,
-      getEmpty: getEmpty,
-      scanDefaultValues: scanDefaultValues
-    };
-  })();
 
-  module.exports = HandlebarsMock;
+    HandlebarsMock.scanDefaultValues = function(code) {};
+
+    return HandlebarsMock;
+
+  })();
 
 }).call(this);
 
-},{"../defaults":207,"../replacer":227,"./helpers":212,"./lookups":214,"jquery":25,"lodash":27,"lodash-deep":26}],217:[function(require,module,exports){
+},{"../replacer":227,"./helpers":212,"./lookups":214,"lodash":27,"lodash-deep":26}],217:[function(require,module,exports){
 (function() {
   var MomentHelpers;
 
-  MomentHelpers = (function() {
+  module.exports = MomentHelpers = (function() {
     var _;
 
     function MomentHelpers() {}
@@ -62331,8 +62338,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     return MomentHelpers;
 
   })();
-
-  module.exports = MomentHelpers;
 
 }).call(this);
 
@@ -62654,14 +62659,22 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 (function() {
   var Persistance;
 
-  Persistance = module.exports = (function() {
-    var Databound, Model, StepMemory, act, communicate, _;
+  module.exports = Persistance = (function() {
+    var Databound, Model, StepMemory, _;
+
+    function Persistance() {}
+
     _ = require('lodash');
+
     Databound = require('databound');
+
     Databound.API_URL = window.PAVONINE_SERVER;
+
     Model = require('./model');
+
     StepMemory = require('./step_memory');
-    communicate = function(action, attributes) {
+
+    Persistance.communicate = function(action, attributes) {
       var connection, model;
       if (!attributes.model) {
         throw new Error('No model specified');
@@ -62686,14 +62699,14 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
         }
       });
     };
-    act = function(action, e, attributes) {
+
+    Persistance.act = function(action, e, attributes) {
       e.preventDefault();
-      return communicate(action, attributes);
+      return this.communicate(action, attributes);
     };
-    return {
-      act: act,
-      communicate: communicate
-    };
+
+    return Persistance;
+
   })();
 
 }).call(this);
@@ -62703,45 +62716,58 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
   var ReactMixin,
     __slice = [].slice;
 
-  ReactMixin = module.exports = (function() {
+  module.exports = ReactMixin = (function() {
     var Facebook, Model, Persistance, Replacer, Router, _;
+
+    function ReactMixin() {}
+
     Router = require('./router');
+
     Model = require('./model');
+
     _ = require('lodash');
+
     _.mixin(require('lodash-deep'));
+
     Persistance = require('./persistance');
+
     Replacer = require('./replacer');
+
     Facebook = require('./facebook');
-    return {
-      getInitialState: function() {
-        return Model.filled().attributes;
-      },
-      onChange: function(path, e) {
-        var new_state;
-        new_state = _.clone(this.state);
-        _.deepSet(new_state, Replacer.toAttribute(path), e.target.value);
-        return this.setState(new_state);
-      },
-      action: function(path, e) {
-        var action, attributes, model_path, model_path_str, _i, _ref;
-        _ref = path.split('.'), model_path = 2 <= _ref.length ? __slice.call(_ref, 0, _i = _ref.length - 1) : (_i = 0, []), action = _ref[_i++];
-        if (action === 'facebook') {
-          return Facebook.login();
-        }
-        if (action === 'next') {
-          return Router.next();
-        }
-        if (action === 'previous') {
-          return Router.previous();
-        }
-        model_path_str = model_path.join('.');
-        attributes = _.deepGet(this.state, model_path_str);
-        attributes.model = _.last(model_path_str.split('.'));
-        return Persistance.act(action, e, attributes).then(function(new_model) {
-          return Router.next(new_model.attributes);
-        });
-      }
+
+    ReactMixin.getInitialState = function() {
+      return Model.filled().attributes;
     };
+
+    ReactMixin.onChange = function(path, e) {
+      var new_state;
+      new_state = _.clone(this.state);
+      _.deepSet(new_state, Replacer.toAttribute(path), e.target.value);
+      return this.setState(new_state);
+    };
+
+    ReactMixin.action = function(path, e) {
+      var action, attributes, model_path, model_path_str, _i, _ref;
+      _ref = path.split('.'), model_path = 2 <= _ref.length ? __slice.call(_ref, 0, _i = _ref.length - 1) : (_i = 0, []), action = _ref[_i++];
+      if (action === 'facebook') {
+        return Facebook.login();
+      }
+      if (action === 'next') {
+        return Router.next();
+      }
+      if (action === 'previous') {
+        return Router.previous();
+      }
+      model_path_str = model_path.join('.');
+      attributes = _.deepGet(this.state, model_path_str);
+      attributes.model = _.last(model_path_str.split('.'));
+      return Persistance.act(action, e, attributes).then(function(new_model) {
+        return Router.next(new_model.attributes);
+      });
+    };
+
+    return ReactMixin;
+
   })();
 
 }).call(this);
@@ -62750,35 +62776,45 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 (function() {
   var Replacer;
 
-  Replacer = module.exports = (function() {
-    var addAction, addState, capitalizations, removeExtraQuotes, replace, replaceToBindings, splice, toAttribute, toReactCode, toState, _;
+  module.exports = Replacer = (function() {
+    var _;
+
+    function Replacer() {}
+
     _ = require('lodash');
-    toReactCode = function(jsx_code) {
-      jsx_code = removeExtraQuotes(jsx_code);
-      jsx_code = capitalizations(jsx_code);
-      jsx_code = replaceToBindings(jsx_code);
+
+    Replacer.toReactCode = function(jsx_code) {
+      jsx_code = this.removeExtraQuotes(jsx_code);
+      jsx_code = this.capitalizations(jsx_code);
+      jsx_code = this.replaceToBindings(jsx_code);
       return jsx_code;
     };
-    removeExtraQuotes = function(jsx_code) {
+
+    Replacer.removeExtraQuotes = function(jsx_code) {
       return jsx_code.replace(/"{/g, '{').replace(/}"/g, '}');
     };
-    capitalizations = function(jsx_code) {
+
+    Replacer.capitalizations = function(jsx_code) {
       var result, words;
       words = ['onChange', 'onClick', 'defaultValue'];
       result = jsx_code;
-      _.each(words, function(word) {
-        return result = replace(result, word.toLowerCase(), function() {
-          return word;
-        });
-      });
+      _.each(words, (function(_this) {
+        return function(word) {
+          return result = _this.replace(result, word.toLowerCase(), function() {
+            return word;
+          });
+        };
+      })(this));
       return result;
     };
-    replaceToBindings = function(jsx_code) {
-      return replace(jsx_code, /\ value={(.+?)}/gi, function(attribute) {
+
+    Replacer.replaceToBindings = function(jsx_code) {
+      return this.replace(jsx_code, /\ value={(.+?)}/gi, function(attribute) {
         return " value={" + attribute + "} onChange={_.partial(this.onChange, '" + attribute + "')}";
       });
     };
-    replace = function(code, from, to) {
+
+    Replacer.replace = function(code, from, to) {
       var attribute, full_match, length, matched, regexp, result;
       result = code;
       regexp = new RegExp(from);
@@ -62788,37 +62824,36 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
           full_match = matched[0];
           attribute = matched[1];
           length = full_match.length;
-          result = splice(result, matched.index, length, to(attribute, full_match));
+          result = this.splice(result, matched.index, length, to(attribute, full_match));
         } else {
           break;
         }
       }
       return result;
     };
-    toState = function(initial) {
+
+    Replacer.toState = function(initial) {
       return "this.state." + (initial.join('.'));
     };
-    addState = function(initial) {
+
+    Replacer.addState = function(initial) {
       return "this.state." + initial;
     };
-    addAction = function(initial) {
+
+    Replacer.addAction = function(initial) {
       return "_.partial(this.action, '" + initial + "')";
     };
-    toAttribute = function(initial) {
+
+    Replacer.toAttribute = function(initial) {
       return initial.replace('this.state.', '');
     };
-    splice = function(string, idx, rem, s) {
+
+    Replacer.splice = function(string, idx, rem, s) {
       return string.toString().slice(0, idx) + s + string.toString().slice(idx + Math.abs(rem));
     };
-    return {
-      toReactCode: toReactCode,
-      replace: replace,
-      toState: toState,
-      addState: addState,
-      addAction: addAction,
-      toAttribute: toAttribute,
-      splice: splice
-    };
+
+    return Replacer;
+
   })();
 
 }).call(this);
@@ -62827,7 +62862,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 (function() {
   var Router;
 
-  Router = (function() {
+  module.exports = Router = (function() {
     var MissingData, UI, return_to, step;
 
     function Router() {}
@@ -62874,8 +62909,6 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
     return Router;
 
   })();
-
-  module.exports = Router;
 
 }).call(this);
 
@@ -62926,7 +62959,7 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 (function() {
   var UI;
 
-  UI = (function() {
+  module.exports = UI = (function() {
     var $, Converter, React, _;
 
     $ = require('jquery');
@@ -63018,37 +63051,37 @@ var hasOwnProperty = Object.hasOwnProperty || function (obj, key) {
 
   })();
 
-  module.exports = UI;
-
 }).call(this);
 
 },{"./converter":205,"jquery":25,"lodash":27,"react":203}],231:[function(require,module,exports){
 (function() {
   var Utils;
 
-  Utils = (function() {
-    var $, failedPromise, pathString, singularize;
+  module.exports = Utils = (function() {
+    var $;
+
+    function Utils() {}
+
     $ = require('jquery');
-    failedPromise = function(result) {
+
+    Utils.failedPromise = function(result) {
       var deferred;
       deferred = $.Deferred();
       deferred.reject(result);
       return deferred.promise();
     };
-    singularize = function(string) {
+
+    Utils.singularize = function(string) {
       return string.replace(/s$/, '');
     };
-    pathString = function(array) {
+
+    Utils.pathString = function(array) {
       return array.join('.');
     };
-    return {
-      failedPromise: failedPromise,
-      singularize: singularize,
-      pathString: pathString
-    };
-  })();
 
-  module.exports = Utils;
+    return Utils;
+
+  })();
 
 }).call(this);
 

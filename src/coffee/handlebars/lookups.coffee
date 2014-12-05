@@ -1,3 +1,5 @@
+# stores all lookups that were registered with Handlebars helpers
+# so we know what data is missing
 class HandlebarsLookups
   _ = require 'lodash'
   individual = []

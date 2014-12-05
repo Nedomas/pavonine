@@ -1,3 +1,5 @@
+# deals with rendering and putting React components into DOM
+module.exports =
 class UI
   $ = require 'jquery'
   _ = require 'lodash'
@@ -59,5 +61,3 @@ class UI
 
   elements: ->
     _.map $('*[step]'), (el) -> $(el)
-
-module.exports = UI

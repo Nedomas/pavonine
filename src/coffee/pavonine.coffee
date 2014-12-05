@@ -12,30 +12,30 @@
 # window.Pavonine.init()
 # window.onload = -> window.Pavonine.scan()
 
-Pavonine = (->
+class Pavonine
   CUSTOM_HELPERS =
     step: /{{\#step\ (\d+)}}([\s\S]*?.+?[\s\S]*?){{\/step}}/g
     login: /{{\#login}}([\s\S]*?.+?[\s\S]*?){{\/login}}/g
     loading: /{{\#loading}}([\s\S]*?.+?[\s\S]*?){{\/loading}}/g
 
-  init = ->
-    hide()
+  @init: ->
+    @hide()
 
   # scan for steps, login and loading parts
   # load the content of it into window.PAVONINE_STEPS
   # put div placeholders in the places we found them
-  scan = ->
+  @scan: ->
     window.PAVONINE_STEPS = {}
 
     for name, regex of CUSTOM_HELPERS
-      regexScan regex, (full_match, content, value) ->
+      @regexScan regex, (full_match, content, value) =>
         window.PAVONINE_STEPS[value || name] = content
-        replace(full_match, "<div #{name}='#{value}'></div>")
+        @replace(full_match, "<div #{name}='#{value}'></div>")
 
-    installMain()
-    show()
+    @installMain()
+    @show()
 
-  regexScan = (regex, fn) ->
+  @regexScan: (regex, fn) ->
     code = window.document.body.innerHTML
     regexp = regex
 
@@ -48,30 +48,24 @@ Pavonine = (->
       else
         break
 
-  replace = (full_match, replacement) ->
+  @replace: (full_match, replacement) ->
     window.document.body.innerHTML = window.document.body.innerHTML
       .replace(full_match, replacement)
 
   # hide the page (so we don't see handlebars ({}) flashing around)
-  hide = ->
+  @hide: ->
     window.document.write('<style class="hideBeforeCompilation" ' +
     'type="text/css">body {display:none;}<\/style>')
 
   # set the page visible again
-  show = ->
+  @show: ->
     window.document.body.style.display = 'block'
 
   # load Core
-  installMain = ->
+  @installMain: ->
     script = window.document.createElement('script')
     script.src = "#{window.PAVONINE_SERVER}/core#{window.PAVONINE_MIN}.js"
     window.document.body.appendChild(script)
-
-  return {
-    init: init
-    scan: scan
-  }
-)()
 
 module.exports = Pavonine
 window.Pavonine = Pavonine

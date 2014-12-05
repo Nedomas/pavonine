@@ -1,7 +1,7 @@
 sinon = require 'sinon'
 FilledModel = require '../src/coffee/filled_model'
 HandlebarsMock = require '../src/coffee/handlebars/mock'
-Memory = require '../src/coffee/memory'
+StepMemory = require '../src/coffee/step_memory'
 
 describe 'FilledModel', ->
   before ->
@@ -31,7 +31,7 @@ describe 'FilledModel', ->
 
   describe '#fillFromMemory', ->
     before ->
-      @stubbed_memory = sinon.stub Memory, 'get', (name) ->
+      @stubbed_memory = sinon.stub StepMemory, 'get', (name) ->
         if name == 'user.name'
           'John'
         else if name == 'user'

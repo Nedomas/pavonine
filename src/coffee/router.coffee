@@ -1,4 +1,5 @@
 # gets data from the backend and renders requested step
+module.exports =
 class Router
   UI = require './ui'
   MissingData = require './missing_data'
@@ -30,5 +31,3 @@ class Router
 
   @goOn: ->
     @change(return_to)
-
-module.exports = Router
